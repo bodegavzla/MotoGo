@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Uber - Conductor</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome para íconos (campana) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
             margin: 0;
@@ -18,9 +18,9 @@
             font-family: 'Roboto', sans-serif;
             background: #f5f5f5;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* Pantalla de carga */
         #loading-screen {
             position: fixed;
             top: 0;
@@ -45,7 +45,6 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Modales de login/registro */
         .modal {
             display: none;
             position: fixed;
@@ -71,6 +70,8 @@
             padding: 30px;
             position: relative;
             animation: slideIn 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         @keyframes slideIn {
@@ -162,12 +163,10 @@
             display: none;
         }
 
-        /* Panel principal */
         #main-panel {
             display: none;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            flex-direction: column;
+            height: 100vh;
         }
 
         header {
@@ -175,20 +174,22 @@
             justify-content: space-between;
             align-items: center;
             background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
+            padding: 12px 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            position: relative;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            color: #1e3c72;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
-        /* Campana de notificaciones */
         .notification-bell {
             position: relative;
             cursor: pointer;
@@ -214,12 +215,13 @@
         .notification-dropdown {
             position: absolute;
             top: 60px;
-            right: 20px;
+            right: 10px;
             width: 350px;
+            max-width: 90vw;
             background: white;
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 100;
+            z-index: 1000;
             display: none;
             max-height: 400px;
             overflow-y: auto;
@@ -236,6 +238,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
         }
 
         .notification-item {
@@ -259,7 +264,7 @@
         }
 
         .notification-item .trip-details {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #666;
         }
 
@@ -268,7 +273,7 @@
             background: #28a745;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 15px;
             border-radius: 4px;
             cursor: pointer;
             width: auto;
@@ -287,31 +292,72 @@
 
         #logout-btn {
             width: auto;
-            padding: 8px 16px;
+            padding: 6px 12px;
             background-color: #dc3545;
+            font-size: 0.9rem;
         }
         #logout-btn:hover { background-color: #c82333; }
 
-        /* Contenido principal (solo conductor) */
-        .driver-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        #map-container {
+            flex: 1;
+            position: relative;
         }
 
-        .driver-panel h3 {
-            margin-bottom: 15px;
-            color: #1e3c72;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 8px;
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .driver-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+            padding: 15px;
+            z-index: 100;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .panel-handle {
+            width: 40px;
+            height: 5px;
+            background: #ddd;
+            border-radius: 3px;
+            margin: 0 auto 15px;
+            cursor: pointer;
         }
 
         .availability-toggle {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .availability-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .availability-info .main-text {
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .availability-info .sub-text {
+            font-size: 0.8rem;
+            color: #888;
         }
 
         .toggle-switch {
@@ -359,19 +405,67 @@
             transform: translateX(26px);
         }
 
-        /* Viaje actual */
         .current-trip {
             background: #e3f2fd;
             padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            margin-top: 10px;
         }
+
+        .current-trip h4 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-trip .trip-route {
+            margin: 10px 0;
+        }
+
+        .current-trip .route-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .current-trip .route-item i {
+            margin-top: 3px;
+        }
+
+        .current-trip .passenger-info {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .btn-start { background: #28a745; }
+        .btn-start:hover { background: #218838; }
+        .btn-complete { background: #007bff; }
+        .btn-complete:hover { background: #0056b3; }
+        .btn-cancel { background: #dc3545; }
+        .btn-cancel:hover { background: #c82333; }
 
         .status-badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
             font-weight: 500;
         }
 
@@ -379,42 +473,110 @@
         .status-accepted { background-color: #17a2b8; color: white; }
         .status-started { background-color: #007bff; color: white; }
         .status-completed { background-color: #28a745; color: white; }
+        .status-cancelled { background-color: #dc3545; color: white; }
 
-        /* Botones pequeños */
-        .btn-small {
-            width: auto;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            display: inline-block;
-        }
-
-        /* Lista de viajes */
-        .list-item {
-            background: #f9f9f9;
-            padding: 12px;
+        .distance-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #fff3cd;
             border-radius: 6px;
-            margin-bottom: 10px;
-            border-left: 3px solid #1e3c72;
+            margin-top: 10px;
+            font-size: 0.9rem;
         }
 
-        .list-item p {
-            margin: 5px 0;
+        .distance-info i {
+            color: #856404;
         }
 
-        h4 {
-            margin: 20px 0 10px;
+        .history-section {
+            margin-top: 15px;
+        }
+
+        .history-section h4 {
             color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .history-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #1e3c72;
+            font-size: 0.85rem;
+        }
+
+        .history-item p {
+            margin: 3px 0;
+        }
+
+        .navigate-btn {
+            position: absolute;
+            bottom: 200px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #28a745;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .navigate-btn:hover {
+            background: #218838;
+        }
+
+        /* Indicador GPS */
+        .gps-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #e8f5e9;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #28a745;
+            margin-top: 5px;
+        }
+
+        .gps-indicator.inactive {
+            background: #ffebee;
+            color: #dc3545;
+        }
+
+        .gps-indicator i {
+            font-size: 0.7rem;
+        }
+
+        .gps-indicator .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 480px) {
+            header h1 { font-size: 1rem; }
+            .notification-dropdown { width: 300px; }
         }
     </style>
 </head>
 <body>
-    <!-- Pantalla de carga -->
     <div id="loading-screen">
         <div class="spinner-large"></div>
     </div>
 
-    <!-- Modal de Login -->
     <div id="login-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" id="close-login">&times;</span>
@@ -438,11 +600,10 @@
         </div>
     </div>
 
-    <!-- Modal de Registro -->
     <div id="register-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" id="close-register">&times;</span>
-            <h2>Crear Cuenta</h2>
+            <h2>Crear Cuenta - Conductor</h2>
             <form id="register-form">
                 <div class="form-group">
                     <label for="register-fullname">Nombre completo</label>
@@ -460,13 +621,6 @@
                     <label for="register-password">Contraseña</label>
                     <input type="password" id="register-password" required>
                 </div>
-                <div class="form-group">
-                    <label for="register-role">Tipo de usuario</label>
-                    <select id="register-role" required>
-                        <option value="conductor">Conductor</option>
-                        <!-- Solo permitimos conductores en esta app -->
-                    </select>
-                </div>
                 <button type="submit" id="register-btn">Registrarse</button>
                 <div class="spinner" id="register-spinner"></div>
                 <div class="message error-message" id="register-error"></div>
@@ -478,20 +632,17 @@
         </div>
     </div>
 
-    <!-- Panel principal (solo conductores) -->
     <div id="main-panel">
         <header>
-            <h1>Mi Uber - Conductor</h1>
+            <h1><i class="fas fa-motorcycle"></i> Mi Uber - Conductor</h1>
             <div class="user-info">
                 <span id="user-name"></span>
-                <!-- Campana de notificaciones -->
                 <div class="notification-bell" id="notification-bell">
                     <i class="fas fa-bell"></i>
                     <span class="badge" id="notification-badge">0</span>
                 </div>
-                <button id="logout-btn">Cerrar sesión</button>
+                <button id="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
-            <!-- Dropdown de notificaciones -->
             <div class="notification-dropdown" id="notification-dropdown">
                 <div class="notification-header">
                     <span>Solicitudes de viaje</span>
@@ -503,46 +654,69 @@
             </div>
         </header>
 
-        <div class="driver-panel">
-            <h3>Panel del Conductor</h3>
-            <div class="availability-toggle">
-                <span>Disponible para viajes:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="availability-checkbox">
-                    <span class="slider"></span>
-                </label>
-            </div>
+        <div id="map-container">
+            <div id="map"></div>
 
-            <!-- Viaje actual -->
-            <div id="current-trip-container" style="display: none;">
-                <h4>Viaje actual</h4>
-                <div id="current-trip-info" class="current-trip"></div>
-            </div>
+            <button class="navigate-btn" id="navigate-btn" title="Navegar al destino">
+                <i class="fas fa-directions"></i>
+            </button>
 
-            <!-- Historial de viajes -->
-            <h4>Viajes recientes</h4>
-            <div id="trips-history"></div>
+            <div class="driver-panel" id="driver-panel">
+                <div class="panel-handle" id="panel-handle"></div>
+
+                <div class="availability-toggle">
+                    <div class="availability-info">
+                        <div class="main-text">
+                            <i class="fas fa-circle" id="status-indicator" style="color: #ccc;"></i>
+                            <span id="availability-text">Disponible para viajes</span>
+                        </div>
+                        <div class="sub-text" id="location-status">Activa tu disponibilidad para compartir ubicación</div>
+                        <div class="gps-indicator inactive" id="gps-indicator">
+                            <i class="fas fa-satellite"></i>
+                            <span>GPS inactivo</span>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="availability-checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div id="current-trip-container" style="display: none;">
+                    <div id="current-trip-info" class="current-trip"></div>
+                </div>
+
+                <div class="history-section">
+                    <h4><i class="fas fa-history"></i> Viajes recientes</h4>
+                    <div id="trips-history"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Supabase JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         // Configuración Supabase
         const SUPABASE_URL = 'https://ajmxtbafpcwjbhtkswuu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbXh0YmFmcGN3amJodGtzd3V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzQyMTEsImV4cCI6MjA4ODc1MDIxMX0.NNNOTr05ef6umCGhKH5GId_j9uoVBzJJfGk6e4rsmQ0';
-        
-        // Crear cliente Supabase (solo una vez)
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Estado global
         let currentUser = null;
         let userProfile = null;
         let subscriptions = [];
-        let pendingTrips = []; // Solicitudes pendientes (no leídas)
+        let pendingTrips = [];
         let unreadCount = 0;
-        let currentTripId = null; // ID del viaje actual
+        let currentTrip = null;
+        let map = null;
+        let driverMarker = null;
+        let originMarker = null;
+        let destinationMarker = null;
+        let routeLine = null;
+        let locationWatchId = null;
+        let isLocationTracking = false;
 
         // Elementos DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -556,11 +730,17 @@
         const notificationBadge = document.getElementById('notification-badge');
         const notificationsList = document.getElementById('notifications-list');
         const unreadCountSpan = document.getElementById('unread-count');
+        const availabilityCheckbox = document.getElementById('availability-checkbox');
+        const statusIndicator = document.getElementById('status-indicator');
+        const availabilityText = document.getElementById('availability-text');
+        const locationStatus = document.getElementById('location-status');
+        const gpsIndicator = document.getElementById('gps-indicator');
+        const navigateBtn = document.getElementById('navigate-btn');
+        const driverPanel = document.getElementById('driver-panel');
+        const panelHandle = document.getElementById('panel-handle');
 
         // Funciones auxiliares
-        function showModal(modal) {
-            modal.classList.add('active');
-        }
+        function showModal(modal) { modal.classList.add('active'); }
         function hideModals() {
             loginModal.classList.remove('active');
             registerModal.classList.remove('active');
@@ -574,13 +754,11 @@
             element.style.display = 'block';
         }
 
-        // Limpiar suscripciones
         function unsubscribeAll() {
             subscriptions.forEach(sub => sub.unsubscribe());
             subscriptions = [];
         }
 
-        // Verificar sesión al cargar
         async function checkSession() {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -609,13 +787,21 @@
                 showLogin();
                 return;
             }
+
+            if (data.role !== 'conductor') {
+                alert('Esta aplicación es solo para conductores. Los pasajeros deben usar la app de pasajero.');
+                await supabaseClient.auth.signOut();
+                showLogin();
+                return;
+            }
+
             userProfile = data;
             currentUser = (await supabaseClient.auth.getUser()).data.user;
-            userNameSpan.textContent = userProfile.full_name;
-            mainPanel.style.display = 'block';
+            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
+            mainPanel.style.display = 'flex';
             hideModals();
 
-            // Inicializar UI de conductor
+            initMap();
             initDriverUI();
         }
 
@@ -648,7 +834,7 @@
             const numericCode = document.getElementById('register-code').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            const role = 'conductor'; // Solo conductores
+            const role = 'conductor';
             const btn = document.getElementById('register-btn');
             const spinner = document.getElementById('register-spinner');
             const errorDiv = document.getElementById('register-error');
@@ -659,7 +845,6 @@
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
 
-            // Validar código
             if (!/^\d{8}$/.test(numericCode)) {
                 showError(errorDiv, 'Código debe ser 8 dígitos');
                 btn.disabled = false;
@@ -713,6 +898,7 @@
 
         // Cerrar sesión
         logoutBtn.addEventListener('click', async () => {
+            stopLocationTracking();
             unsubscribeAll();
             await supabaseClient.auth.signOut();
             currentUser = null;
@@ -726,86 +912,296 @@
             showModal(loginModal);
         }
 
-        // ========== LÓGICA DE CONDUCTOR ==========
+        // ==================== MAPA ====================
+
+        function initMap() {
+            const defaultCenter = [19.4326, -99.1332];
+            const defaultZoom = 14;
+
+            map = L.map('map', {
+                center: defaultCenter,
+                zoom: defaultZoom,
+                zoomControl: false
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            L.control.zoom({ position: 'topright' }).addTo(map);
+        }
+
+        function updateDriverMarker(lat, lng) {
+            if (driverMarker) {
+                driverMarker.setLatLng([lat, lng]);
+            } else {
+                const driverIcon = L.divIcon({
+                    className: 'driver-marker',
+                    html: `<div style="width:40px;height:40px;background:#1e3c72;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><i class="fas fa-motorcycle" style="color:white;font-size:16px;"></i></div>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+                driverMarker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
+            }
+            map.setView([lat, lng], 15);
+        }
+
+        function updateTripMarkers() {
+            if (originMarker) map.removeLayer(originMarker);
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            if (routeLine) map.removeLayer(routeLine);
+
+            if (!currentTrip) return;
+
+            // Marcador de origen
+            if (currentTrip.pickup_lat && currentTrip.pickup_lng) {
+                const originIcon = L.divIcon({
+                    className: 'origin-marker',
+                    html: `<div style="width:30px;height:30px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-user" style="color:white;font-size:12px;"></i></div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                originMarker = L.marker([currentTrip.pickup_lat, currentTrip.pickup_lng], { icon: originIcon }).addTo(map);
+            }
+
+            // Marcador de destino
+            if (currentTrip.dropoff_lat && currentTrip.dropoff_lng) {
+                const destIcon = L.divIcon({
+                    className: 'dest-marker',
+                    html: `<div style="width:40px;height:40px;background:#dc3545;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag" style="color:white;transform:rotate(45deg);"></i></div>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40]
+                });
+                destinationMarker = L.marker([currentTrip.dropoff_lat, currentTrip.dropoff_lng], { icon: destIcon }).addTo(map);
+
+                if (currentTrip.pickup_lat && currentTrip.pickup_lng) {
+                    routeLine = L.polyline([
+                        [currentTrip.pickup_lat, currentTrip.pickup_lng],
+                        [currentTrip.dropoff_lat, currentTrip.dropoff_lng]
+                    ], { color: '#1e3c72', weight: 4, opacity: 0.7, dashArray: '10, 10' }).addTo(map);
+
+                    const bounds = L.latLngBounds([
+                        [currentTrip.pickup_lat, currentTrip.pickup_lng],
+                        [currentTrip.dropoff_lat, currentTrip.dropoff_lng]
+                    ]);
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            }
+        }
+
+        navigateBtn.addEventListener('click', () => {
+            if (!currentTrip) return;
+            
+            let destLat, destLng;
+            if (currentTrip.status === 'accepted') {
+                destLat = currentTrip.pickup_lat;
+                destLng = currentTrip.pickup_lng;
+            } else if (currentTrip.status === 'started') {
+                destLat = currentTrip.dropoff_lat;
+                destLng = currentTrip.dropoff_lng;
+            }
+
+            if (destLat && destLng) {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`;
+                window.open(url, '_blank');
+            }
+        });
+
+        // ==================== GEOLOCALIZACIÓN ====================
+
+        function startLocationTracking() {
+            if (!navigator.geolocation) {
+                alert('Tu navegador no soporta geolocalización');
+                availabilityCheckbox.checked = false;
+                return false;
+            }
+
+            updateGPSIndicator(true, 'Obteniendo ubicación...');
+
+            // Primera ubicación inmediata
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    await updateDriverLocation(latitude, longitude);
+                    updateDriverMarker(latitude, longitude);
+                    updateGPSIndicator(true, 'GPS activo');
+                },
+                (error) => {
+                    console.error('Error obteniendo ubicación:', error);
+                    updateGPSIndicator(false, 'Error de GPS');
+                    availabilityCheckbox.checked = false;
+                    alert('No se pudo obtener tu ubicación. Activa el GPS y los permisos de ubicación.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+
+            // Watch position para actualizaciones continuas
+            locationWatchId = navigator.geolocation.watchPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    await updateDriverLocation(latitude, longitude);
+                    updateDriverMarker(latitude, longitude);
+                    if (isLocationTracking) {
+                        updateGPSIndicator(true, 'GPS activo');
+                    }
+                },
+                (error) => {
+                    console.error('Error en tracking:', error);
+                    updateGPSIndicator(false, 'GPS interrumpido');
+                },
+                { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
+            );
+
+            isLocationTracking = true;
+            return true;
+        }
+
+        function stopLocationTracking() {
+            if (locationWatchId !== null) {
+                navigator.geolocation.clearWatch(locationWatchId);
+                locationWatchId = null;
+            }
+            isLocationTracking = false;
+            updateGPSIndicator(false, 'GPS inactivo');
+            
+            if (driverMarker) {
+                map.removeLayer(driverMarker);
+                driverMarker = null;
+            }
+        }
+
+        async function updateDriverLocation(lat, lng) {
+            if (!currentUser) return;
+
+            const { error } = await supabaseClient
+                .from('user_profiles')
+                .update({ 
+                    driver_lat: lat, 
+                    driver_lng: lng,
+                    driver_location_updated_at: new Date()
+                })
+                .eq('id', currentUser.id);
+
+            if (error) {
+                console.error('Error actualizando ubicación:', error);
+            }
+        }
+
+        function updateGPSIndicator(active, text) {
+            if (active) {
+                gpsIndicator.classList.remove('inactive');
+                gpsIndicator.innerHTML = `<i class="fas fa-satellite pulse"></i><span>${text}</span>`;
+            } else {
+                gpsIndicator.classList.add('inactive');
+                gpsIndicator.innerHTML = `<i class="fas fa-satellite"></i><span>${text}</span>`;
+            }
+        }
+
+        // ==================== LÓGICA DE CONDUCTOR ====================
+
         async function initDriverUI() {
-            // Mostrar estado actual de disponibilidad
-            const availCheckbox = document.getElementById('availability-checkbox');
-            availCheckbox.checked = userProfile.available || false;
+            availabilityCheckbox.checked = userProfile.available || false;
+            updateAvailabilityIndicator(userProfile.available);
+
+            // Si ya estaba disponible, activar ubicación
+            if (userProfile.available) {
+                startLocationTracking();
+                locationStatus.textContent = 'Compartiendo tu ubicación con los pasajeros';
+            }
 
             // Toggle disponibilidad
-            availCheckbox.addEventListener('change', async (e) => {
+            availabilityCheckbox.addEventListener('change', async (e) => {
                 const available = e.target.checked;
+                
+                if (available) {
+                    const started = startLocationTracking();
+                    if (!started) {
+                        availabilityCheckbox.checked = false;
+                        return;
+                    }
+                    locationStatus.textContent = 'Compartiendo tu ubicación con los pasajeros';
+                } else {
+                    stopLocationTracking();
+                    locationStatus.textContent = 'Activa tu disponibilidad para compartir ubicación';
+                }
+
                 const { error } = await supabaseClient
                     .from('user_profiles')
-                    .update({ available })
+                    .update({ 
+                        available,
+                        driver_lat: available ? userProfile.driver_lat : null,
+                        driver_lng: available ? userProfile.driver_lng : null
+                    })
                     .eq('id', currentUser.id);
+
                 if (error) {
                     console.error('Error actualizando disponibilidad:', error);
-                    availCheckbox.checked = !available; // revertir
+                    availabilityCheckbox.checked = !available;
+                    if (available) stopLocationTracking();
                 } else {
                     userProfile.available = available;
+                    updateAvailabilityIndicator(available);
                 }
             });
 
-            // Cargar solicitudes pendientes iniciales
             await loadPendingTrips();
+            await loadCurrentTrip();
+            await loadTripHistory();
+            setupSubscriptions();
+            setupNotificationBell();
+        }
 
-            // Suscribirse a nuevas solicitudes (INSERT en trips)
-            const subscription = supabaseClient
-                .channel('pending-trips')
+        function updateAvailabilityIndicator(available) {
+            statusIndicator.style.color = available ? '#28a745' : '#ccc';
+            availabilityText.textContent = available ? 'Estás disponible' : 'Disponible para viajes';
+        }
+
+        function setupSubscriptions() {
+            const newTripSub = supabaseClient
+                .channel('new-trips')
                 .on('postgres_changes', {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'trips',
                     filter: 'status=eq.pending'
                 }, (payload) => {
-                    // Nueva solicitud pendiente
-                    const newTrip = payload.new;
-                    // Solo agregar si no está en la lista y el conductor está disponible
-                    if (userProfile.available && !pendingTrips.find(t => t.id === newTrip.id)) {
-                        pendingTrips.unshift(newTrip); // Agregar al inicio
-                        unreadCount++;
-                        updateNotifications();
+                    if (userProfile.available && !pendingTrips.find(t => t.id === payload.new.id)) {
+                        loadPendingTrips();
                     }
                 })
                 .subscribe();
-            subscriptions.push(subscription);
+            subscriptions.push(newTripSub);
 
-            // Suscripción a actualizaciones (cuando otro conductor acepta, se quita de pendientes)
             const updateSub = supabaseClient
-                .channel('trip-updates')
+                .channel('trip-updates-driver')
                 .on('postgres_changes', {
                     event: 'UPDATE',
                     schema: 'public',
                     table: 'trips'
                 }, (payload) => {
-                    // Si ya no está pendiente, remover de la lista
-                    if (payload.old && payload.old.status === 'pending' && payload.new.status !== 'pending') {
+                    if (payload.old.status === 'pending' && payload.new.status !== 'pending') {
                         pendingTrips = pendingTrips.filter(t => t.id !== payload.old.id);
-                        unreadCount = pendingTrips.length;
                         updateNotifications();
+                    }
+                    if (currentTrip && payload.new.id === currentTrip.id) {
+                        currentTrip = { ...currentTrip, ...payload.new };
+                        renderCurrentTrip();
+                        updateTripMarkers();
                     }
                 })
                 .subscribe();
             subscriptions.push(updateSub);
+        }
 
-            // Cargar viaje actual
-            await loadCurrentTrip();
-
-            // Cargar historial
-            await loadTripHistory();
-
-            // Click en campana despliega notificaciones
+        function setupNotificationBell() {
             notificationBell.addEventListener('click', (e) => {
                 e.stopPropagation();
                 notificationDropdown.classList.toggle('show');
                 if (notificationDropdown.classList.contains('show')) {
-                    // Marcar todas como leídas visualmente
                     markAllAsRead();
                 }
             });
 
-            // Cerrar dropdown al hacer clic fuera
             document.addEventListener('click', (e) => {
                 if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) {
                     notificationDropdown.classList.remove('show');
@@ -813,14 +1209,14 @@
             });
         }
 
-        // Cargar solicitudes pendientes desde la BD
         async function loadPendingTrips() {
             const { data, error } = await supabaseClient
                 .from('trips')
-                .select('*, passenger:passenger_id(full_name)')
+                .select('*, passenger:passenger_id(full_name, numeric_code)')
                 .eq('status', 'pending')
                 .is('driver_id', null)
                 .order('created_at', { ascending: false });
+            
             if (error) {
                 console.error('Error cargando viajes pendientes:', error);
                 return;
@@ -830,9 +1226,7 @@
             updateNotifications();
         }
 
-        // Actualizar la interfaz de notificaciones
         function updateNotifications() {
-            // Actualizar badge
             if (unreadCount > 0) {
                 notificationBadge.textContent = unreadCount;
                 notificationBadge.style.display = 'block';
@@ -840,7 +1234,6 @@
                 notificationBadge.style.display = 'none';
             }
 
-            // Actualizar lista en dropdown
             if (pendingTrips.length === 0) {
                 notificationsList.innerHTML = '<div class="no-notifications">No hay solicitudes pendientes</div>';
                 unreadCountSpan.textContent = '0 nuevas';
@@ -850,48 +1243,56 @@
             unreadCountSpan.textContent = `${unreadCount} nueva${unreadCount !== 1 ? 's' : ''}`;
 
             notificationsList.innerHTML = pendingTrips.map(trip => {
-                const passengerName = trip.passenger?.full_name || 'Desconocido';
+                const timeAgo = getTimeAgo(new Date(trip.created_at));
+                const distance = trip.pickup_lat && trip.dropoff_lat ? 
+                    calculateDistance(trip.pickup_lat, trip.pickup_lng, trip.dropoff_lat, trip.dropoff_lng) : null;
+                
                 return `
                     <div class="notification-item unread" data-trip-id="${trip.id}">
                         <div class="trip-info">
-                            <strong>${passengerName}</strong> solicitó un viaje
+                            <strong>${trip.passenger?.full_name || 'Pasajero'}</strong> solicitó un viaje
                         </div>
                         <div class="trip-details">
-                            Origen: ${trip.pickup_location}<br>
-                            Destino: ${trip.dropoff_location}
+                            <i class="fas fa-map-marker-alt" style="color:#28a745;"></i> ${trip.pickup_location}<br>
+                            <i class="fas fa-flag" style="color:#dc3545;"></i> ${trip.dropoff_location}
+                            ${distance ? `<br><i class="fas fa-road"></i> ~${distance.toFixed(1)} km` : ''}
+                            <br><small style="color:#888;"><i class="fas fa-clock"></i> ${timeAgo}</small>
                         </div>
-                        <button class="accept-btn" data-trip-id="${trip.id}">Aceptar</button>
+                        <button class="accept-btn" data-trip-id="${trip.id}">
+                            <i class="fas fa-check"></i> Aceptar
+                        </button>
                     </div>
                 `;
             }).join('');
 
-            // Añadir event listeners a los botones de aceptar
             document.querySelectorAll('.accept-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    const tripId = e.target.dataset.tripId;
+                    const tripId = e.target.closest('.accept-btn').dataset.tripId;
                     await acceptTrip(tripId);
                 });
             });
         }
 
-        // Marcar todas como leídas (al abrir dropdown)
         function markAllAsRead() {
             unreadCount = 0;
             notificationBadge.style.display = 'none';
-            // En la UI, quitamos la clase unread
             document.querySelectorAll('.notification-item').forEach(item => {
                 item.classList.remove('unread');
             });
             unreadCountSpan.textContent = '0 nuevas';
         }
 
-        // Aceptar un viaje
         async function acceptTrip(tripId) {
-            // Verificar que el conductor esté disponible
             if (!userProfile.available) {
                 alert('Debes estar disponible para aceptar viajes');
                 return;
+            }
+
+            const btn = document.querySelector(`.accept-btn[data-trip-id="${tripId}"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aceptando...';
             }
 
             const { error } = await supabaseClient
@@ -905,51 +1306,125 @@
 
             if (error) {
                 alert('Error al aceptar viaje: ' + error.message);
-            } else {
-                // Remover de pendientes
-                pendingTrips = pendingTrips.filter(t => t.id !== tripId);
-                unreadCount = pendingTrips.length;
-                updateNotifications();
-                // Cargar viaje actual
-                await loadCurrentTrip();
-                // Cerrar dropdown
-                notificationDropdown.classList.remove('show');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Aceptar';
+                }
+                return;
             }
+
+            pendingTrips = pendingTrips.filter(t => t.id !== tripId);
+            unreadCount = pendingTrips.length;
+            updateNotifications();
+            notificationDropdown.classList.remove('show');
+            
+            await loadCurrentTrip();
         }
 
-        // Cargar viaje actual (aceptado o iniciado)
         async function loadCurrentTrip() {
             const { data, error } = await supabaseClient
                 .from('trips')
-                .select('*, passenger:passenger_id(full_name)')
+                .select('*, passenger:passenger_id(full_name, numeric_code)')
                 .eq('driver_id', currentUser.id)
                 .in('status', ['accepted', 'started'])
                 .maybeSingle();
+
             if (error) {
                 console.error('Error cargando viaje actual:', error);
                 return;
             }
+
+            currentTrip = data;
+            renderCurrentTrip();
+            updateTripMarkers();
+        }
+
+        function renderCurrentTrip() {
             const container = document.getElementById('current-trip-container');
             const infoDiv = document.getElementById('current-trip-info');
-            if (data) {
-                currentTripId = data.id; // Guardar el ID del viaje actual
-                container.style.display = 'block';
-                infoDiv.innerHTML = `
-                    <p><strong>Pasajero:</strong> ${data.passenger?.full_name || 'Desconocido'}</p>
-                    <p><strong>Origen:</strong> ${data.pickup_location}</p>
-                    <p><strong>Destino:</strong> ${data.dropoff_location}</p>
-                    <p><strong>Estado:</strong> <span class="status-badge status-${data.status}">${data.status}</span></p>
-                    ${data.status === 'accepted' ? '<button class="btn-small" id="start-trip-btn">Iniciar viaje</button>' : ''}
-                    ${data.status === 'started' ? '<button class="btn-small" id="complete-trip-btn">Completar viaje</button>' : ''}
-                `;
-                if (data.status === 'accepted') {
-                    document.getElementById('start-trip-btn')?.addEventListener('click', () => updateTripStatus(currentTripId, 'started'));
-                } else if (data.status === 'started') {
-                    document.getElementById('complete-trip-btn')?.addEventListener('click', () => updateTripStatus(currentTripId, 'completed'));
-                }
-            } else {
-                currentTripId = null;
+
+            if (!currentTrip) {
                 container.style.display = 'none';
+                navigateBtn.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            navigateBtn.style.display = 'flex';
+
+            const distance = currentTrip.pickup_lat && currentTrip.dropoff_lat ? 
+                calculateDistance(currentTrip.pickup_lat, currentTrip.pickup_lng, currentTrip.dropoff_lat, currentTrip.dropoff_lng) : null;
+
+            let statusBadge = '';
+            let buttons = '';
+
+            switch(currentTrip.status) {
+                case 'accepted':
+                    statusBadge = '<span class="status-badge status-accepted">Aceptado - Ve a recoger al pasajero</span>';
+                    buttons = `
+                        <div class="action-buttons">
+                            <button class="btn-start" id="start-trip-btn">
+                                <i class="fas fa-play"></i> Iniciar viaje
+                            </button>
+                            <button class="btn-cancel" id="cancel-trip-btn">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'started':
+                    statusBadge = '<span class="status-badge status-started">En viaje - Conduce al destino</span>';
+                    buttons = `
+                        <div class="action-buttons">
+                            <button class="btn-complete" id="complete-trip-btn">
+                                <i class="fas fa-flag-checkered"></i> Completar viaje
+                            </button>
+                        </div>
+                    `;
+                    break;
+            }
+
+            infoDiv.innerHTML = `
+                <h4><i class="fas fa-route"></i> Viaje Actual ${statusBadge}</h4>
+                <div class="trip-route">
+                    <div class="route-item">
+                        <i class="fas fa-map-marker-alt" style="color:#28a745;"></i>
+                        <span><strong>Origen:</strong> ${currentTrip.pickup_location}</span>
+                    </div>
+                    <div class="route-item">
+                        <i class="fas fa-flag" style="color:#dc3545;"></i>
+                        <span><strong>Destino:</strong> ${currentTrip.dropoff_location}</span>
+                    </div>
+                </div>
+                ${distance ? `
+                <div class="distance-info">
+                    <i class="fas fa-road"></i>
+                    <span>Distancia aproximada: <strong>${distance.toFixed(1)} km</strong></span>
+                </div>
+                ` : ''}
+                <div class="passenger-info">
+                    <p><i class="fas fa-user"></i> <strong>Pasajero:</strong> ${currentTrip.passenger?.full_name || 'N/A'}</p>
+                    <p><i class="fas fa-id-badge"></i> <strong>Código:</strong> ${currentTrip.passenger?.numeric_code || 'N/A'}</p>
+                </div>
+                ${buttons}
+            `;
+
+            const startBtn = document.getElementById('start-trip-btn');
+            const completeBtn = document.getElementById('complete-trip-btn');
+            const cancelBtn = document.getElementById('cancel-trip-btn');
+
+            if (startBtn) {
+                startBtn.addEventListener('click', () => updateTripStatus(currentTrip.id, 'started'));
+            }
+            if (completeBtn) {
+                completeBtn.addEventListener('click', () => updateTripStatus(currentTrip.id, 'completed'));
+            }
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', async () => {
+                    if (confirm('¿Estás seguro de cancelar este viaje?')) {
+                        await updateTripStatus(currentTrip.id, 'cancelled');
+                    }
+                });
             }
         }
 
@@ -958,15 +1433,21 @@
                 .from('trips')
                 .update({ status: newStatus, updated_at: new Date() })
                 .eq('id', tripId);
+
             if (error) {
                 alert('Error actualizando viaje: ' + error.message);
-            } else {
-                await loadCurrentTrip();
-                await loadTripHistory();
+                return;
             }
+
+            if (newStatus === 'completed' || newStatus === 'cancelled') {
+                currentTrip = null;
+                updateTripMarkers();
+            }
+
+            await loadCurrentTrip();
+            await loadTripHistory();
         }
 
-        // Cargar historial de viajes
         async function loadTripHistory() {
             const { data, error } = await supabaseClient
                 .from('trips')
@@ -974,23 +1455,52 @@
                 .eq('driver_id', currentUser.id)
                 .in('status', ['completed', 'cancelled'])
                 .order('created_at', { ascending: false })
-                .limit(10);
-            if (error) {
-                console.error('Error cargando historial:', error);
-                return;
-            }
+                .limit(5);
+
             const historyDiv = document.getElementById('trips-history');
-            if (!data || data.length === 0) {
-                historyDiv.innerHTML = '<p>No hay viajes realizados.</p>';
+            if (error || !data || data.length === 0) {
+                historyDiv.innerHTML = '<p style="color:#888;font-size:0.85rem;">No hay viajes realizados</p>';
                 return;
             }
+
             historyDiv.innerHTML = data.map(trip => `
-                <div class="list-item">
-                    <p><strong>${trip.passenger?.full_name || 'Desconocido'}</strong> - ${trip.pickup_location} → ${trip.dropoff_location}</p>
-                    <p><span class="status-badge status-${trip.status}">${trip.status}</span> - ${new Date(trip.created_at).toLocaleString()}</p>
+                <div class="history-item">
+                    <p><strong>${trip.passenger?.full_name || 'N/A'}</strong></p>
+                    <p>${trip.pickup_location} → ${trip.dropoff_location}</p>
+                    <p><span class="status-badge status-${trip.status}">${trip.status}</span> 
+                    <small>${new Date(trip.created_at).toLocaleDateString()}</small></p>
                 </div>
             `).join('');
         }
+
+        // Utilidades
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'hace un momento';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `hace ${minutes} min`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `hace ${hours} h`;
+            return `hace ${Math.floor(hours / 24)} días`;
+        }
+
+        // Panel deslizable
+        let panelCollapsed = false;
+        panelHandle.addEventListener('click', () => {
+            panelCollapsed = !panelCollapsed;
+            driverPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 60px))' : 'translateY(0)';
+        });
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', checkSession);
