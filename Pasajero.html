@@ -636,8 +636,15 @@
             }
 
             if (data.role !== 'pasajero') {
-                alert('Esta aplicación es solo para pasajeros. Los conductores deben usar la app de conductor.');
+                loadingScreen.style.display = 'none';
+                alert('Esta cuenta es de CONDUCTOR.\n\nPara usar la app de pasajero, necesitas:\n1. Cerrar esta alerta\n2. Clic en "Regístrate aquí"\n3. Crear una NUEVA cuenta de pasajero\n\n¿O si quieres usar esta cuenta, abre el archivo mi-uber-conductor-v3.html');
                 await supabaseClient.auth.signOut();
+                currentUser = null;
+                userProfile = null;
+                // Resetear el formulario de login
+                document.getElementById('login-form').reset();
+                document.getElementById('login-spinner').style.display = 'none';
+                document.getElementById('login-btn').disabled = false;
                 showLogin();
                 return;
             }
