@@ -1161,38 +1161,73 @@
         }
 
    function subscribeToTripUpdates() {
-            if (!currentUser) return;
+    if (!currentUser) return;
+
+    console.log("📡 Suscrito a actualizaciones de viajes...");
+
+    // Agregamos un filtro específico para escuchar solo los viajes de este pasajero
+    const sub = supabaseClient.channel('trip-passenger').on('postgres_changes', {
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'trips',
+        filter: `passenger_id=eq.${currentUser.id}`
+    }, async (payload) => {
+        console.log("⚡ ¡Cambio detectado en el viaje!", payload.new);
+
+        if (currentTrip && payload.new.id === currentTrip.id) {
+            currentTrip = { ...currentTrip, ...payload.new };
             
-            // Le quitamos el filtro "filter:" de esta línea para que no se pierda la actualización
-            const sub = supabaseClient.channel('trip-passenger').on('postgres_changes', {
-                event: 'UPDATE', schema: 'public', table: 'trips' 
-            }, async (payload) => {
-                if (currentTrip && payload.new.id === currentTrip.id) {
-                    currentTrip = { ...currentTrip, ...payload.new };
-                    
-                    if (payload.new.status === 'accepted' && payload.new.driver_id) {
-                        const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single();
-                        if (data) currentTrip.driver = data;
+            // Si el conductor acaba de aceptar el viaje
+            if (payload.new.status === 'accepted' && payload.new.driver_id) {
+                console.log("🚗 Conductor asignado. Buscando perfil...");
+                
+                // Actualizamos la pantalla de inmediato para que el usuario no espere
+                updateTripUI(); 
+
+                try {
+                    // Buscamos los datos del conductor
+                    const { data, error } = await supabaseClient
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', payload.new.driver_id)
+                        .single();
+
+                    if (error) {
+                        console.error("❌ Error obteniendo perfil del conductor:", error.message);
+                    }
+
+                    if (data) {
+                        console.log("✅ Datos del conductor obtenidos:", data);
+                        currentTrip.driver = data;
+                        updateTripUI(); // Actualizamos de nuevo ya con el nombre y código
                         startDriverLocationTracking();
                     }
-                    
-                    if (['completed', 'cancelled'].includes(payload.new.status)) {
-                        stopDriverLocationTracking(); 
-                        setTimeout(() => { 
-                            currentTrip = null; 
-                            updateTripUI(); 
-                            // Refrescar ubicación al terminar viaje
-                            originCoords = null;
-                            locateBtn.click();
-                        }, 2000);
-                    } else { 
-                        updateTripUI(); 
-                    }
+                } catch (err) {
+                    console.error("❌ Fallo crítico al procesar aceptación:", err);
                 }
-            }).subscribe();
+            }
             
-            subscriptions.push(sub);
+            // Si el viaje terminó o se canceló
+            else if (['completed', 'cancelled'].includes(payload.new.status)) {
+                stopDriverLocationTracking(); 
+                setTimeout(() => { 
+                    currentTrip = null; 
+                    updateTripUI(); 
+                    originCoords = null;
+                    locateBtn.click();
+                }, 2000);
+            } 
+            // Si el viaje cambia a otro estado (ej. "started")
+            else { 
+                updateTripUI(); 
+            }
         }
+    }).subscribe((status) => {
+        console.log("🔌 Estado de conexión Realtime:", status);
+    });
+    
+    subscriptions.push(sub);
+}
 
         // UX Interactions
         let panelCollapsed = false;
