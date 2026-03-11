@@ -188,6 +188,60 @@
         .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); }
         .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); }
 
+        /* Modal de Permiso Especial */
+        .permission-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 122, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .permission-icon i {
+            font-size: 32px;
+            color: var(--ios-blue);
+        }
+
+        .permission-icon.denied {
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .permission-icon.denied i {
+            color: var(--ios-red);
+        }
+
+        .permission-text {
+            color: var(--ios-gray);
+            font-size: 15px;
+            line-height: 1.5;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .permission-instructions {
+            color: var(--ios-gray);
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: left;
+            background: rgba(142, 142, 147, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+
+        .permission-instructions strong {
+            color: var(--ios-text);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--ios-blue);
+            margin-top: 12px;
+        }
+
         /* Panel Principal */
         #main-panel {
             display: none;
@@ -477,6 +531,40 @@
         <div class="spinner-large"></div>
     </div>
 
+    <!-- Modal de Permiso de Ubicación -->
+    <div id="permission-modal" class="modal">
+        <div class="modal-content">
+            <div class="permission-icon">
+                <i class="fas fa-location-arrow"></i>
+            </div>
+            <h2>Permitir Ubicación</h2>
+            <p class="permission-text">
+                Mi Uber necesita acceso a tu ubicación para mostrarte en el mapa y conectar con conductores cercanos.
+            </p>
+            <button id="allow-permission-btn">Permitir Ubicación</button>
+            <button class="btn-secondary" id="later-permission-btn">Más tarde</button>
+        </div>
+    </div>
+
+    <!-- Modal de Permiso Denegado -->
+    <div id="permission-denied-modal" class="modal">
+        <div class="modal-content">
+            <div class="permission-icon denied">
+                <i class="fas fa-location-slash"></i>
+            </div>
+            <h2>Ubicación Bloqueada</h2>
+            <p class="permission-text">
+                El permiso de ubicación fue denegado. Para usar Mi Uber necesitas habilitar la ubicación.
+            </p>
+            <div class="permission-instructions">
+                <strong>¿Cómo habilitar?</strong><br>
+                <strong>iOS:</strong> Ajustes → Privacidad → Ubicación → Mi Uber<br>
+                <strong>Android:</strong> Ajustes → Aplicaciones → Mi Uber → Permisos
+            </div>
+            <button id="understand-btn">Entendido</button>
+        </div>
+    </div>
+
     <div id="login-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" id="close-login">&times;</span>
@@ -600,6 +688,7 @@
         let currentTrip = null;
         let subscriptions = [];
         let driverLocationInterval = null;
+        let permissionStatus = 'prompt';
 
         let originCoords = null;
         let destinationCoords = null;
@@ -607,6 +696,8 @@
 
         // DOM
         const loadingScreen = document.getElementById('loading-screen');
+        const permissionModal = document.getElementById('permission-modal');
+        const permissionDeniedModal = document.getElementById('permission-denied-modal');
         const loginModal = document.getElementById('login-modal');
         const registerModal = document.getElementById('register-modal');
         const mainPanel = document.getElementById('main-panel');
@@ -621,11 +712,69 @@
         const panelHandle = document.getElementById('panel-handle');
         const mapInstructions = document.getElementById('map-instructions');
 
-        // Autenticación
+        // ============================================
+        // MANEJO DE PERMISOS DE UBICACIÓN
+        // ============================================
+
+        // Verificar estado del permiso
+        async function checkLocationPermission() {
+            if (navigator.permissions) {
+                try {
+                    const result = await navigator.permissions.query({ name: 'geolocation' });
+                    permissionStatus = result.state;
+                    
+                    // Escuchar cambios en el permiso
+                    result.addEventListener('change', () => {
+                        permissionStatus = result.state;
+                        if (permissionStatus === 'granted') {
+                            permissionDeniedModal.classList.remove('active');
+                        }
+                    });
+                    
+                    return result.state;
+                } catch (e) {
+                    console.log('Permissions API no disponible, usando fallback');
+                    return 'prompt';
+                }
+            }
+            return 'prompt';
+        }
+
+        // Mostrar modal explicativo antes de pedir permiso
+        function showPermissionModal() {
+            permissionModal.classList.add('active');
+        }
+
+        // Mostrar modal de permiso denegado
+        function showPermissionDeniedModal() {
+            permissionDeniedModal.classList.add('active');
+        }
+
+        // Solicitar ubicación (esto dispara el diálogo nativo del sistema)
+        function requestLocation() {
+            permissionModal.classList.remove('active');
+            getLocation();
+        }
+
+        // Event listeners para modales de permiso
+        document.getElementById('allow-permission-btn').addEventListener('click', requestLocation);
+        document.getElementById('later-permission-btn').addEventListener('click', () => {
+            permissionModal.classList.remove('active');
+        });
+        document.getElementById('understand-btn').addEventListener('click', () => {
+            permissionDeniedModal.classList.remove('active');
+        });
+
+        // ============================================
+        // AUTENTICACIÓN
+        // ============================================
+
         function showModal(modal) { modal.classList.add('active'); }
         function hideModals() {
             loginModal.classList.remove('active');
             registerModal.classList.remove('active');
+            permissionModal.classList.remove('active');
+            permissionDeniedModal.classList.remove('active');
         }
         function showError(element, msg) { element.textContent = msg; element.style.display = 'block'; }
         function showSuccess(element, msg) { element.textContent = msg; element.style.display = 'block'; }
@@ -752,7 +901,10 @@
 
         function showLogin() { hideModals(); showModal(loginModal); }
 
-        // Mapa
+        // ============================================
+        // MAPA
+        // ============================================
+
         function initMap() {
             map = L.map('map', { center: [19.4326, -99.1332], zoom: 14, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -782,7 +934,6 @@
 
             destinationMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
             
-            // Draw line
             if (originCoords) {
                 const bounds = L.latLngBounds([[originCoords.lat, originCoords.lng], [lat, lng]]);
                 map.fitBounds(bounds, { padding: [50, 50] });
@@ -804,10 +955,34 @@
             } catch (e) { dropoffText.textContent = 'Destino seleccionado'; }
         }
 
-        locateBtn.addEventListener('click', getLocation);
+        // ============================================
+        // OBTENER UBICACIÓN - CON MANEJO DE PERMISOS
+        // ============================================
+
+        locateBtn.addEventListener('click', async () => {
+            // Verificar estado del permiso antes de actuar
+            const status = await checkLocationPermission();
+            
+            if (status === 'prompt') {
+                // Nunca se ha pedido permiso, mostrar modal explicativo
+                showPermissionModal();
+            } else if (status === 'granted') {
+                // Ya tiene permiso, obtener ubicación directamente
+                getLocation();
+            } else if (status === 'denied') {
+                // Permiso denegado, mostrar instrucciones
+                showPermissionDeniedModal();
+            } else {
+                // Fallback para navegadores sin Permissions API
+                getLocation();
+            }
+        });
 
         async function getLocation() {
-            if (!navigator.geolocation) return alert('GPS no soportado');
+            if (!navigator.geolocation) {
+                alert('Tu dispositivo no soporta geolocalización');
+                return;
+            }
             
             locateBtn.classList.remove('pulse-initial');
             locateBtn.classList.add('loading');
@@ -836,10 +1011,32 @@
                 },
                 (error) => {
                     locateBtn.classList.remove('loading');
-                    mapInstructions.innerHTML = 'Activa el GPS';
-                    alert('No se pudo obtener tu ubicación.');
+                    
+                    // Manejar diferentes tipos de errores
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            permissionStatus = 'denied';
+                            showPermissionDeniedModal();
+                            mapInstructions.innerHTML = 'Permiso denegado';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            mapInstructions.innerHTML = 'Ubicación no disponible';
+                            alert('No se pudo obtener tu ubicación. Verifica que el GPS esté activado.');
+                            break;
+                        case error.TIMEOUT:
+                            mapInstructions.innerHTML = 'Tiempo agotado';
+                            alert('Se agotó el tiempo para obtener tu ubicación. Intenta de nuevo.');
+                            break;
+                        default:
+                            mapInstructions.innerHTML = 'Error de ubicación';
+                            alert('No se pudo obtener tu ubicación: ' + error.message);
+                    }
                 },
-                { enableHighAccuracy: true }
+                { 
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
             );
         }
 
@@ -858,7 +1055,10 @@
             mapInstructions.innerHTML = 'Toca el mapa para cambiar el destino';
         });
 
-        // Tracking Driver
+        // ============================================
+        // TRACKING DEL CONDUCTOR
+        // ============================================
+
         function startDriverLocationTracking() {
             if (driverLocationInterval) return;
             driverLocationInterval = setInterval(async () => {
@@ -888,7 +1088,10 @@
             }
         }
 
-        // Lógica de Viajes
+        // ============================================
+        // LÓGICA DE VIAJES
+        // ============================================
+
         async function checkCurrentTrip() {
             const { data } = await supabaseClient
                 .from('trips')
