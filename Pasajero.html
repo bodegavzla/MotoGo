@@ -1160,18 +1160,22 @@
             locateBtn.click(); // Buscar ubicación fresca nuevamente
         }
 
-        function subscribeToTripUpdates() {
+   function subscribeToTripUpdates() {
             if (!currentUser) return;
+            
+            // Le quitamos el filtro "filter:" de esta línea para que no se pierda la actualización
             const sub = supabaseClient.channel('trip-passenger').on('postgres_changes', {
-                event: 'UPDATE', schema: 'public', table: 'trips', filter: `passenger_id=eq.${currentUser.id}`
+                event: 'UPDATE', schema: 'public', table: 'trips' 
             }, async (payload) => {
                 if (currentTrip && payload.new.id === currentTrip.id) {
                     currentTrip = { ...currentTrip, ...payload.new };
+                    
                     if (payload.new.status === 'accepted' && payload.new.driver_id) {
                         const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single();
                         if (data) currentTrip.driver = data;
                         startDriverLocationTracking();
                     }
+                    
                     if (['completed', 'cancelled'].includes(payload.new.status)) {
                         stopDriverLocationTracking(); 
                         setTimeout(() => { 
@@ -1181,9 +1185,12 @@
                             originCoords = null;
                             locateBtn.click();
                         }, 2000);
-                    } else { updateTripUI(); }
+                    } else { 
+                        updateTripUI(); 
+                    }
                 }
             }).subscribe();
+            
             subscriptions.push(sub);
         }
 
