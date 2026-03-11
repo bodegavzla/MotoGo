@@ -794,38 +794,43 @@
                 loadingScreen.style.display = 'none';
             }
         }
+async function loadUserProfile(userId) {
+    const { data, error } = await supabaseClient
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+    
+    if (error || !data) {
+        await supabaseClient.auth.signOut();
+        showLogin();
+        return;
+    }
 
-        async function loadUserProfile(userId) {
-            const { data, error } = await supabaseClient
-                .from('user_profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-            
-            if (error || !data) {
-                await supabaseClient.auth.signOut();
-                showLogin();
-                return;
-            }
+    if (data.role !== 'pasajero') {
+        loadingScreen.style.display = 'none';
+        alert('Esta cuenta es de CONDUCTOR.\nPor favor regístrate como pasajero.');
+        await supabaseClient.auth.signOut();
+        showLogin();
+        return;
+    }
 
-            if (data.role !== 'pasajero') {
-                loadingScreen.style.display = 'none';
-                alert('Esta cuenta es de CONDUCTOR.\nPor favor regístrate como pasajero.');
-                await supabaseClient.auth.signOut();
-                showLogin();
-                return;
-            }
+    userProfile = data;
+    currentUser = (await supabaseClient.auth.getUser()).data.user;
+    userNameSpan.textContent = userProfile.full_name.split(' ')[0];
+    mainPanel.style.display = 'flex';
+    hideModals();
 
-            userProfile = data;
-            currentUser = (await supabaseClient.auth.getUser()).data.user;
-            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
-            mainPanel.style.display = 'flex';
-            hideModals();
+    initMap();
+    await checkCurrentTrip();
+    subscribeToTripUpdates();
 
-            initMap();
-            await checkCurrentTrip();
-            subscribeToTripUpdates();
-        }
+    // NUEVO: Solicitar la ubicación automáticamente si no hay un viaje activo ni coordenadas previas
+    if (!originCoords && !currentTrip) {
+        document.getElementById('locate-btn').click();
+    }
+}
+
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
