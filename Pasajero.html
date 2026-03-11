@@ -4,30 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Uber - Pasajero</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-bg: #F2F2F7;
+            --ios-surface: #FFFFFF;
+            --ios-text: #000000;
+            --ios-gray: #8E8E93;
+            --ios-input-bg: #7676801F;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Roboto', sans-serif;
-            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--ios-bg);
+            color: var(--ios-text);
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Pantalla de carga */
         #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background: var(--ios-surface);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -35,172 +49,199 @@
         }
 
         .spinner-large {
-            border: 6px solid rgba(255,255,255,0.3);
-            border-left-color: white;
+            border: 4px solid rgba(0, 122, 255, 0.2);
+            border-left-color: var(--ios-blue);
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Modales iOS Style */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .modal.active {
             display: flex;
+            opacity: 1;
         }
 
         .modal-content {
-            background-color: white;
-            border-radius: 10px;
+            background-color: var(--ios-surface);
+            border-radius: 20px;
             width: 90%;
-            max-width: 450px;
-            padding: 30px;
+            max-width: 400px;
+            padding: 30px 25px;
             position: relative;
-            animation: slideIn 0.3s;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             max-height: 90vh;
             overflow-y: auto;
         }
 
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .modal.active .modal-content {
+            transform: scale(1);
         }
 
         .close-modal {
             position: absolute;
             top: 15px;
             right: 20px;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 300;
             cursor: pointer;
-            color: #999;
+            color: var(--ios-gray);
+            line-height: 1;
         }
 
-        .close-modal:hover { color: #333; }
+        h2 { 
+            text-align: center; 
+            font-weight: 600; 
+            font-size: 22px; 
+            margin-bottom: 25px; 
+            letter-spacing: -0.5px;
+        }
 
-        h2 { text-align: center; color: #1e3c72; margin-bottom: 20px; }
-
-        .form-group { margin-bottom: 15px; }
+        .form-group { margin-bottom: 16px; }
 
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--ios-gray);
             font-weight: 500;
         }
 
-        input, select, textarea {
+        input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
+            padding: 14px 16px;
+            background-color: var(--ios-input-bg);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: background 0.2s, border 0.2s;
         }
 
-        input:focus, select:focus, textarea:focus { border-color: #1e3c72; outline: none; }
+        input:focus { 
+            background-color: var(--ios-surface);
+            border: 1px solid var(--ios-blue); 
+            outline: none; 
+        }
 
         button {
             width: 100%;
-            padding: 12px;
-            background-color: #1e3c72;
+            padding: 16px;
+            background-color: var(--ios-blue);
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 1rem;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: transform 0.1s, opacity 0.2s;
         }
 
-        button:hover { background-color: #2a4b8a; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .switch-link {
             text-align: center;
-            margin-top: 15px;
-            color: #666;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--ios-gray);
         }
 
         .switch-link a {
-            color: #1e3c72;
+            color: var(--ios-blue);
             text-decoration: none;
             font-weight: 500;
             cursor: pointer;
         }
 
-        .switch-link a:hover { text-decoration: underline; }
-
         .message {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
             text-align: center;
+            font-size: 14px;
             display: none;
         }
 
-        .error-message { background-color: #f8d7da; color: #721c24; }
-        .success-message { background-color: #d4edda; color: #155724; }
+        .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); }
+        .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); }
 
-        .spinner {
-            border: 3px solid rgba(0,0,0,0.1);
-            border-left-color: #1e3c72;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto 0;
-            display: none;
-        }
-
+        /* Panel Principal */
         #main-panel {
             display: none;
             flex-direction: column;
             height: 100vh;
+            height: 100dvh;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
-            padding: 12px 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 100;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 20px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            z-index: 1000;
+            position: absolute;
+            top: 0;
+            width: 100%;
         }
 
         header h1 {
-            font-size: 1.2rem;
-            color: #1e3c72;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 15px;
         }
 
         #logout-btn {
-            width: auto;
-            padding: 6px 12px;
-            background-color: #dc3545;
-            font-size: 0.9rem;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 18px;
+            background-color: rgba(255, 59, 48, 0.1);
+            color: var(--ios-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        #logout-btn:hover { background-color: #c82333; }
 
+        /* Contenedor del Mapa */
         #map-container {
             flex: 1;
             position: relative;
+            margin-top: 0; 
         }
 
         #map {
@@ -208,239 +249,227 @@
             height: 100%;
         }
 
+        /* Instrucciones tipo Dynamic Island / Pill */
+        .map-instructions {
+            position: absolute;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            text-align: center;
+            max-width: 90%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { top: 60px; opacity: 0; }
+            to { top: 85px; opacity: 1; }
+        }
+
+        /* Botón Flotante de Ubicación Elegante */
         .locate-btn {
             position: absolute;
-            bottom: 180px;
-            right: 15px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: white;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            bottom: 230px; /* Sobre el panel */
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 0.5px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             cursor: pointer;
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            color: #1e3c72;
+            font-size: 20px;
+            color: var(--ios-blue);
+            transition: all 0.2s ease;
         }
 
-        .locate-btn:hover { background: #f0f0f0; }
-        .locate-btn.loading { color: #ccc; }
+        .locate-btn.pulse-initial {
+            animation: ripple 2s infinite;
+        }
 
+        @keyframes ripple {
+            0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.3); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 122, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+        }
+
+        .locate-btn:active { background: #e5e5ea; transform: scale(0.92); }
+        .locate-btn.loading { color: var(--ios-gray); }
+
+        /* Panel Inferior tipo iOS Bottom Sheet */
         .trip-panel {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.08);
+            padding: 20px 24px 30px 24px;
             z-index: 1000;
-            max-height: 60vh;
+            max-height: 50vh;
             overflow-y: auto;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            border-top: 0.5px solid rgba(255,255,255,0.4);
         }
 
-        .trip-panel.collapsed {
-            transform: translateY(calc(100% - 60px));
-        }
+        .trip-panel.collapsed { transform: translateY(calc(100% - 70px)); }
 
         .panel-handle {
-            width: 40px;
+            width: 36px;
             height: 5px;
-            background: #ddd;
+            background: rgba(0,0,0,0.15);
             border-radius: 3px;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
             cursor: pointer;
         }
 
-        .location-section {
-            margin-bottom: 15px;
-        }
+        .location-section { margin-bottom: 16px; }
 
         .location-section h3 {
-            font-size: 0.9rem;
-            color: #1e3c72;
+            font-size: 13px;
+            color: var(--ios-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            font-weight: 600;
         }
-
-        .location-section h3 i { font-size: 1rem; }
 
         .location-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 12px;
-            position: relative;
-        }
-
-        .location-box.pickup { border-left: 4px solid #28a745; }
-        .location-box.dropoff { border-left: 4px solid #dc3545; }
-
-        .location-text {
-            font-size: 0.95rem;
-            color: #333;
-            word-break: break-word;
-        }
-
-        .location-text.placeholder {
-            color: #999;
-            font-style: italic;
-        }
-
-        .set-location-btn {
-            margin-top: 8px;
-            padding: 8px 15px;
-            font-size: 0.85rem;
-            width: auto;
-            background: #17a2b8;
-        }
-
-        .set-location-btn:hover { background: #138496; }
-
-        .trip-status {
-            text-align: center;
-            padding: 15px;
-            background: #e3f2fd;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-
-        .trip-status .status-text {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #1e3c72;
-        }
-
-        .trip-status .status-detail {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .action-buttons button { flex: 1; }
-
-        .btn-request { background: #28a745; }
-        .btn-request:hover { background: #218838; }
-        .btn-cancel { background: #dc3545; }
-        .btn-cancel:hover { background: #c82333; }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .status-pending { background-color: #ffc107; color: #856404; }
-        .status-accepted { background-color: #17a2b8; color: white; }
-        .status-started { background-color: #007bff; color: white; }
-        .status-completed { background-color: #28a745; color: white; }
-        .status-cancelled { background-color: #dc3545; color: white; }
-
-        .driver-info {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
-        .driver-info h4 {
-            color: #1e3c72;
-            margin-bottom: 10px;
+            background: var(--ios-surface);
+            border-radius: 12px;
+            padding: 14px 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .driver-info p {
-            margin: 5px 0;
-            font-size: 0.9rem;
-        }
-
-        .map-instructions {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(30, 60, 114, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            z-index: 1000;
-            text-align: center;
-            max-width: 90%;
-        }
-
-        /* Driver location indicator */
-        .driver-arrival {
-            background: #e8f5e9;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .driver-arrival .driver-icon {
-            width: 40px;
-            height: 40px;
-            background: #1e3c72;
-            border-radius: 50%;
+        .location-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 14px;
         }
 
-        .driver-arrival .driver-icon i {
-            color: white;
-            font-size: 1.2rem;
-        }
+        .location-box.pickup .location-icon { background: rgba(52, 199, 89, 0.15); color: var(--ios-green); }
+        .location-box.dropoff .location-icon { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); }
 
-        .driver-arrival .arrival-info {
-            flex: 1;
-        }
+        .location-content { flex: 1; }
 
-        .driver-arrival .arrival-info .eta {
+        .location-text {
+            font-size: 15px;
+            color: var(--ios-text);
             font-weight: 500;
-            color: #1e3c72;
+            word-break: break-word;
         }
 
-        .driver-arrival .arrival-info .distance {
-            font-size: 0.85rem;
-            color: #666;
+        .location-text.placeholder { color: var(--ios-gray); font-weight: 400; }
+
+        .set-location-btn {
+            margin-top: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--ios-blue);
         }
 
-        .pulse-animation {
-            animation: pulse 2s infinite;
+        /* Estados de Viaje */
+        .trip-status {
+            text-align: center;
+            padding: 20px;
+            background: var(--ios-surface);
+            border-radius: 16px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .trip-status .status-text { font-size: 17px; font-weight: 600; color: var(--ios-text); }
+        .trip-status .status-detail { font-size: 14px; color: var(--ios-gray); margin-top: 6px; }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
         }
 
-        @media (max-width: 480px) {
-            header h1 { font-size: 1rem; }
-            .trip-panel { padding: 15px; }
-            .action-buttons { flex-direction: column; }
+        .btn-request { background: var(--ios-text); color: white; } /* Botón principal negro moderno */
+        .btn-cancel { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); }
+        
+        /* Conductor Info */
+        .driver-arrival {
+            background: var(--ios-surface);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
         }
+
+        .driver-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 122, 255, 0.1);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ios-blue);
+            font-size: 20px;
+        }
+
+        .arrival-info { flex: 1; }
+        .arrival-info .eta { font-weight: 600; font-size: 16px; }
+        .arrival-info .distance { font-size: 13px; color: var(--ios-gray); margin-top: 2px; }
+
+        .driver-info {
+            background: var(--ios-surface);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
+        .driver-info p {
+            font-size: 14px;
+            color: var(--ios-gray);
+            margin: 4px 0;
+        }
+        .driver-info strong { color: var(--ios-text); }
+
+        .pulse-animation { animation: fadePulse 1.5s infinite; }
+        @keyframes fadePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Mapa Ajustes */
+        .leaflet-control-zoom { display: none; } /* Ocultar controles de zoom nativos para limpiar la pantalla */
     </style>
 </head>
 <body>
@@ -454,15 +483,14 @@
             <h2>Iniciar Sesión</h2>
             <form id="login-form">
                 <div class="form-group">
-                    <label for="login-email">Correo electrónico</label>
+                    <label>Correo electrónico</label>
                     <input type="email" id="login-email" required>
                 </div>
                 <div class="form-group">
-                    <label for="login-password">Contraseña</label>
+                    <label>Contraseña</label>
                     <input type="password" id="login-password" required>
                 </div>
                 <button type="submit" id="login-btn">Entrar</button>
-                <div class="spinner" id="login-spinner"></div>
                 <div class="message error-message" id="login-error"></div>
             </form>
             <div class="switch-link">
@@ -477,23 +505,22 @@
             <h2>Crear Cuenta</h2>
             <form id="register-form">
                 <div class="form-group">
-                    <label for="register-fullname">Nombre completo</label>
+                    <label>Nombre completo</label>
                     <input type="text" id="register-fullname" required>
                 </div>
                 <div class="form-group">
-                    <label for="register-code">Código numérico (8 dígitos)</label>
+                    <label>Código numérico (8 dígitos)</label>
                     <input type="text" id="register-code" maxlength="8" pattern="\d{8}" required>
                 </div>
                 <div class="form-group">
-                    <label for="register-email">Correo electrónico</label>
+                    <label>Correo electrónico</label>
                     <input type="email" id="register-email" required>
                 </div>
                 <div class="form-group">
-                    <label for="register-password">Contraseña</label>
+                    <label>Contraseña</label>
                     <input type="password" id="register-password" required>
                 </div>
                 <button type="submit" id="register-btn">Registrarse</button>
-                <div class="spinner" id="register-spinner"></div>
                 <div class="message error-message" id="register-error"></div>
                 <div class="message success-message" id="register-success"></div>
             </form>
@@ -505,7 +532,7 @@
 
     <div id="main-panel">
         <header>
-            <h1><i class="fas fa-motorcycle"></i> Mi Uber - Pasajero</h1>
+            <h1>Mi Uber</h1>
             <div class="user-info">
                 <span id="user-name"></span>
                 <button id="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
@@ -516,30 +543,36 @@
             <div id="map"></div>
             
             <div class="map-instructions" id="map-instructions">
-                <i class="fas fa-info-circle"></i> Activa tu ubicación y selecciona tu destino en el mapa
+                <i class="fas fa-location-arrow"></i> Toca el botón de ubicación
             </div>
 
-            <button class="locate-btn" id="locate-btn" title="Mi ubicación">
-                <i class="fas fa-crosshairs"></i>
+            <button class="locate-btn pulse-initial" id="locate-btn" title="Mi ubicación">
+                <i class="fas fa-location-arrow"></i>
             </button>
 
             <div class="trip-panel" id="trip-panel">
                 <div class="panel-handle" id="panel-handle"></div>
 
                 <div class="location-section">
-                    <h3><i class="fas fa-map-marker-alt" style="color: #28a745;"></i> Origen (Tu ubicación)</h3>
+                    <h3>Origen</h3>
                     <div class="location-box pickup">
-                        <p class="location-text placeholder" id="pickup-text">Activa tu ubicación para establecer el origen</p>
+                        <div class="location-icon"><i class="fas fa-circle"></i></div>
+                        <div class="location-content">
+                            <p class="location-text placeholder" id="pickup-text">Activa tu ubicación para iniciar</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="location-section">
-                    <h3><i class="fas fa-flag-checkered" style="color: #dc3545;"></i> Destino</h3>
+                    <h3>Destino</h3>
                     <div class="location-box dropoff">
-                        <p class="location-text placeholder" id="dropoff-text">Toca el mapa para seleccionar tu destino</p>
-                        <button class="set-location-btn" id="set-destination-btn" style="display: none;">
-                            <i class="fas fa-map-marker-alt"></i> Cambiar destino
-                        </button>
+                        <div class="location-icon"><i class="fas fa-square"></i></div>
+                        <div class="location-content">
+                            <p class="location-text placeholder" id="dropoff-text">¿A dónde vas?</p>
+                            <button class="set-location-btn" id="set-destination-btn" style="display: none;">
+                                Editar destino
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -568,12 +601,11 @@
         let subscriptions = [];
         let driverLocationInterval = null;
 
-        // Coordenadas
         let originCoords = null;
         let destinationCoords = null;
         let driverCoords = null;
 
-        // Elementos DOM
+        // DOM
         const loadingScreen = document.getElementById('loading-screen');
         const loginModal = document.getElementById('login-modal');
         const registerModal = document.getElementById('register-modal');
@@ -589,21 +621,14 @@
         const panelHandle = document.getElementById('panel-handle');
         const mapInstructions = document.getElementById('map-instructions');
 
-        // ==================== AUTENTICACIÓN ====================
-        
+        // Autenticación
         function showModal(modal) { modal.classList.add('active'); }
         function hideModals() {
             loginModal.classList.remove('active');
             registerModal.classList.remove('active');
         }
-        function showError(element, msg) {
-            element.textContent = msg;
-            element.style.display = 'block';
-        }
-        function showSuccess(element, msg) {
-            element.textContent = msg;
-            element.style.display = 'block';
-        }
+        function showError(element, msg) { element.textContent = msg; element.style.display = 'block'; }
+        function showSuccess(element, msg) { element.textContent = msg; element.style.display = 'block'; }
 
         async function checkSession() {
             try {
@@ -629,7 +654,6 @@
                 .single();
             
             if (error || !data) {
-                console.error('Error cargando perfil:', error);
                 await supabaseClient.auth.signOut();
                 showLogin();
                 return;
@@ -637,14 +661,8 @@
 
             if (data.role !== 'pasajero') {
                 loadingScreen.style.display = 'none';
-                alert('Esta cuenta es de CONDUCTOR.\n\nPara usar la app de pasajero, necesitas:\n1. Cerrar esta alerta\n2. Clic en "Regístrate aquí"\n3. Crear una NUEVA cuenta de pasajero\n\n¿O si quieres usar esta cuenta, abre el archivo mi-uber-conductor-v3.html');
+                alert('Esta cuenta es de CONDUCTOR.\nPor favor regístrate como pasajero.');
                 await supabaseClient.auth.signOut();
-                currentUser = null;
-                userProfile = null;
-                // Resetear el formulario de login
-                document.getElementById('login-form').reset();
-                document.getElementById('login-spinner').style.display = 'none';
-                document.getElementById('login-btn').disabled = false;
                 showLogin();
                 return;
             }
@@ -660,70 +678,51 @@
             subscribeToTripUpdates();
         }
 
-        // Login
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             const btn = document.getElementById('login-btn');
-            const spinner = document.getElementById('login-spinner');
             const errorDiv = document.getElementById('login-error');
             
-            btn.disabled = true;
-            spinner.style.display = 'block';
+            btn.disabled = true; btn.textContent = 'Iniciando...';
             errorDiv.style.display = 'none';
 
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
                 showError(errorDiv, error.message);
-                btn.disabled = false;
-                spinner.style.display = 'none';
+                btn.disabled = false; btn.textContent = 'Entrar';
                 return;
             }
             await loadUserProfile(data.user.id);
         });
 
-        // Registro
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fullName = document.getElementById('register-fullname').value;
             const numericCode = document.getElementById('register-code').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            const role = 'pasajero';
             const btn = document.getElementById('register-btn');
-            const spinner = document.getElementById('register-spinner');
             const errorDiv = document.getElementById('register-error');
             const successDiv = document.getElementById('register-success');
 
-            btn.disabled = true;
-            spinner.style.display = 'block';
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
+            btn.disabled = true; btn.textContent = 'Registrando...';
+            errorDiv.style.display = 'none'; successDiv.style.display = 'none';
 
             if (!/^\d{8}$/.test(numericCode)) {
-                showError(errorDiv, 'El código debe tener exactamente 8 dígitos');
-                btn.disabled = false;
-                spinner.style.display = 'none';
+                showError(errorDiv, 'El código debe tener 8 dígitos');
+                btn.disabled = false; btn.textContent = 'Registrarse';
                 return;
             }
 
             const { data, error } = await supabaseClient.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                        numeric_code: numericCode,
-                        role
-                    }
-                }
+                email, password, options: { data: { full_name: fullName, numeric_code: numericCode, role: 'pasajero' } }
             });
 
             if (error) {
                 showError(errorDiv, error.message);
-                btn.disabled = false;
-                spinner.style.display = 'none';
+                btn.disabled = false; btn.textContent = 'Registrarse';
                 return;
             }
 
@@ -732,584 +731,262 @@
                 registerModal.classList.remove('active');
                 loginModal.classList.add('active');
                 document.getElementById('register-form').reset();
-                btn.disabled = false;
-                spinner.style.display = 'none';
+                btn.disabled = false; btn.textContent = 'Registrarse';
                 successDiv.style.display = 'none';
             }, 2000);
         });
 
-        // Navegación entre modales
-        document.getElementById('show-register').addEventListener('click', (e) => {
-            e.preventDefault();
-            loginModal.classList.remove('active');
-            registerModal.classList.add('active');
-        });
-        
-        document.getElementById('show-login').addEventListener('click', (e) => {
-            e.preventDefault();
-            registerModal.classList.remove('active');
-            loginModal.classList.add('active');
-        });
-        
+        document.getElementById('show-register').addEventListener('click', () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); });
+        document.getElementById('show-login').addEventListener('click', () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); });
         document.getElementById('close-login').addEventListener('click', () => loginModal.classList.remove('active'));
         document.getElementById('close-register').addEventListener('click', () => registerModal.classList.remove('active'));
 
-        // Logout
         logoutBtn.addEventListener('click', async () => {
-            unsubscribeAll();
+            subscriptions.forEach(sub => sub.unsubscribe());
+            subscriptions = [];
             stopDriverLocationTracking();
             await supabaseClient.auth.signOut();
-            currentUser = null;
-            userProfile = null;
             mainPanel.style.display = 'none';
             showLogin();
         });
 
-        function showLogin() {
-            hideModals();
-            showModal(loginModal);
-        }
+        function showLogin() { hideModals(); showModal(loginModal); }
 
-        function unsubscribeAll() {
-            subscriptions.forEach(sub => sub.unsubscribe());
-            subscriptions = [];
-        }
-
-        // ==================== MAPA ====================
-
+        // Mapa
         function initMap() {
-            const defaultCenter = [19.4326, -99.1332];
-            const defaultZoom = 13;
-
-            map = L.map('map', {
-                center: defaultCenter,
-                zoom: defaultZoom,
-                zoomControl: false
-            });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+            map = L.map('map', { center: [19.4326, -99.1332], zoom: 14, zoomControl: false });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap'
             }).addTo(map);
-
-            L.control.zoom({ position: 'topright' }).addTo(map);
             map.on('click', onMapClick);
         }
 
         function onMapClick(e) {
-            if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) {
+            if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) return;
+            if (!originCoords) {
+                alert("Primero activa tu ubicación con el botón flotante.");
                 return;
             }
-            const { lat, lng } = e.latlng;
-            setDestination(lat, lng);
+            setDestination(e.latlng.lat, e.latlng.lng);
         }
 
         async function setDestination(lat, lng) {
             destinationCoords = { lat, lng };
-
-            if (destinationMarker) {
-                map.removeLayer(destinationMarker);
-            }
+            if (destinationMarker) map.removeLayer(destinationMarker);
 
             const destIcon = L.divIcon({
-                className: 'destination-marker',
-                html: `<div style="width:40px;height:40px;background:#dc3545;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag" style="color:white;transform:rotate(45deg);"></i></div>`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 40]
+                className: 'dest-marker',
+                html: `<div style="width:16px;height:16px;background:var(--ios-red);border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [22, 22]
             });
 
-            destinationMarker = L.marker([lat, lng], { 
-                icon: destIcon,
-                draggable: true 
-            }).addTo(map);
-
-            destinationMarker.on('dragend', async (e) => {
-                const pos = e.target.getLatLng();
-                destinationCoords = { lat: pos.lat, lng: pos.lng };
-                await updateDestinationAddress();
-            });
+            destinationMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
+            
+            // Draw line
+            if (originCoords) {
+                const bounds = L.latLngBounds([[originCoords.lat, originCoords.lng], [lat, lng]]);
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
 
             await updateDestinationAddress();
-            setDestinationBtn.style.display = 'block';
+            setDestinationBtn.style.display = 'inline-block';
             updateTripUI();
         }
 
         async function updateDestinationAddress() {
             if (!destinationCoords) return;
-            
-            dropoffText.textContent = 'Obteniendo dirección...';
-            dropoffText.classList.add('placeholder');
-
+            dropoffText.textContent = 'Buscando...';
             try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?lat=${destinationCoords.lat}&lon=${destinationCoords.lng}&format=json&addressdetails=1`
-                );
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${destinationCoords.lat}&lon=${destinationCoords.lng}&format=json`);
                 const data = await response.json();
-                
-                if (data.display_name) {
-                    dropoffText.textContent = data.display_name;
-                    dropoffText.classList.remove('placeholder');
-                } else {
-                    dropoffText.textContent = `${destinationCoords.lat.toFixed(6)}, ${destinationCoords.lng.toFixed(6)}`;
-                    dropoffText.classList.remove('placeholder');
-                }
-            } catch (error) {
-                console.error('Error obteniendo dirección:', error);
-                dropoffText.textContent = `${destinationCoords.lat.toFixed(6)}, ${destinationCoords.lng.toFixed(6)}`;
+                dropoffText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado';
                 dropoffText.classList.remove('placeholder');
-            }
+            } catch (e) { dropoffText.textContent = 'Destino seleccionado'; }
         }
 
-        // Botón de ubicación
         locateBtn.addEventListener('click', getLocation);
 
         async function getLocation() {
-            if (!navigator.geolocation) {
-                alert('Tu navegador no soporta geolocalización');
-                return;
-            }
-
+            if (!navigator.geolocation) return alert('GPS no soportado');
+            
+            locateBtn.classList.remove('pulse-initial');
             locateBtn.classList.add('loading');
-            mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo tu ubicación...';
+            mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localizando...';
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     originCoords = { lat: latitude, lng: longitude };
-
                     map.setView([latitude, longitude], 16);
 
-                    if (originMarker) {
-                        map.removeLayer(originMarker);
-                    }
+                    if (originMarker) map.removeLayer(originMarker);
 
                     const originIcon = L.divIcon({
                         className: 'origin-marker',
-                        html: `<div style="width:30px;height:30px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-user" style="color:white;font-size:12px;"></i></div>`,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
+                        html: `<div style="width:18px;height:18px;background:var(--ios-blue);border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(0,122,255,0.2);"></div>`,
+                        iconSize: [24, 24]
                     });
 
                     originMarker = L.marker([latitude, longitude], { icon: originIcon }).addTo(map);
                     await updatePickupAddress();
 
                     locateBtn.classList.remove('loading');
-                    mapInstructions.innerHTML = '<i class="fas fa-info-circle"></i> Toca el mapa para seleccionar tu destino';
-                    
+                    mapInstructions.innerHTML = 'Toca el mapa para tu destino';
                     updateTripUI();
                 },
                 (error) => {
-                    console.error('Error de geolocalización:', error);
                     locateBtn.classList.remove('loading');
-                    mapInstructions.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No se pudo obtener tu ubicación. Activa el GPS.';
-                    
-                    let errorMsg = 'Error al obtener ubicación. ';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMsg += 'Permiso denegado.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMsg += 'Posición no disponible.';
-                            break;
-                        case error.TIMEOUT:
-                            errorMsg += 'Tiempo de espera agotado.';
-                            break;
-                    }
-                    alert(errorMsg);
+                    mapInstructions.innerHTML = 'Activa el GPS';
+                    alert('No se pudo obtener tu ubicación.');
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true }
             );
         }
 
         async function updatePickupAddress() {
             if (!originCoords) return;
-            
-            pickupText.textContent = 'Obteniendo dirección...';
-            pickupText.classList.add('placeholder');
-
+            pickupText.textContent = 'Buscando...';
             try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?lat=${originCoords.lat}&lon=${originCoords.lng}&format=json&addressdetails=1`
-                );
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${originCoords.lat}&lon=${originCoords.lng}&format=json`);
                 const data = await response.json();
-                
-                if (data.display_name) {
-                    pickupText.textContent = data.display_name;
-                    pickupText.classList.remove('placeholder');
-                } else {
-                    pickupText.textContent = `${originCoords.lat.toFixed(6)}, ${originCoords.lng.toFixed(6)}`;
-                    pickupText.classList.remove('placeholder');
-                }
-            } catch (error) {
-                console.error('Error obteniendo dirección:', error);
-                pickupText.textContent = `${originCoords.lat.toFixed(6)}, ${originCoords.lng.toFixed(6)}`;
+                pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual';
                 pickupText.classList.remove('placeholder');
-            }
+            } catch (e) { pickupText.textContent = 'Ubicación actual'; }
         }
 
         setDestinationBtn.addEventListener('click', () => {
-            mapInstructions.innerHTML = '<i class="fas fa-hand-pointer"></i> Toca el mapa para seleccionar nuevo destino';
+            mapInstructions.innerHTML = 'Toca el mapa para cambiar el destino';
         });
 
-        // ==================== DRIVER LOCATION TRACKING ====================
-
+        // Tracking Driver
         function startDriverLocationTracking() {
             if (driverLocationInterval) return;
-            
-            // Actualizar ubicación del conductor cada 3 segundos
             driverLocationInterval = setInterval(async () => {
                 if (!currentTrip || !currentTrip.driver_id) return;
-                
-                const { data, error } = await supabaseClient
-                    .from('user_profiles')
-                    .select('driver_lat, driver_lng, full_name')
-                    .eq('id', currentTrip.driver_id)
-                    .single();
-
-                if (error) {
-                    console.error('Error obteniendo ubicación del conductor:', error);
-                    return;
-                }
-
-                if (data && data.driver_lat && data.driver_lng) {
+                const { data } = await supabaseClient.from('user_profiles').select('driver_lat, driver_lng').eq('id', currentTrip.driver_id).single();
+                if (data && data.driver_lat) {
                     driverCoords = { lat: data.driver_lat, lng: data.driver_lng };
                     updateDriverMarker();
-                    updateDriverArrivalInfo();
                 }
             }, 3000);
         }
 
         function stopDriverLocationTracking() {
-            if (driverLocationInterval) {
-                clearInterval(driverLocationInterval);
-                driverLocationInterval = null;
-            }
-            if (driverMarker) {
-                map.removeLayer(driverMarker);
-                driverMarker = null;
-            }
+            if (driverLocationInterval) clearInterval(driverLocationInterval);
+            if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; }
         }
 
         function updateDriverMarker() {
             if (!driverCoords || !map) return;
-
-            if (driverMarker) {
-                driverMarker.setLatLng([driverCoords.lat, driverCoords.lng]);
-            } else {
-                const driverIcon = L.divIcon({
-                    className: 'driver-marker',
-                    html: `<div style="width:40px;height:40px;background:#1e3c72;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><i class="fas fa-motorcycle" style="color:white;font-size:16px;"></i></div>`,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
+            if (driverMarker) { driverMarker.setLatLng([driverCoords.lat, driverCoords.lng]); } 
+            else {
+                const icon = L.divIcon({
+                    html: `<div style="width:30px;height:30px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-motorcycle" style="color:white;font-size:12px;"></i></div>`,
+                    iconSize: [30, 30]
                 });
-                driverMarker = L.marker([driverCoords.lat, driverCoords.lng], { icon: driverIcon }).addTo(map);
-            }
-
-            // Centrar mapa para mostrar ambos
-            if (originCoords && currentTrip?.status === 'accepted') {
-                const bounds = L.latLngBounds([
-                    [originCoords.lat, originCoords.lng],
-                    [driverCoords.lat, driverCoords.lng]
-                ]);
-                map.fitBounds(bounds, { padding: [100, 100] });
-            } else if (destinationCoords && currentTrip?.status === 'started') {
-                const bounds = L.latLngBounds([
-                    [destinationCoords.lat, destinationCoords.lng],
-                    [driverCoords.lat, driverCoords.lng]
-                ]);
-                map.fitBounds(bounds, { padding: [100, 100] });
+                driverMarker = L.marker([driverCoords.lat, driverCoords.lng], { icon }).addTo(map);
             }
         }
 
-        function updateDriverArrivalInfo() {
-            if (!driverCoords || !originCoords) return;
-            
-            const distance = calculateDistance(
-                driverCoords.lat, driverCoords.lng,
-                originCoords.lat, originCoords.lng
-            );
-
-            // Actualizar el texto de llegada
-            const etaElement = document.getElementById('driver-eta');
-            const distElement = document.getElementById('driver-distance');
-            
-            if (etaElement && distElement) {
-                // Estimar tiempo (asumiendo 30 km/h promedio en ciudad)
-                const etaMinutes = Math.round((distance / 30) * 60);
-                etaElement.textContent = etaMinutes > 0 ? `${etaMinutes} min` : 'Muy cerca';
-                distElement.textContent = `${distance.toFixed(2)} km de ti`;
-            }
-        }
-
-        // ==================== GESTIÓN DE VIAJES ====================
-
+        // Lógica de Viajes
         async function checkCurrentTrip() {
-            const { data, error } = await supabaseClient
+            const { data } = await supabaseClient
                 .from('trips')
                 .select('*, driver:driver_id(full_name, numeric_code)')
                 .eq('passenger_id', currentUser.id)
                 .in('status', ['pending', 'accepted', 'started'])
                 .maybeSingle();
 
-            if (error) {
-                console.error('Error verificando viaje actual:', error);
-                return;
-            }
-
             if (data) {
                 currentTrip = data;
-                if (data.pickup_lat && data.pickup_lng) {
-                    originCoords = { lat: data.pickup_lat, lng: data.pickup_lng };
-                }
-                if (data.dropoff_lat && data.dropoff_lng) {
+                if (data.pickup_lat) originCoords = { lat: data.pickup_lat, lng: data.pickup_lng };
+                if (data.dropoff_lat) {
                     destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng };
-                    if (destinationMarker) map.removeLayer(destinationMarker);
-                    
-                    const destIcon = L.divIcon({
-                        className: 'destination-marker',
-                        html: `<div style="width:40px;height:40px;background:#dc3545;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag" style="color:white;transform:rotate(45deg);"></i></div>`,
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 40]
-                    });
-                    destinationMarker = L.marker([destinationCoords.lat, destinationCoords.lng], { icon: destIcon }).addTo(map);
+                    setDestination(destinationCoords.lat, destinationCoords.lng);
                 }
-
-                // Si el viaje está aceptado o iniciado, empezar a rastrear conductor
-                if (['accepted', 'started'].includes(data.status)) {
-                    startDriverLocationTracking();
-                }
+                if (['accepted', 'started'].includes(data.status)) startDriverLocationTracking();
             }
-
             updateTripUI();
         }
 
         function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
-                renderNewTripUI();
+                const canRequest = originCoords && destinationCoords;
+                tripActions.innerHTML = `
+                    <button class="btn-request" id="request-trip-btn" ${!canRequest ? 'disabled' : ''}>
+                        Solicitar Viaje
+                    </button>
+                `;
+                if (canRequest) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
             } else {
-                renderActiveTripUI();
-            }
-        }
-
-        function renderNewTripUI() {
-            const canRequest = originCoords && destinationCoords;
-            
-            tripActions.innerHTML = `
-                <button class="btn-request" id="request-trip-btn" ${!canRequest ? 'disabled' : ''}>
-                    <i class="fas fa-motorcycle"></i> Solicitar Moto
-                </button>
-                <p style="text-align: center; margin-top: 10px; font-size: 0.85rem; color: #666;">
-                    ${!originCoords ? 'Activa tu ubicación primero' : 
-                      !destinationCoords ? 'Selecciona tu destino en el mapa' : 
-                      'Listo para solicitar tu viaje'}
-                </p>
-            `;
-
-            if (canRequest) {
-                document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
-            }
-        }
-
-        function renderActiveTripUI() {
-            let statusHtml = '';
-            let driverHtml = '';
-            let buttonsHtml = '';
-            let arrivalHtml = '';
-
-            switch(currentTrip.status) {
-                case 'pending':
-                    statusHtml = `
-                        <div class="trip-status">
-                            <p class="status-text"><i class="fas fa-search pulse-animation"></i> Buscando conductor...</p>
-                            <p class="status-detail">Espera mientras un conductor disponible acepta tu solicitud</p>
-                        </div>
-                    `;
-                    buttonsHtml = `
-                        <div class="action-buttons">
-                            <button class="btn-cancel" id="cancel-trip-btn">
-                                <i class="fas fa-times"></i> Cancelar viaje
-                            </button>
-                        </div>
-                    `;
-                    break;
-
-                case 'accepted':
-                    statusHtml = `
-                        <div class="trip-status">
-                            <p class="status-text"><span class="status-badge status-accepted">Conductor en camino</span></p>
-                            <p class="status-detail">Tu conductor se dirige a tu ubicación</p>
-                        </div>
-                    `;
-                    arrivalHtml = `
+                let html = '';
+                if (currentTrip.status === 'pending') {
+                    html = `<div class="trip-status"><p class="status-text pulse-animation">Buscando conductor...</p></div>`;
+                } else if (currentTrip.status === 'accepted') {
+                    html = `
                         <div class="driver-arrival">
-                            <div class="driver-icon pulse-animation">
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="arrival-info">
-                                <p class="eta" id="driver-eta">Calculando...</p>
-                                <p class="distance" id="driver-distance">Obteniendo ubicación...</p>
-                            </div>
+                            <div class="driver-icon"><i class="fas fa-motorcycle"></i></div>
+                            <div class="arrival-info"><p class="eta">Conductor en camino</p></div>
                         </div>
-                    `;
-                    driverHtml = `
                         <div class="driver-info">
-                            <h4><i class="fas fa-user"></i> Tu conductor</h4>
-                            <p><strong>Nombre:</strong> ${currentTrip.driver?.full_name || 'N/A'}</p>
-                            <p><strong>Código:</strong> ${currentTrip.driver?.numeric_code || 'N/A'}</p>
-                        </div>
-                    `;
-                    buttonsHtml = `
-                        <div class="action-buttons">
-                            <button class="btn-cancel" id="cancel-trip-btn">
-                                <i class="fas fa-times"></i> Cancelar viaje
-                            </button>
-                        </div>
-                    `;
-                    break;
-
-                case 'started':
-                    statusHtml = `
-                        <div class="trip-status">
-                            <p class="status-text"><span class="status-badge status-started">En viaje</span></p>
-                            <p class="status-detail">Dirigiéndose a tu destino</p>
-                        </div>
-                    `;
-                    driverHtml = `
-                        <div class="driver-info">
-                            <h4><i class="fas fa-user"></i> Tu conductor</h4>
-                            <p><strong>Nombre:</strong> ${currentTrip.driver?.full_name || 'N/A'}</p>
-                            <p><strong>Código:</strong> ${currentTrip.driver?.numeric_code || 'N/A'}</p>
-                        </div>
-                    `;
-                    break;
-            }
-
-            tripActions.innerHTML = statusHtml + arrivalHtml + driverHtml + buttonsHtml;
-
-            if (document.getElementById('cancel-trip-btn')) {
-                document.getElementById('cancel-trip-btn').addEventListener('click', cancelTrip);
+                            <p><strong>${currentTrip.driver?.full_name}</strong> • Código: ${currentTrip.driver?.numeric_code}</p>
+                        </div>`;
+                } else if (currentTrip.status === 'started') {
+                    html = `<div class="trip-status"><p class="status-text">En viaje a tu destino</p></div>`;
+                }
+                
+                html += `<div class="action-buttons"><button class="btn-cancel" id="cancel-trip-btn">Cancelar viaje</button></div>`;
+                tripActions.innerHTML = html;
+                if (document.getElementById('cancel-trip-btn')) document.getElementById('cancel-trip-btn').addEventListener('click', cancelTrip);
             }
         }
 
         async function requestTrip() {
             const btn = document.getElementById('request-trip-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Solicitando...';
+            btn.disabled = true; btn.textContent = 'Procesando...';
 
-            const { data, error } = await supabaseClient
-                .from('trips')
-                .insert({
-                    passenger_id: currentUser.id,
-                    pickup_location: pickupText.textContent,
-                    dropoff_location: dropoffText.textContent,
-                    pickup_lat: originCoords.lat,
-                    pickup_lng: originCoords.lng,
-                    dropoff_lat: destinationCoords.lat,
-                    dropoff_lng: destinationCoords.lng,
-                    status: 'pending'
-                })
-                .select()
-                .single();
+            const { data, error } = await supabaseClient.from('trips').insert({
+                passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffText.textContent,
+                pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, status: 'pending'
+            }).select().single();
 
-            if (error) {
-                console.error('Error solicitando viaje:', error);
-                alert('Error al solicitar viaje: ' + error.message);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-motorcycle"></i> Solicitar Moto';
-                return;
-            }
-
-            currentTrip = data;
-            mapInstructions.innerHTML = '<i class="fas fa-search"></i> Buscando conductor disponible...';
-            updateTripUI();
+            if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Solicitar Viaje'; return; }
+            currentTrip = data; mapInstructions.innerHTML = 'Buscando conductor...'; updateTripUI();
         }
 
         async function cancelTrip() {
-            if (!confirm('¿Estás seguro de que deseas cancelar este viaje?')) return;
-
-            const { error } = await supabaseClient
-                .from('trips')
-                .update({ 
-                    status: 'cancelled',
-                    updated_at: new Date()
-                })
-                .eq('id', currentTrip.id);
-
-            if (error) {
-                alert('Error al cancelar: ' + error.message);
-                return;
-            }
-
-            stopDriverLocationTracking();
-            currentTrip = null;
-            mapInstructions.innerHTML = '<i class="fas fa-info-circle"></i> Viaje cancelado. Selecciona un nuevo destino';
-            updateTripUI();
+            if (!confirm('¿Cancelar viaje?')) return;
+            await supabaseClient.from('trips').update({ status: 'cancelled' }).eq('id', currentTrip.id);
+            stopDriverLocationTracking(); currentTrip = null; mapInstructions.innerHTML = 'Selecciona tu destino'; updateTripUI();
         }
 
         function subscribeToTripUpdates() {
             if (!currentUser) return;
-
-            const subscription = supabaseClient
-                .channel('trip-updates-passenger')
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'trips',
-                    filter: `passenger_id=eq.${currentUser.id}`
-                }, async (payload) => {
-                    if (currentTrip && payload.new.id === currentTrip.id) {
-                        currentTrip = { ...currentTrip, ...payload.new };
-                        
-                        // Si el viaje fue aceptado, obtener info del conductor y empezar tracking
-                        if (payload.new.status === 'accepted' && payload.new.driver_id) {
-                            const { data } = await supabaseClient
-                                .from('user_profiles')
-                                .select('full_name, numeric_code')
-                                .eq('id', payload.new.driver_id)
-                                .single();
-                            
-                            if (data) {
-                                currentTrip.driver = data;
-                            }
-                            startDriverLocationTracking();
-                        }
-                        
-                        if (['completed', 'cancelled'].includes(payload.new.status)) {
-                            stopDriverLocationTracking();
-                            setTimeout(() => {
-                                currentTrip = null;
-                                updateTripUI();
-                            }, 3000);
-                        } else {
-                            updateTripUI();
-                        }
+            const sub = supabaseClient.channel('trip-passenger').on('postgres_changes', {
+                event: 'UPDATE', schema: 'public', table: 'trips', filter: `passenger_id=eq.${currentUser.id}`
+            }, async (payload) => {
+                if (currentTrip && payload.new.id === currentTrip.id) {
+                    currentTrip = { ...currentTrip, ...payload.new };
+                    if (payload.new.status === 'accepted' && payload.new.driver_id) {
+                        const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single();
+                        if (data) currentTrip.driver = data;
+                        startDriverLocationTracking();
                     }
-                })
-                .subscribe();
-
-            subscriptions.push(subscription);
+                    if (['completed', 'cancelled'].includes(payload.new.status)) {
+                        stopDriverLocationTracking(); setTimeout(() => { currentTrip = null; updateTripUI(); }, 2000);
+                    } else { updateTripUI(); }
+                }
+            }).subscribe();
+            subscriptions.push(sub);
         }
 
-        // ==================== UTILIDADES ====================
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // km
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        // Panel deslizable
+        // UX Interactions
         let panelCollapsed = false;
         panelHandle.addEventListener('click', () => {
             panelCollapsed = !panelCollapsed;
             tripPanel.classList.toggle('collapsed', panelCollapsed);
         });
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
