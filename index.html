@@ -718,6 +718,9 @@
         let routeLine = null;
         let locationWatchId = null;
         let isLocationTracking = false;
+        
+        // --- NUEVO: Almacena las coordenadas completas de la ruta trazada ---
+        let fullRouteCoords = null; 
 
         // Elementos DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -739,6 +742,30 @@
         const navigateBtn = document.getElementById('navigate-btn');
         const driverPanel = document.getElementById('driver-panel');
         const panelHandle = document.getElementById('panel-handle');
+
+        // ==================== NUEVO: RUTAS REALES OSRM ====================
+        async function getRealRoute(lat1, lng1, lat2, lng2) {
+            try {
+                // Pide la ruta en auto (driving)
+                const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    // OSRM devuelve [lng, lat], Leaflet usa [lat, lng], así que las invertimos
+                    const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                    return {
+                        coordinates: coordinates,
+                        distance: route.distance / 1000, // convertido a kilómetros
+                        duration: route.duration / 60 // convertido a minutos
+                    };
+                }
+            } catch (error) {
+                console.error("Error obteniendo la ruta:", error);
+            }
+            return null;
+        }
 
         // Funciones auxiliares
         function showModal(modal) { modal.classList.add('active'); }
@@ -947,15 +974,38 @@
             map.setView([lat, lng], 15);
         }
 
-        function updateTripMarkers() {
+        // --- RUTA INTELIGENTE: Traza la ruta correcta dependiendo del estado del viaje ---
+        async function updateTripMarkers() {
             if (originMarker) map.removeLayer(originMarker);
             if (destinationMarker) map.removeLayer(destinationMarker);
             if (routeLine) map.removeLayer(routeLine);
+            fullRouteCoords = null; // Reiniciar ruta almacenada
 
             if (!currentTrip) return;
 
-            // Marcador de origen
-            if (currentTrip.pickup_lat && currentTrip.pickup_lng) {
+            let startLat, startLng, endLat, endLng;
+            let showOriginMarker = false;
+            let showDestMarker = false;
+
+            // Si el viaje es aceptado, la ruta es del Conductor -> Pasajero (Origen)
+            if (currentTrip.status === 'accepted') {
+                startLat = userProfile?.driver_lat || currentTrip.pickup_lat;
+                startLng = userProfile?.driver_lng || currentTrip.pickup_lng;
+                endLat = currentTrip.pickup_lat;
+                endLng = currentTrip.pickup_lng;
+                showOriginMarker = true; 
+            } 
+            // Si el viaje está en curso, la ruta es del Conductor -> Destino
+            else if (currentTrip.status === 'started') {
+                startLat = userProfile?.driver_lat || currentTrip.pickup_lat;
+                startLng = userProfile?.driver_lng || currentTrip.pickup_lng;
+                endLat = currentTrip.dropoff_lat;
+                endLng = currentTrip.dropoff_lng;
+                showDestMarker = true;
+            }
+
+            // Dibuja marcador del pasajero si aplica
+            if (showOriginMarker && currentTrip.pickup_lat) {
                 const originIcon = L.divIcon({
                     className: 'origin-marker',
                     html: `<div style="width:30px;height:30px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-user" style="color:white;font-size:12px;"></i></div>`,
@@ -965,8 +1015,8 @@
                 originMarker = L.marker([currentTrip.pickup_lat, currentTrip.pickup_lng], { icon: originIcon }).addTo(map);
             }
 
-            // Marcador de destino
-            if (currentTrip.dropoff_lat && currentTrip.dropoff_lng) {
+            // Dibuja marcador de destino final si aplica
+            if (showDestMarker && currentTrip.dropoff_lat) {
                 const destIcon = L.divIcon({
                     className: 'dest-marker',
                     html: `<div style="width:40px;height:40px;background:#dc3545;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag" style="color:white;transform:rotate(45deg);"></i></div>`,
@@ -974,17 +1024,29 @@
                     iconAnchor: [20, 40]
                 });
                 destinationMarker = L.marker([currentTrip.dropoff_lat, currentTrip.dropoff_lng], { icon: destIcon }).addTo(map);
+            }
 
-                if (currentTrip.pickup_lat && currentTrip.pickup_lng) {
+            // Traza la ruta real
+            if (startLat && startLng && endLat && endLng) {
+                const routeData = await getRealRoute(startLat, startLng, endLat, endLng);
+                
+                if (routeData) {
+                    fullRouteCoords = routeData.coordinates; // Guardamos la ruta completa
+                    routeLine = L.polyline(fullRouteCoords, { color: '#1e3c72', weight: 5, opacity: 0.8 }).addTo(map);
+                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                    
+                    // Actualizar la tarjeta con la distancia y tiempo
+                    const distanceEl = document.getElementById('real-distance-info');
+                    if(distanceEl) {
+                        distanceEl.innerHTML = `<strong>${routeData.distance.toFixed(1)} km</strong> (Aprox. ${Math.round(routeData.duration)} min)`;
+                    }
+                } else {
+                    // Fallback en caso de error del servidor de rutas
                     routeLine = L.polyline([
-                        [currentTrip.pickup_lat, currentTrip.pickup_lng],
-                        [currentTrip.dropoff_lat, currentTrip.dropoff_lng]
+                        [startLat, startLng],
+                        [endLat, endLng]
                     ], { color: '#1e3c72', weight: 4, opacity: 0.7, dashArray: '10, 10' }).addTo(map);
-
-                    const bounds = L.latLngBounds([
-                        [currentTrip.pickup_lat, currentTrip.pickup_lng],
-                        [currentTrip.dropoff_lat, currentTrip.dropoff_lng]
-                    ]);
+                    const bounds = L.latLngBounds([[startLat, startLng], [endLat, endLng]]);
                     map.fitBounds(bounds, { padding: [50, 50] });
                 }
             }
@@ -1080,6 +1142,30 @@
                 userProfile.driver_lng = lng;
             }
 
+            // --- LÓGICA DE BORRADO DE RUTA DINÁMICO ---
+            // Si tenemos la ruta dibujada, buscamos el punto más cercano a nosotros
+            // y cortamos todo lo que quedó "atrás" para simular que avanzamos.
+            if (fullRouteCoords && routeLine) {
+                let closestIndex = 0;
+                let minDist = Infinity;
+                const currentPos = L.latLng(lat, lng);
+                
+                for (let i = 0; i < fullRouteCoords.length; i++) {
+                    const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1]));
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestIndex = i;
+                    }
+                }
+                
+                // Actualizamos la polilínea solo con el trayecto que nos falta
+                const remainingRoute = fullRouteCoords.slice(closestIndex);
+                if (remainingRoute.length > 1) {
+                    routeLine.setLatLngs(remainingRoute);
+                }
+            }
+            // ------------------------------------------
+
             const { error } = await supabaseClient
                 .from('user_profiles')
                 .update({ 
@@ -1091,9 +1177,7 @@
 
             if (error) {
                 console.error('Error actualizando ubicación:', error);
-            } else if (userProfile && userProfile.available) {
-                // Si la ubicación se actualizó y estamos disponibles, 
-                // re-evaluamos si hay viajes nuevos cerca de nosotros
+            } else if (userProfile && userProfile.available && !currentTrip) {
                 loadPendingTrips();
             }
         }
@@ -1371,8 +1455,11 @@
             }
 
             currentTrip = data;
+            
+            // Hacemos renderCurrentTrip primero para inyectar el HTML de la distancia real en el DOM
             renderCurrentTrip();
-            updateTripMarkers();
+            // Luego updateTripMarkers para que consulte OSRM y rellene los datos
+            updateTripMarkers(); 
         }
 
         function renderCurrentTrip() {
@@ -1387,9 +1474,6 @@
 
             container.style.display = 'block';
             navigateBtn.style.display = 'flex';
-
-            const distance = currentTrip.pickup_lat && currentTrip.dropoff_lat ? 
-                calculateDistance(currentTrip.pickup_lat, currentTrip.pickup_lng, currentTrip.dropoff_lat, currentTrip.dropoff_lng) : null;
 
             let statusBadge = '';
             let buttons = '';
@@ -1432,12 +1516,10 @@
                         <span><strong>Destino:</strong> ${currentTrip.dropoff_location}</span>
                     </div>
                 </div>
-                ${distance ? `
                 <div class="distance-info">
                     <i class="fas fa-road"></i>
-                    <span>Distancia aproximada: <strong>${distance.toFixed(1)} km</strong></span>
+                    <span>Recorrido: <span id="real-distance-info"><strong>Calculando ruta real...</strong></span></span>
                 </div>
-                ` : ''}
                 <div class="passenger-info">
                     <p><i class="fas fa-user"></i> <strong>Pasajero:</strong> ${currentTrip.passenger?.full_name || 'N/A'}</p>
                     <p><i class="fas fa-id-badge"></i> <strong>Código:</strong> ${currentTrip.passenger?.numeric_code || 'N/A'}</p>
