@@ -452,6 +452,9 @@
             font-size: 14px;
             background: rgba(0, 122, 255, 0.1);
             color: var(--ios-blue);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
         /* Estados de Viaje */
@@ -531,7 +534,6 @@
         <div class="spinner-large"></div>
     </div>
 
-    <!-- Modal de Permiso de Ubicación -->
     <div id="permission-modal" class="modal">
         <div class="modal-content">
             <div class="permission-icon">
@@ -539,14 +541,13 @@
             </div>
             <h2>Permitir Ubicación</h2>
             <p class="permission-text">
-                Mi Uber necesita acceso a tu ubicación para mostrarte en el mapa y conectar con conductores cercanos.
+                Mi Uber necesita acceso a tu ubicación para mostrarte en el mapa y buscar tu destino.
             </p>
             <button id="allow-permission-btn">Permitir Ubicación</button>
             <button class="btn-secondary" id="later-permission-btn">Más tarde</button>
         </div>
     </div>
 
-    <!-- Modal de Permiso Denegado -->
     <div id="permission-denied-modal" class="modal">
         <div class="modal-content">
             <div class="permission-icon denied">
@@ -631,7 +632,7 @@
             <div id="map"></div>
             
             <div class="map-instructions" id="map-instructions">
-                <i class="fas fa-location-arrow"></i> Toca el botón de ubicación
+                Cargando mapa...
             </div>
 
             <button class="locate-btn pulse-initial" id="locate-btn" title="Mi ubicación">
@@ -646,7 +647,7 @@
                     <div class="location-box pickup">
                         <div class="location-icon"><i class="fas fa-circle"></i></div>
                         <div class="location-content">
-                            <p class="location-text placeholder" id="pickup-text">Activa tu ubicación para iniciar</p>
+                            <p class="location-text placeholder" id="pickup-text">Buscando tu ubicación...</p>
                         </div>
                     </div>
                 </div>
@@ -658,7 +659,7 @@
                         <div class="location-content">
                             <p class="location-text placeholder" id="dropoff-text">¿A dónde vas?</p>
                             <button class="set-location-btn" id="set-destination-btn" style="display: none;">
-                                Editar destino
+                                Cambiar destino
                             </button>
                         </div>
                     </div>
@@ -716,50 +717,36 @@
         // MANEJO DE PERMISOS DE UBICACIÓN
         // ============================================
 
-        // Verificar estado del permiso
         async function checkLocationPermission() {
             if (navigator.permissions) {
                 try {
                     const result = await navigator.permissions.query({ name: 'geolocation' });
                     permissionStatus = result.state;
-                    
-                    // Escuchar cambios en el permiso
                     result.addEventListener('change', () => {
                         permissionStatus = result.state;
                         if (permissionStatus === 'granted') {
                             permissionDeniedModal.classList.remove('active');
                         }
                     });
-                    
                     return result.state;
                 } catch (e) {
-                    console.log('Permissions API no disponible, usando fallback');
                     return 'prompt';
                 }
             }
             return 'prompt';
         }
 
-        // Mostrar modal explicativo antes de pedir permiso
-        function showPermissionModal() {
-            permissionModal.classList.add('active');
-        }
-
-        // Mostrar modal de permiso denegado
-        function showPermissionDeniedModal() {
-            permissionDeniedModal.classList.add('active');
-        }
-
-        // Solicitar ubicación (esto dispara el diálogo nativo del sistema)
+        function showPermissionModal() { permissionModal.classList.add('active'); }
+        function showPermissionDeniedModal() { permissionDeniedModal.classList.add('active'); }
         function requestLocation() {
             permissionModal.classList.remove('active');
             getLocation();
         }
 
-        // Event listeners para modales de permiso
         document.getElementById('allow-permission-btn').addEventListener('click', requestLocation);
         document.getElementById('later-permission-btn').addEventListener('click', () => {
             permissionModal.classList.remove('active');
+            mapInstructions.innerHTML = 'Activa tu ubicación para continuar';
         });
         document.getElementById('understand-btn').addEventListener('click', () => {
             permissionDeniedModal.classList.remove('active');
@@ -788,49 +775,48 @@
                     showLogin();
                 }
             } catch (err) {
-                console.error(err);
                 showLogin();
             } finally {
                 loadingScreen.style.display = 'none';
             }
         }
-async function loadUserProfile(userId) {
-    const { data, error } = await supabaseClient
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-    
-    if (error || !data) {
-        await supabaseClient.auth.signOut();
-        showLogin();
-        return;
-    }
 
-    if (data.role !== 'pasajero') {
-        loadingScreen.style.display = 'none';
-        alert('Esta cuenta es de CONDUCTOR.\nPor favor regístrate como pasajero.');
-        await supabaseClient.auth.signOut();
-        showLogin();
-        return;
-    }
+        async function loadUserProfile(userId) {
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            
+            if (error || !data) {
+                await supabaseClient.auth.signOut();
+                showLogin();
+                return;
+            }
 
-    userProfile = data;
-    currentUser = (await supabaseClient.auth.getUser()).data.user;
-    userNameSpan.textContent = userProfile.full_name.split(' ')[0];
-    mainPanel.style.display = 'flex';
-    hideModals();
+            if (data.role !== 'pasajero') {
+                loadingScreen.style.display = 'none';
+                alert('Esta cuenta es de CONDUCTOR.\nPor favor regístrate como pasajero.');
+                await supabaseClient.auth.signOut();
+                showLogin();
+                return;
+            }
 
-    initMap();
-    await checkCurrentTrip();
-    subscribeToTripUpdates();
+            userProfile = data;
+            currentUser = (await supabaseClient.auth.getUser()).data.user;
+            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
+            mainPanel.style.display = 'flex';
+            hideModals();
 
-    // NUEVO: Solicitar la ubicación automáticamente si no hay un viaje activo ni coordenadas previas
-    if (!originCoords && !currentTrip) {
-        document.getElementById('locate-btn').click();
-    }
-}
+            initMap();
+            await checkCurrentTrip();
+            subscribeToTripUpdates();
 
+            // NUEVO: Disparador automático para pedir ubicación fresca si no hay viaje en curso
+            if (!currentTrip) {
+                locateBtn.click();
+            }
+        }
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -901,6 +887,8 @@ async function loadUserProfile(userId) {
             stopDriverLocationTracking();
             await supabaseClient.auth.signOut();
             mainPanel.style.display = 'none';
+            originCoords = null;
+            destinationCoords = null;
             showLogin();
         });
 
@@ -911,6 +899,7 @@ async function loadUserProfile(userId) {
         // ============================================
 
         function initMap() {
+            if (map !== null) return; // Evitar reinicializar si ya existe
             map = L.map('map', { center: [19.4326, -99.1332], zoom: 14, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap'
@@ -921,7 +910,8 @@ async function loadUserProfile(userId) {
         function onMapClick(e) {
             if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) return;
             if (!originCoords) {
-                alert("Primero activa tu ubicación con el botón flotante.");
+                mapInstructions.innerHTML = 'Buscando tu ubicación primero...';
+                locateBtn.click();
                 return;
             }
             setDestination(e.latlng.lat, e.latlng.lng);
@@ -952,33 +942,27 @@ async function loadUserProfile(userId) {
         async function updateDestinationAddress() {
             if (!destinationCoords) return;
             dropoffText.textContent = 'Buscando...';
+            dropoffText.classList.remove('placeholder');
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${destinationCoords.lat}&lon=${destinationCoords.lng}&format=json`);
                 const data = await response.json();
                 dropoffText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado';
-                dropoffText.classList.remove('placeholder');
             } catch (e) { dropoffText.textContent = 'Destino seleccionado'; }
         }
 
         // ============================================
-        // OBTENER UBICACIÓN - CON MANEJO DE PERMISOS
+        // OBTENER UBICACIÓN FRESCA
         // ============================================
 
         locateBtn.addEventListener('click', async () => {
-            // Verificar estado del permiso antes de actuar
             const status = await checkLocationPermission();
-            
             if (status === 'prompt') {
-                // Nunca se ha pedido permiso, mostrar modal explicativo
                 showPermissionModal();
             } else if (status === 'granted') {
-                // Ya tiene permiso, obtener ubicación directamente
                 getLocation();
             } else if (status === 'denied') {
-                // Permiso denegado, mostrar instrucciones
                 showPermissionDeniedModal();
             } else {
-                // Fallback para navegadores sin Permissions API
                 getLocation();
             }
         });
@@ -991,8 +975,9 @@ async function loadUserProfile(userId) {
             
             locateBtn.classList.remove('pulse-initial');
             locateBtn.classList.add('loading');
-            mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localizando...';
+            mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación real...';
 
+            // maximumAge: 0 asegura que nunca use caché y obtenga la posición actual exacta
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
@@ -1016,8 +1001,6 @@ async function loadUserProfile(userId) {
                 },
                 (error) => {
                     locateBtn.classList.remove('loading');
-                    
-                    // Manejar diferentes tipos de errores
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
                             permissionStatus = 'denied';
@@ -1025,22 +1008,19 @@ async function loadUserProfile(userId) {
                             mapInstructions.innerHTML = 'Permiso denegado';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            mapInstructions.innerHTML = 'Ubicación no disponible';
-                            alert('No se pudo obtener tu ubicación. Verifica que el GPS esté activado.');
+                            mapInstructions.innerHTML = 'Señal GPS no disponible';
                             break;
                         case error.TIMEOUT:
-                            mapInstructions.innerHTML = 'Tiempo agotado';
-                            alert('Se agotó el tiempo para obtener tu ubicación. Intenta de nuevo.');
+                            mapInstructions.innerHTML = 'Tiempo agotado, intenta de nuevo';
                             break;
                         default:
                             mapInstructions.innerHTML = 'Error de ubicación';
-                            alert('No se pudo obtener tu ubicación: ' + error.message);
                     }
                 },
                 { 
                     enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
+                    timeout: 10000,
+                    maximumAge: 0 
                 }
             );
         }
@@ -1048,11 +1028,11 @@ async function loadUserProfile(userId) {
         async function updatePickupAddress() {
             if (!originCoords) return;
             pickupText.textContent = 'Buscando...';
+            pickupText.classList.remove('placeholder');
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${originCoords.lat}&lon=${originCoords.lng}&format=json`);
                 const data = await response.json();
                 pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual';
-                pickupText.classList.remove('placeholder');
             } catch (e) { pickupText.textContent = 'Ubicación actual'; }
         }
 
@@ -1165,7 +1145,19 @@ async function loadUserProfile(userId) {
         async function cancelTrip() {
             if (!confirm('¿Cancelar viaje?')) return;
             await supabaseClient.from('trips').update({ status: 'cancelled' }).eq('id', currentTrip.id);
-            stopDriverLocationTracking(); currentTrip = null; mapInstructions.innerHTML = 'Selecciona tu destino'; updateTripUI();
+            stopDriverLocationTracking(); 
+            
+            // NUEVO: Al cancelar el viaje, reseteamos las coordenadas y volvemos a buscar la ubicación real
+            currentTrip = null; 
+            originCoords = null;
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            destinationCoords = null;
+            dropoffText.textContent = '¿A dónde vas?';
+            dropoffText.classList.add('placeholder');
+            setDestinationBtn.style.display = 'none';
+            
+            updateTripUI();
+            locateBtn.click(); // Buscar ubicación fresca nuevamente
         }
 
         function subscribeToTripUpdates() {
@@ -1181,7 +1173,14 @@ async function loadUserProfile(userId) {
                         startDriverLocationTracking();
                     }
                     if (['completed', 'cancelled'].includes(payload.new.status)) {
-                        stopDriverLocationTracking(); setTimeout(() => { currentTrip = null; updateTripUI(); }, 2000);
+                        stopDriverLocationTracking(); 
+                        setTimeout(() => { 
+                            currentTrip = null; 
+                            updateTripUI(); 
+                            // Refrescar ubicación al terminar viaje
+                            originCoords = null;
+                            locateBtn.click();
+                        }, 2000);
                     } else { updateTripUI(); }
                 }
             }).subscribe();
