@@ -579,7 +579,7 @@
 
     <div id="login-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" id="close-login">&times;</span>
+            <span class="close-modal" id="close-login">×</span>
             <h2>Iniciar Sesión</h2>
             <form id="login-form">
                 <div class="form-group">
@@ -602,7 +602,7 @@
 
     <div id="register-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" id="close-register">&times;</span>
+            <span class="close-modal" id="close-register">×</span>
             <h2>Crear Cuenta - Conductor</h2>
             <form id="register-form">
                 <div class="form-group">
@@ -649,7 +649,7 @@
                     <small id="unread-count">0 nuevas</small>
                 </div>
                 <div id="notifications-list">
-                    <div class="no-notifications">No hay solicitudes pendientes</div>
+                    <div class="no-notifications">No hay solicitudes pendientes a menos de 50km</div>
                 </div>
             </div>
         </header>
@@ -1073,6 +1073,12 @@
         async function updateDriverLocation(lat, lng) {
             if (!currentUser) return;
 
+            // Actualizamos el perfil localmente para que el cálculo de distancia funcione enseguida
+            if (userProfile) {
+                userProfile.driver_lat = lat;
+                userProfile.driver_lng = lng;
+            }
+
             const { error } = await supabaseClient
                 .from('user_profiles')
                 .update({ 
@@ -1084,6 +1090,10 @@
 
             if (error) {
                 console.error('Error actualizando ubicación:', error);
+            } else if (userProfile && userProfile.available) {
+                // Si la ubicación se actualizó y estamos disponibles, 
+                // re-evaluamos si hay viajes nuevos cerca de nosotros
+                loadPendingTrips();
             }
         }
 
@@ -1123,6 +1133,8 @@
                 } else {
                     stopLocationTracking();
                     locationStatus.textContent = 'Activa tu disponibilidad para compartir ubicación';
+                    pendingTrips = []; // Limpiamos la lista si nos ponemos indisponibles
+                    updateNotifications();
                 }
 
                 const { error } = await supabaseClient
@@ -1141,6 +1153,7 @@
                 } else {
                     userProfile.available = available;
                     updateAvailabilityIndicator(available);
+                    if (available) loadPendingTrips();
                 }
             });
 
@@ -1221,7 +1234,26 @@
                 console.error('Error cargando viajes pendientes:', error);
                 return;
             }
-            pendingTrips = data || [];
+
+            // FILTRADO DE 50 KM DE DISTANCIA
+            const maxDistanceKm = 50;
+
+            if (userProfile.driver_lat && userProfile.driver_lng) {
+                pendingTrips = (data || []).filter(trip => {
+                    if (!trip.pickup_lat || !trip.pickup_lng) return false;
+                    const distance = calculateDistance(
+                        userProfile.driver_lat, 
+                        userProfile.driver_lng, 
+                        trip.pickup_lat, 
+                        trip.pickup_lng
+                    );
+                    return distance <= maxDistanceKm; // Solo retornamos si está a 50km o menos
+                });
+            } else {
+                // Si por alguna razón el conductor no tiene su ubicación, no mostramos viajes basados en distancia
+                pendingTrips = [];
+            }
+
             unreadCount = pendingTrips.length;
             updateNotifications();
         }
@@ -1235,7 +1267,7 @@
             }
 
             if (pendingTrips.length === 0) {
-                notificationsList.innerHTML = '<div class="no-notifications">No hay solicitudes pendientes</div>';
+                notificationsList.innerHTML = '<div class="no-notifications">No hay solicitudes pendientes a menos de 50km</div>';
                 unreadCountSpan.textContent = '0 nuevas';
                 return;
             }
@@ -1244,18 +1276,21 @@
 
             notificationsList.innerHTML = pendingTrips.map(trip => {
                 const timeAgo = getTimeAgo(new Date(trip.created_at));
-                const distance = trip.pickup_lat && trip.dropoff_lat ? 
+                const driverDistance = (userProfile.driver_lat && trip.pickup_lat) ? 
+                    calculateDistance(userProfile.driver_lat, userProfile.driver_lng, trip.pickup_lat, trip.pickup_lng) : null;
+                const tripDistance = trip.pickup_lat && trip.dropoff_lat ? 
                     calculateDistance(trip.pickup_lat, trip.pickup_lng, trip.dropoff_lat, trip.dropoff_lng) : null;
                 
                 return `
                     <div class="notification-item unread" data-trip-id="${trip.id}">
                         <div class="trip-info">
                             <strong>${trip.passenger?.full_name || 'Pasajero'}</strong> solicitó un viaje
+                            ${driverDistance !== null ? `<span style="float:right; color:#1e3c72; font-size:0.8rem;">A ${driverDistance.toFixed(1)} km de ti</span>` : ''}
                         </div>
                         <div class="trip-details">
                             <i class="fas fa-map-marker-alt" style="color:#28a745;"></i> ${trip.pickup_location}<br>
                             <i class="fas fa-flag" style="color:#dc3545;"></i> ${trip.dropoff_location}
-                            ${distance ? `<br><i class="fas fa-road"></i> ~${distance.toFixed(1)} km` : ''}
+                            ${tripDistance ? `<br><i class="fas fa-road"></i> Viaje de ~${tripDistance.toFixed(1)} km` : ''}
                             <br><small style="color:#888;"><i class="fas fa-clock"></i> ${timeAgo}</small>
                         </div>
                         <button class="accept-btn" data-trip-id="${trip.id}">
