@@ -1263,7 +1263,8 @@
             stopDriverLocationTracking(); 
             
             currentTrip = null; 
-            originCoords = null;
+            // Ya no borramos originCoords ni llamamos a locateBtn.click()
+            
             if (destinationMarker) map.removeLayer(destinationMarker);
             destinationCoords = null;
             dropoffText.textContent = '¿A dónde vas?';
@@ -1271,7 +1272,12 @@
             setDestinationBtn.style.display = 'none';
             
             updateTripUI();
-            locateBtn.click(); 
+
+            // Restauramos las instrucciones y centramos la cámara en ti
+            if (originCoords) {
+                map.setView([originCoords.lat, originCoords.lng], 16);
+                mapInstructions.innerHTML = 'Toca el mapa para tu destino';
+            }
         }
 
         function subscribeToTripUpdates() {
