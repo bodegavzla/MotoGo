@@ -602,17 +602,28 @@
         }
 
         // NUEVO: Función de seguridad para compartir ruta
+       // NUEVO: Función de seguridad para compartir ruta con Link de Seguimiento
         window.shareRoute = async function() {
             const dest = dropoffInput.value || 'mi destino';
             const driverName = currentTrip.driver?.full_name || 'un conductor';
             const driverCode = currentTrip.driver?.numeric_code || 'desconocido';
-            const textToShare = `¡Hola! Voy en un Mi Uber hacia ${dest}. Mi conductor es ${driverName} (Código: ${driverCode}).`;
+            
+            // Construimos la URL mágica (detecta automáticamente tu dominio web)
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const trackingUrl = `${baseUrl}/invitado.html?viaje=${currentTrip.id}`;
+            
+            const textToShare = `📍 Sigue mi viaje en Mi Uber en tiempo real.\nVoy hacia: ${dest}\nConductor: ${driverName} (Cód: ${driverCode}).\n\nSigue mi ruta aquí: ${trackingUrl}`;
 
             if (navigator.share) {
-                try { await navigator.share({ title: 'Mi viaje seguro', text: textToShare }); } catch (err) { console.error('Error compartiendo:', err); }
+                try { 
+                    await navigator.share({ 
+                        title: 'Mi viaje seguro', 
+                        text: textToShare
+                    }); 
+                } catch (err) { console.error('Error compartiendo:', err); }
             } else {
                 navigator.clipboard.writeText(textToShare);
-                alert("Detalles del viaje copiados al portapapeles para que los pegues en WhatsApp.");
+                alert("Link de rastreo copiado al portapapeles. Pégalo en WhatsApp.");
             }
         }
 
