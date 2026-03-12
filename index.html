@@ -21,6 +21,22 @@
             overflow-x: hidden;
         }
 
+        /* MEJORA 3: Estilo para el banner de red */
+        #network-status {
+            display: none;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background: #dc3545;
+            color: white;
+            z-index: 3000;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
         #loading-screen {
             position: fixed;
             top: 0;
@@ -536,7 +552,6 @@
             background: #218838;
         }
 
-        /* Indicador GPS */
         .gps-indicator {
             display: flex;
             align-items: center;
@@ -574,6 +589,10 @@
     </style>
 </head>
 <body>
+    <div id="network-status">
+        <i class="fas fa-wifi-slash"></i> Sin conexión a Internet
+    </div>
+
     <div id="loading-screen">
         <div class="spinner-large"></div>
     </div>
@@ -718,9 +737,10 @@
         let routeLine = null;
         let locationWatchId = null;
         let isLocationTracking = false;
-        
-        // --- NUEVO: Almacena las coordenadas completas de la ruta trazada ---
         let fullRouteCoords = null; 
+        
+        // MEJORA 2: Variable global para el canal de Broadcast
+        let driverBroadcastChannel = null;
 
         // Elementos DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -742,23 +762,34 @@
         const navigateBtn = document.getElementById('navigate-btn');
         const driverPanel = document.getElementById('driver-panel');
         const panelHandle = document.getElementById('panel-handle');
+        const networkStatus = document.getElementById('network-status'); // MEJORA 3
 
-        // ==================== NUEVO: RUTAS REALES OSRM ====================
+        // MEJORA 3: Detección y manejo de red
+        window.addEventListener('offline', () => {
+            networkStatus.style.display = 'block';
+        });
+
+        window.addEventListener('online', async () => { 
+            networkStatus.style.display = 'none'; 
+            if (currentUser) {
+                await checkSession(); 
+                await loadPendingTrips();
+            }
+        });
+
         async function getRealRoute(lat1, lng1, lat2, lng2) {
             try {
-                // Pide la ruta en auto (driving)
                 const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.code === 'Ok' && data.routes.length > 0) {
                     const route = data.routes[0];
-                    // OSRM devuelve [lng, lat], Leaflet usa [lat, lng], así que las invertimos
                     const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
                     return {
                         coordinates: coordinates,
-                        distance: route.distance / 1000, // convertido a kilómetros
-                        duration: route.duration / 60 // convertido a minutos
+                        distance: route.distance / 1000,
+                        duration: route.duration / 60 
                     };
                 }
             } catch (error) {
@@ -767,7 +798,6 @@
             return null;
         }
 
-        // Funciones auxiliares
         function showModal(modal) { modal.classList.add('active'); }
         function hideModals() {
             loginModal.classList.remove('active');
@@ -910,7 +940,6 @@
             }, 2000);
         });
 
-        // Navegación entre modales
         document.getElementById('show-register').addEventListener('click', (e) => {
             e.preventDefault();
             loginModal.classList.remove('active');
@@ -928,6 +957,13 @@
         logoutBtn.addEventListener('click', async () => {
             stopLocationTracking();
             unsubscribeAll();
+            
+            // Limpieza Broadcast
+            if (driverBroadcastChannel) {
+                driverBroadcastChannel.unsubscribe();
+                driverBroadcastChannel = null;
+            }
+
             await supabaseClient.auth.signOut();
             currentUser = null;
             userProfile = null;
@@ -939,8 +975,6 @@
             hideModals();
             showModal(loginModal);
         }
-
-        // ==================== MAPA ====================
 
         function initMap() {
             const defaultCenter = [19.4326, -99.1332];
@@ -974,12 +1008,11 @@
             map.setView([lat, lng], 15);
         }
 
-        // --- RUTA INTELIGENTE: Traza la ruta correcta dependiendo del estado del viaje ---
         async function updateTripMarkers() {
             if (originMarker) map.removeLayer(originMarker);
             if (destinationMarker) map.removeLayer(destinationMarker);
             if (routeLine) map.removeLayer(routeLine);
-            fullRouteCoords = null; // Reiniciar ruta almacenada
+            fullRouteCoords = null; 
 
             if (!currentTrip) return;
 
@@ -987,7 +1020,6 @@
             let showOriginMarker = false;
             let showDestMarker = false;
 
-            // Si el viaje es aceptado, la ruta es del Conductor -> Pasajero (Origen)
             if (currentTrip.status === 'accepted') {
                 startLat = userProfile?.driver_lat || currentTrip.pickup_lat;
                 startLng = userProfile?.driver_lng || currentTrip.pickup_lng;
@@ -995,7 +1027,6 @@
                 endLng = currentTrip.pickup_lng;
                 showOriginMarker = true; 
             } 
-            // Si el viaje está en curso, la ruta es del Conductor -> Destino
             else if (currentTrip.status === 'started') {
                 startLat = userProfile?.driver_lat || currentTrip.pickup_lat;
                 startLng = userProfile?.driver_lng || currentTrip.pickup_lng;
@@ -1004,7 +1035,6 @@
                 showDestMarker = true;
             }
 
-            // Dibuja marcador del pasajero si aplica
             if (showOriginMarker && currentTrip.pickup_lat) {
                 const originIcon = L.divIcon({
                     className: 'origin-marker',
@@ -1015,7 +1045,6 @@
                 originMarker = L.marker([currentTrip.pickup_lat, currentTrip.pickup_lng], { icon: originIcon }).addTo(map);
             }
 
-            // Dibuja marcador de destino final si aplica
             if (showDestMarker && currentTrip.dropoff_lat) {
                 const destIcon = L.divIcon({
                     className: 'dest-marker',
@@ -1026,22 +1055,19 @@
                 destinationMarker = L.marker([currentTrip.dropoff_lat, currentTrip.dropoff_lng], { icon: destIcon }).addTo(map);
             }
 
-            // Traza la ruta real
             if (startLat && startLng && endLat && endLng) {
                 const routeData = await getRealRoute(startLat, startLng, endLat, endLng);
                 
                 if (routeData) {
-                    fullRouteCoords = routeData.coordinates; // Guardamos la ruta completa
+                    fullRouteCoords = routeData.coordinates; 
                     routeLine = L.polyline(fullRouteCoords, { color: '#1e3c72', weight: 5, opacity: 0.8 }).addTo(map);
                     map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
                     
-                    // Actualizar la tarjeta con la distancia y tiempo
                     const distanceEl = document.getElementById('real-distance-info');
                     if(distanceEl) {
                         distanceEl.innerHTML = `<strong>${routeData.distance.toFixed(1)} km</strong> (Aprox. ${Math.round(routeData.duration)} min)`;
                     }
                 } else {
-                    // Fallback en caso de error del servidor de rutas
                     routeLine = L.polyline([
                         [startLat, startLng],
                         [endLat, endLng]
@@ -1070,8 +1096,6 @@
             }
         });
 
-        // ==================== GEOLOCALIZACIÓN ====================
-
         function startLocationTracking() {
             if (!navigator.geolocation) {
                 alert('Tu navegador no soporta geolocalización');
@@ -1081,11 +1105,10 @@
 
             updateGPSIndicator(true, 'Obteniendo ubicación...');
 
-            // Primera ubicación inmediata
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    await updateDriverLocation(latitude, longitude);
+                    await updateDriverLocation(latitude, longitude, true);
                     updateDriverMarker(latitude, longitude);
                     updateGPSIndicator(true, 'GPS activo');
                 },
@@ -1098,11 +1121,24 @@
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
 
-            // Watch position para actualizaciones continuas
             locationWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    await updateDriverLocation(latitude, longitude);
+                    
+                    // MEJORA 2: Transmisión híbrida (Broadcast + Local Logic)
+                    if (currentTrip && driverBroadcastChannel && ['accepted', 'started'].includes(currentTrip.status)) {
+                        // Si hay viaje activo, solo borramos la ruta visualmente, no sobrecargamos la Base de Datos
+                        await updateDriverLocation(latitude, longitude, false); 
+                        driverBroadcastChannel.send({
+                            type: 'broadcast',
+                            event: 'location',
+                            payload: { lat: latitude, lng: longitude }
+                        });
+                    } else {
+                        // Si no hay viaje, actualizamos en BD para que los pasajeros nos vean
+                        await updateDriverLocation(latitude, longitude, true);
+                    }
+
                     updateDriverMarker(latitude, longitude);
                     if (isLocationTracking) {
                         updateGPSIndicator(true, 'GPS activo');
@@ -1133,18 +1169,15 @@
             }
         }
 
-        async function updateDriverLocation(lat, lng) {
+        // Modificamos para aceptar el parámetro `updateDB` (Mejora 2)
+        async function updateDriverLocation(lat, lng, updateDB = true) {
             if (!currentUser) return;
 
-            // Actualizamos el perfil localmente para que el cálculo de distancia funcione enseguida
             if (userProfile) {
                 userProfile.driver_lat = lat;
                 userProfile.driver_lng = lng;
             }
 
-            // --- LÓGICA DE BORRADO DE RUTA DINÁMICO ---
-            // Si tenemos la ruta dibujada, buscamos el punto más cercano a nosotros
-            // y cortamos todo lo que quedó "atrás" para simular que avanzamos.
             if (fullRouteCoords && routeLine) {
                 let closestIndex = 0;
                 let minDist = Infinity;
@@ -1158,27 +1191,27 @@
                     }
                 }
                 
-                // Actualizamos la polilínea solo con el trayecto que nos falta
                 const remainingRoute = fullRouteCoords.slice(closestIndex);
                 if (remainingRoute.length > 1) {
                     routeLine.setLatLngs(remainingRoute);
                 }
             }
-            // ------------------------------------------
 
-            const { error } = await supabaseClient
-                .from('user_profiles')
-                .update({ 
-                    driver_lat: lat, 
-                    driver_lng: lng,
-                    driver_location_updated_at: new Date()
-                })
-                .eq('id', currentUser.id);
+            if (updateDB) {
+                const { error } = await supabaseClient
+                    .from('user_profiles')
+                    .update({ 
+                        driver_lat: lat, 
+                        driver_lng: lng,
+                        driver_location_updated_at: new Date()
+                    })
+                    .eq('id', currentUser.id);
 
-            if (error) {
-                console.error('Error actualizando ubicación:', error);
-            } else if (userProfile && userProfile.available && !currentTrip) {
-                loadPendingTrips();
+                if (error) {
+                    console.error('Error actualizando ubicación:', error);
+                } else if (userProfile && userProfile.available && !currentTrip) {
+                    loadPendingTrips();
+                }
             }
         }
 
@@ -1192,19 +1225,15 @@
             }
         }
 
-        // ==================== LÓGICA DE CONDUCTOR ====================
-
         async function initDriverUI() {
             availabilityCheckbox.checked = userProfile.available || false;
             updateAvailabilityIndicator(userProfile.available);
 
-            // Si ya estaba disponible, activar ubicación
             if (userProfile.available) {
                 startLocationTracking();
                 locationStatus.textContent = 'Compartiendo tu ubicación con los pasajeros';
             }
 
-            // Toggle disponibilidad
             availabilityCheckbox.addEventListener('change', async (e) => {
                 const available = e.target.checked;
                 
@@ -1218,7 +1247,7 @@
                 } else {
                     stopLocationTracking();
                     locationStatus.textContent = 'Activa tu disponibilidad para compartir ubicación';
-                    pendingTrips = []; // Limpiamos la lista si nos ponemos indisponibles
+                    pendingTrips = []; 
                     updateNotifications();
                 }
 
@@ -1320,7 +1349,6 @@
                 return;
             }
 
-            // FILTRADO DE 50 KM DE DISTANCIA
             const maxDistanceKm = 50;
 
             if (userProfile.driver_lat && userProfile.driver_lng) {
@@ -1332,10 +1360,9 @@
                         trip.pickup_lat, 
                         trip.pickup_lng
                     );
-                    return distance <= maxDistanceKm; // Solo retornamos si está a 50km o menos
+                    return distance <= maxDistanceKm; 
                 });
             } else {
-                // Si por alguna razón el conductor no tiene su ubicación, no mostramos viajes basados en distancia
                 pendingTrips = [];
             }
 
@@ -1403,6 +1430,7 @@
             unreadCountSpan.textContent = '0 nuevas';
         }
 
+        // MEJORA 1: Bloqueo de Concurrencia aplicado aquí
         async function acceptTrip(tripId) {
             if (!userProfile.available) {
                 alert('Debes estar disponible para aceptar viajes');
@@ -1415,14 +1443,17 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aceptando...';
             }
 
-            const { error } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('trips')
                 .update({ 
                     driver_id: currentUser.id, 
                     status: 'accepted',
                     updated_at: new Date()
                 })
-                .eq('id', tripId);
+                .eq('id', tripId)
+                .is('driver_id', null) 
+                .eq('status', 'pending')
+                .select(); 
 
             if (error) {
                 alert('Error al aceptar viaje: ' + error.message);
@@ -1430,6 +1461,12 @@
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-check"></i> Aceptar';
                 }
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                alert('¡Ups! Otro conductor aceptó este viaje un milisegundo antes que tú o fue cancelado.');
+                await loadPendingTrips(); 
                 return;
             }
 
@@ -1456,9 +1493,19 @@
 
             currentTrip = data;
             
-            // Hacemos renderCurrentTrip primero para inyectar el HTML de la distancia real en el DOM
+            // MEJORA 2: Conexión al canal de Broadcast
+            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) {
+                if (driverBroadcastChannel) driverBroadcastChannel.unsubscribe();
+                driverBroadcastChannel = supabaseClient.channel(`trip-${currentTrip.id}`);
+                driverBroadcastChannel.subscribe();
+            } else {
+                if (driverBroadcastChannel) {
+                    driverBroadcastChannel.unsubscribe();
+                    driverBroadcastChannel = null;
+                }
+            }
+
             renderCurrentTrip();
-            // Luego updateTripMarkers para que consulte OSRM y rellene los datos
             updateTripMarkers(); 
         }
 
@@ -1559,6 +1606,11 @@
 
             if (newStatus === 'completed' || newStatus === 'cancelled') {
                 currentTrip = null;
+                // MEJORA 2: Limpieza de canal al terminar
+                if (driverBroadcastChannel) {
+                    driverBroadcastChannel.unsubscribe();
+                    driverBroadcastChannel = null;
+                }
                 updateTripMarkers();
             }
 
@@ -1591,7 +1643,6 @@
             `).join('');
         }
 
-        // Utilidades
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1613,14 +1664,12 @@
             return `hace ${Math.floor(hours / 24)} días`;
         }
 
-        // Panel deslizable
         let panelCollapsed = false;
         panelHandle.addEventListener('click', () => {
             panelCollapsed = !panelCollapsed;
             driverPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 60px))' : 'translateY(0)';
         });
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
