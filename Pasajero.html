@@ -1208,7 +1208,7 @@
             updateTripUI();
         }
 
-        function updateTripUI() {
+       function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
                 const canRequest = originCoords && destinationCoords;
                 tripActions.innerHTML = `
@@ -1217,21 +1217,51 @@
                     </button>
                 `;
                 if (canRequest) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
+
+                // --- CONTROL DE LA PÍLDORA SUPERIOR (Sin Viaje) ---
+                mapInstructions.style.display = 'flex';
+                if (!originCoords) {
+                    mapInstructions.innerHTML = 'Buscando tu ubicación...';
+                } else if (!destinationCoords) {
+                    mapInstructions.innerHTML = 'Toca el mapa para indicar tu destino';
+                } else {
+                    // Ocultamos la píldora porque ya marcó el destino y está listo para solicitar
+                    mapInstructions.style.display = 'none'; 
+                }
+
             } else {
                 let html = '';
+                
+                // --- ESTADO 1: BUSCANDO ---
                 if (currentTrip.status === 'pending') {
                     html = `<div class="trip-status"><p class="status-text pulse-animation">Buscando conductor...</p></div>`;
-                } else if (currentTrip.status === 'accepted') {
+                    
+                    // Actualizamos la píldora superior
+                    mapInstructions.style.display = 'flex';
+                    mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Buscando conductor...';
+                } 
+                // --- ESTADO 2: ACEPTADO ---
+                else if (currentTrip.status === 'accepted') {
                     html = `
                         <div class="driver-arrival">
                             <div class="driver-icon"><i class="fas fa-motorcycle"></i></div>
                             <div class="arrival-info"><p class="eta">Conductor en camino</p></div>
                         </div>
                         <div class="driver-info">
-                            <p><strong>${currentTrip.driver?.full_name}</strong> • Código: ${currentTrip.driver?.numeric_code}</p>
+                            <p><strong>${currentTrip.driver?.full_name || 'Cargando datos...'}</strong> • Código: ${currentTrip.driver?.numeric_code || '...'}</p>
                         </div>`;
-                } else if (currentTrip.status === 'started') {
+                        
+                    // Actualizamos la píldora superior para quitar el "buscando"
+                    mapInstructions.style.display = 'flex';
+                    mapInstructions.innerHTML = '<i class="fas fa-motorcycle"></i> Conductor asignado';
+                } 
+                // --- ESTADO 3: EN VIAJE ---
+                else if (currentTrip.status === 'started') {
                     html = `<div class="trip-status"><p class="status-text">En viaje a tu destino</p></div>`;
+                    
+                    // Actualizamos la píldora superior
+                    mapInstructions.style.display = 'flex';
+                    mapInstructions.innerHTML = '<i class="fas fa-route"></i> En viaje al destino';
                 }
                 
                 html += `<div class="action-buttons"><button class="btn-cancel" id="cancel-trip-btn">Cancelar viaje</button></div>`;
