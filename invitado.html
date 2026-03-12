@@ -116,11 +116,11 @@ body { background: var(--brand-dark); color: white; min-height: 100vh; min-heigh
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         }
 
-        async function loadTripData() {
-            // Buscamos los datos del viaje y del conductor asociado
+       async function loadTripData() {
+            // MEJORA: Ahora también pedimos el driver_lat y driver_lng desde la base de datos
             const { data, error } = await supabaseClient
                 .from('trips')
-                .select('*, driver:driver_id(full_name, numeric_code)')
+                .select('*, driver:driver_id(full_name, numeric_code, driver_lat, driver_lng)')
                 .eq('id', tripId)
                 .single();
 
@@ -132,7 +132,7 @@ body { background: var(--brand-dark); color: white; min-height: 100vh; min-heigh
 
             currentTrip = data;
             
-            // Llenar datos en el panel
+            // Llenar textos en el panel
             document.getElementById('driver-name').textContent = data.driver?.full_name || "Conductor";
             document.getElementById('driver-code').textContent = `Placa / Cód: ${data.driver?.numeric_code || "N/A"}`;
             document.getElementById('pickup-text').textContent = data.pickup_location;
@@ -146,12 +146,17 @@ body { background: var(--brand-dark); color: white; min-height: 100vh; min-heigh
             const destIcon = L.divIcon({ className: 'dest-marker', html: `<div style="width:16px;height:16px;background:#FF3B30;border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>`, iconSize: [22, 22] });
             L.marker([data.dropoff_lat, data.dropoff_lng], { icon: destIcon }).addTo(map);
 
+            // ¡LA MAGIA!: Dibujar la moto INMEDIATAMENTE con su última ubicación conocida
+            if (data.driver && data.driver.driver_lat && data.driver.driver_lng) {
+                updateDriverVisuals(data.driver.driver_lat, data.driver.driver_lng, 0);
+            }
+
             // Escuchar cambios de estado (si el viaje termina)
             supabaseClient.channel(`trip-status-${tripId}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` }, (payload) => {
                 updateStatusUI(payload.new.status);
             }).subscribe();
 
-            // Escuchar el GPS ultra-rápido de la moto
+            // Escuchar el GPS ultra-rápido de la moto (para cuando empiece a moverse)
             startDriverTracking();
         }
 
