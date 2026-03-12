@@ -37,7 +37,6 @@
         /* --- MEJORAS VISUALES DE MAPA --- */
         .driver-marker-animated { transition: transform 1s linear !important; }
         #motorcycle-inner-icon-passenger { transition: transform 0.5s ease-out; transform-origin: center; }
-        /* NUEVO: Transición suave para el pasajero */
         .passenger-marker-animated { transition: transform 1s linear !important; }
         
         #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 3000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
@@ -535,6 +534,15 @@
 
         /* Mapa Ajustes */
         .leaflet-control-zoom { display: none; } /* Ocultar controles de zoom nativos para limpiar la pantalla */
+
+        /* --- BUSCADOR DE DESTINO --- */
+        .location-text-input { width: 100%; border: none; background: transparent; font-size: 15px; color: var(--ios-text); font-weight: 500; outline: none; padding: 0; }
+        .location-text-input::placeholder { color: var(--ios-gray); font-weight: 400; }
+        .search-results-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--ios-surface); border-radius: 12px; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); margin-bottom: 8px; z-index: 2000; max-height: 200px; overflow-y: auto; display: none; border: 1px solid rgba(0,0,0,0.05); }
+        .search-result-item { padding: 12px 15px; border-bottom: 0.5px solid rgba(0,0,0,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:active { background: var(--ios-bg); }
+        .search-result-item i { color: var(--ios-gray); }
     </style>
 </head>
 <body>
@@ -666,8 +674,10 @@
                     <h3>Destino</h3>
                     <div class="location-box dropoff">
                         <div class="location-icon"><i class="fas fa-square"></i></div>
-                        <div class="location-content">
-                            <p class="location-text placeholder" id="dropoff-text">¿A dónde vas?</p>
+                        <div class="location-content" style="position: relative; width: 100%;">
+                            <input type="text" class="location-text-input" id="dropoff-input" placeholder="¿A dónde vas?" autocomplete="off">
+                            <div id="search-results" class="search-results-dropdown"></div>
+                            
                             <button class="set-location-btn" id="set-destination-btn" style="display: none;">
                                 Cambiar destino
                             </button>
@@ -696,16 +706,16 @@
         let originMarker = null;
         let destinationMarker = null;
         let driverMarker = null;
-        let routeLine = null; // MEJORA: Línea de ruta OSRM
-        let searchRadiusCircle = null; // NUEVO: Radar de búsqueda de 50km
+        let routeLine = null; 
+        let searchRadiusCircle = null; 
         let currentTrip = null;
         let subscriptions = [];
-        let driverLocationChannel = null; // MEJORA: Transmisión Broadcast Ultra-Rápida
+        let driverLocationChannel = null; 
         let permissionStatus = 'prompt';
 
         let originCoords = null;
         let destinationCoords = null;
-        let passengerWatchId = null; // NUEVO: Para guardar y controlar el rastreo en vivo del pasajero
+        let passengerWatchId = null; 
 
         // DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -718,7 +728,12 @@
         const logoutBtn = document.getElementById('logout-btn');
         const locateBtn = document.getElementById('locate-btn');
         const pickupText = document.getElementById('pickup-text');
-        const dropoffText = document.getElementById('dropoff-text');
+        
+        // Variables del buscador
+        const dropoffInput = document.getElementById('dropoff-input');
+        const searchResults = document.getElementById('search-results');
+        let searchTimeout = null;
+
         const setDestinationBtn = document.getElementById('set-destination-btn');
         const tripActions = document.getElementById('trip-actions');
         const tripPanel = document.getElementById('trip-panel');
@@ -727,7 +742,7 @@
         const networkStatus = document.getElementById('network-status');
 
         // ============================================
-        // MEJORA: RECONEXIÓN DE RED
+        // RECONEXIÓN DE RED
         // ============================================
         window.addEventListener('offline', () => networkStatus.style.display = 'block');
         window.addEventListener('online', async () => { 
@@ -736,7 +751,7 @@
         });
 
         // ============================================
-        // MEJORA: RUTAS OSRM (Línea Azul)
+        // RUTAS OSRM (Línea Azul)
         // ============================================
         async function getRealRoute(lat1, lng1, lat2, lng2) {
             try {
@@ -750,9 +765,9 @@
             return null;
         }
 
-    async function drawRoute() {
+        async function drawRoute() {
             if (routeLine) map.removeLayer(routeLine);
-            if (searchRadiusCircle) map.removeLayer(searchRadiusCircle); // Limpiamos el radar viejo si existe
+            if (searchRadiusCircle) map.removeLayer(searchRadiusCircle);
 
             if (!currentTrip) return;
 
@@ -763,14 +778,13 @@
                 startCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
                 endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
 
-                // ¡MAGIA AQUÍ! Dibujamos el radar de 50km
                 searchRadiusCircle = L.circle([startCoords.lat, startCoords.lng], {
                     color: 'var(--ios-blue)',
                     fillColor: 'var(--ios-blue)',
-                    fillOpacity: 0.05, // Muy transparente para no tapar el mapa
+                    fillOpacity: 0.05, 
                     weight: 2,
-                    dashArray: '8, 8', // Borde punteado estilo radar
-                    radius: 50000 // 50,000 metros = 50 kilómetros
+                    dashArray: '8, 8', 
+                    radius: 50000 
                 }).addTo(map);
 
             } else if (currentTrip.status === 'accepted') {
@@ -788,7 +802,6 @@
             const coords = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
             if (coords) {
                 routeLine = L.polyline(coords, { color: 'var(--ios-blue)', weight: 5, opacity: 0.8 }).addTo(map);
-                // Mantenemos el zoom enfocado en tu ruta, no en los 50km para que no se vea tan lejos
                 map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
             }
         }
@@ -979,7 +992,6 @@
 
         function initMap() {
             if (map !== null) return; 
-            // MEJORA: Centro por defecto en Valencia, Venezuela
             map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap'
@@ -1021,14 +1033,57 @@
 
         async function updateDestinationAddress() {
             if (!destinationCoords) return;
-            dropoffText.textContent = 'Buscando...';
-            dropoffText.classList.remove('placeholder');
+            dropoffInput.value = 'Buscando...';
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${destinationCoords.lat}&lon=${destinationCoords.lng}&format=json`);
                 const data = await response.json();
-                dropoffText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado';
-            } catch (e) { dropoffText.textContent = 'Destino seleccionado'; }
+                dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado';
+            } catch (e) { dropoffInput.value = 'Destino seleccionado'; }
         }
+
+        // ============================================
+        // BUSCADOR DE DIRECCIONES (Nominatim Gratuito)
+        // ============================================
+        dropoffInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            if (query.length < 3) { searchResults.style.display = 'none'; return; }
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ve&limit=5`);
+                    const data = await res.json();
+                    
+                    if (data.length > 0) {
+                        searchResults.innerHTML = data.map(place => {
+                            const shortName = place.display_name.split(',').slice(0, 2).join(',');
+                            return `
+                            <div class="search-result-item" onclick="selectSearchResult(${place.lat}, ${place.lon}, '${shortName.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-search"></i>
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${shortName}</div>
+                            </div>`;
+                        }).join('');
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="search-result-item">No hay resultados</div>';
+                        searchResults.style.display = 'block';
+                    }
+                } catch (error) { console.error(error); }
+            }, 500);
+        });
+
+        window.selectSearchResult = function(lat, lng, name) {
+            dropoffInput.value = name;
+            searchResults.style.display = 'none';
+            map.setView([lat, lng], 16); 
+            setDestination(lat, lng); 
+        };
+        
+        document.addEventListener('click', (e) => {
+            if (!dropoffInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
 
         // ============================================
         // OBTENER UBICACIÓN FRESCA
@@ -1057,26 +1112,22 @@
             locateBtn.classList.add('loading');
             mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación real...';
 
-            // Si ya estábamos rastreando, limpiamos el rastreo anterior para no duplicarlo
             if (passengerWatchId) {
                 navigator.geolocation.clearWatch(passengerWatchId);
             }
 
-            // Iniciamos el rastreo en vivo (watchPosition)
             passengerWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     originCoords = { lat: latitude, lng: longitude };
 
                     if (originMarker) {
-                        // Si el marcador ya existe, simplemente lo deslizamos a la nueva ubicación
                         originMarker.setLatLng([latitude, longitude]);
                     } else {
-                        // Si es la primera vez que te ubica, creamos el marcador animado y centramos la cámara
                         map.setView([latitude, longitude], 16);
 
                         const originIcon = L.divIcon({
-                            className: 'passenger-marker-animated', // Clase mágica para deslizarse
+                            className: 'passenger-marker-animated', 
                             html: `<div style="width:18px;height:18px;background:var(--ios-blue);border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(0,122,255,0.2);"></div>`,
                             iconSize: [24, 24]
                         });
@@ -1131,17 +1182,15 @@
         });
 
         // ============================================
-        // MEJORA: TRACKING DEL CONDUCTOR VÍA BROADCAST
+        // TRACKING DEL CONDUCTOR VÍA BROADCAST
         // ============================================
 
         function updateDriverVisuals(lat, lng, bearing) {
             if (driverMarker) {
                 driverMarker.setLatLng([lat, lng]);
-                // Aplicar rotación
                 const iconEl = document.getElementById('motorcycle-inner-icon-passenger');
                 if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
             } else {
-                // Notar la clase 'driver-marker-animated' para interpolación CSS
                 const icon = L.divIcon({
                     className: 'driver-marker-animated',
                     html: `<div style="width:36px;height:36px;background:var(--ios-text);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i id="motorcycle-inner-icon-passenger" class="fas fa-motorcycle" style="color:white;font-size:14px;transform:rotate(${bearing}deg);"></i></div>`,
@@ -1150,7 +1199,6 @@
                 });
                 driverMarker = L.marker([lat, lng], { icon }).addTo(map);
                 
-                // Dibujar ruta azul la primera vez que el conductor aparece
                 drawRoute();
             }
         }
@@ -1168,7 +1216,6 @@
                 })
                 .subscribe();
                 
-            // Intentar dibujar la ruta por si ya teníamos al conductor
             if(driverMarker) drawRoute();
         }
 
@@ -1176,7 +1223,7 @@
             if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; }
             if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; }
             if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
-            if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } // Limpiamos el radar
+            if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; }
         }
 
         // ============================================
@@ -1202,13 +1249,13 @@
                 if (['accepted', 'started'].includes(data.status)) {
                     startDriverLocationTracking();
                 } else if (data.status === 'pending') {
-                    drawRoute(); // Recuperamos la línea azul si entra y estaba buscando conductor
+                    drawRoute(); 
                 }
             }
             updateTripUI();
         }
 
-       function updateTripUI() {
+        function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
                 const canRequest = originCoords && destinationCoords;
                 tripActions.innerHTML = `
@@ -1218,29 +1265,24 @@
                 `;
                 if (canRequest) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
 
-                // --- CONTROL DE LA PÍLDORA SUPERIOR (Sin Viaje) ---
                 mapInstructions.style.display = 'flex';
                 if (!originCoords) {
                     mapInstructions.innerHTML = 'Buscando tu ubicación...';
                 } else if (!destinationCoords) {
                     mapInstructions.innerHTML = 'Toca el mapa para indicar tu destino';
                 } else {
-                    // Ocultamos la píldora porque ya marcó el destino y está listo para solicitar
                     mapInstructions.style.display = 'none'; 
                 }
 
             } else {
                 let html = '';
                 
-                // --- ESTADO 1: BUSCANDO ---
                 if (currentTrip.status === 'pending') {
                     html = `<div class="trip-status"><p class="status-text pulse-animation">Buscando conductor...</p></div>`;
                     
-                    // Actualizamos la píldora superior
                     mapInstructions.style.display = 'flex';
                     mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Buscando conductor...';
                 } 
-                // --- ESTADO 2: ACEPTADO ---
                 else if (currentTrip.status === 'accepted') {
                     html = `
                         <div class="driver-arrival">
@@ -1251,15 +1293,12 @@
                             <p><strong>${currentTrip.driver?.full_name || 'Cargando datos...'}</strong> • Código: ${currentTrip.driver?.numeric_code || '...'}</p>
                         </div>`;
                         
-                    // Actualizamos la píldora superior para quitar el "buscando"
                     mapInstructions.style.display = 'flex';
                     mapInstructions.innerHTML = '<i class="fas fa-motorcycle"></i> Conductor asignado';
                 } 
-                // --- ESTADO 3: EN VIAJE ---
                 else if (currentTrip.status === 'started') {
                     html = `<div class="trip-status"><p class="status-text">En viaje a tu destino</p></div>`;
                     
-                    // Actualizamos la píldora superior
                     mapInstructions.style.display = 'flex';
                     mapInstructions.innerHTML = '<i class="fas fa-route"></i> En viaje al destino';
                 }
@@ -1275,7 +1314,7 @@
             btn.disabled = true; btn.textContent = 'Procesando...';
 
             const { data, error } = await supabaseClient.from('trips').insert({
-                passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffText.textContent,
+                passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffInput.value,
                 pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, status: 'pending'
             }).select().single();
 
@@ -1284,7 +1323,7 @@
             currentTrip = data; 
             mapInstructions.innerHTML = 'Buscando conductor...'; 
             updateTripUI();
-            drawRoute(); // ¡MAGIA AQUÍ! Dibujamos la ruta inmediatamente al solicitar
+            drawRoute(); 
         }
 
         async function cancelTrip() {
@@ -1293,17 +1332,14 @@
             stopDriverLocationTracking(); 
             
             currentTrip = null; 
-            // Ya no borramos originCoords ni llamamos a locateBtn.click()
             
             if (destinationMarker) map.removeLayer(destinationMarker);
             destinationCoords = null;
-            dropoffText.textContent = '¿A dónde vas?';
-            dropoffText.classList.add('placeholder');
+            dropoffInput.value = '';
             setDestinationBtn.style.display = 'none';
             
             updateTripUI();
 
-            // Restauramos las instrucciones y centramos la cámara en ti
             if (originCoords) {
                 map.setView([originCoords.lat, originCoords.lng], 16);
                 mapInstructions.innerHTML = 'Toca el mapa para tu destino';
@@ -1327,7 +1363,6 @@
                     const oldStatus = currentTrip.status;
                     currentTrip = { ...currentTrip, ...payload.new };
                     
-                    // Si el conductor acaba de aceptar el viaje
                     if (payload.new.status === 'accepted' && payload.new.driver_id) {
                         console.log("🚗 Conductor asignado. Buscando perfil...");
                         updateTripUI(); 
@@ -1352,14 +1387,11 @@
                         }
                     }
                     
-                    // Si el viaje cambia a "started" (En curso hacia el destino)
                     else if (payload.new.status === 'started' && oldStatus !== 'started') {
                         updateTripUI();
-                        drawRoute(); // Redibujamos la línea ahora apuntando al destino
+                        drawRoute(); 
                     }
                     
-                    // Si el viaje terminó o se canceló
-                    // Si el viaje terminó o se canceló
                     else if (['completed', 'cancelled'].includes(payload.new.status)) {
                         stopDriverLocationTracking(); 
                         setTimeout(() => { 
@@ -1367,8 +1399,7 @@
                             
                             if (destinationMarker) map.removeLayer(destinationMarker);
                             destinationCoords = null;
-                            dropoffText.textContent = '¿A dónde vas?';
-                            dropoffText.classList.add('placeholder');
+                            dropoffInput.value = '';
                             setDestinationBtn.style.display = 'none';
                             
                             updateTripUI(); 
