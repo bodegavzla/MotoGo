@@ -749,16 +749,26 @@
             return null;
         }
 
-        async function drawRoute() {
+    async function drawRoute() {
             if (routeLine) map.removeLayer(routeLine);
-            if (!currentTrip || !driverMarker) return;
+            if (!currentTrip) return;
 
-            let startCoords = driverMarker.getLatLng();
+            let startCoords;
             let endCoords;
 
-            if (currentTrip.status === 'accepted') {
+            if (currentTrip.status === 'pending') {
+                // NUEVO: Ruta del pasajero al destino (lo que ves al solicitar)
+                startCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
+                endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
+            } else if (currentTrip.status === 'accepted') {
+                // Ruta del conductor al pasajero
+                if (!driverMarker) return;
+                startCoords = driverMarker.getLatLng();
                 endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
             } else if (currentTrip.status === 'started') {
+                // Ruta del conductor al destino final
+                if (!driverMarker) return;
+                startCoords = driverMarker.getLatLng();
                 endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
             } else {
                 return;
@@ -767,7 +777,7 @@
             const coords = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
             if (coords) {
                 routeLine = L.polyline(coords, { color: 'var(--ios-blue)', weight: 5, opacity: 0.8 }).addTo(map);
-                // Forzar la cámara a enfocar la ruta completa la primera vez
+                // La cámara se aleja suavemente para mostrarte todo el viaje que pediste
                 map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
             }
         }
@@ -1176,7 +1186,12 @@
                     destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng };
                     setDestination(destinationCoords.lat, destinationCoords.lng);
                 }
-                if (['accepted', 'started'].includes(data.status)) startDriverLocationTracking();
+                
+                if (['accepted', 'started'].includes(data.status)) {
+                    startDriverLocationTracking();
+                } else if (data.status === 'pending') {
+                    drawRoute(); // Recuperamos la línea azul si entra y estaba buscando conductor
+                }
             }
             updateTripUI();
         }
@@ -1223,7 +1238,11 @@
             }).select().single();
 
             if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Solicitar Viaje'; return; }
-            currentTrip = data; mapInstructions.innerHTML = 'Buscando conductor...'; updateTripUI();
+            
+            currentTrip = data; 
+            mapInstructions.innerHTML = 'Buscando conductor...'; 
+            updateTripUI();
+            drawRoute(); // ¡MAGIA AQUÍ! Dibujamos la ruta inmediatamente al solicitar
         }
 
         async function cancelTrip() {
