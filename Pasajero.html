@@ -1187,11 +1187,35 @@
         // TRACKING DEL CONDUCTOR VÍA BROADCAST
         // ============================================
 
-        function updateDriverVisuals(lat, lng, bearing) {
+   function updateDriverVisuals(lat, lng, bearing) {
             if (driverMarker) {
                 driverMarker.setLatLng([lat, lng]);
                 const iconEl = document.getElementById('motorcycle-inner-icon-passenger');
                 if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
+
+                // --- NUEVO: EFECTO COMECOCOS (Recortar la línea azul) ---
+                if (fullRouteCoords && routeLine) {
+                    let closestIndex = 0;
+                    let minDist = Infinity;
+                    const currentPos = L.latLng(lat, lng);
+                    
+                    // Buscamos qué punto de la ruta azul está más cerca de la moto
+                    for (let i = 0; i < fullRouteCoords.length; i++) {
+                        const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1]));
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestIndex = i;
+                        }
+                    }
+                    
+                    // Borramos todo lo que quedó atrás y redibujamos lo que falta
+                    const remainingRoute = fullRouteCoords.slice(closestIndex);
+                    if (remainingRoute.length > 1) {
+                        routeLine.setLatLngs(remainingRoute);
+                    }
+                }
+                // --------------------------------------------------------
+
             } else {
                 const icon = L.divIcon({
                     className: 'driver-marker-animated',
