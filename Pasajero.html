@@ -1329,15 +1329,26 @@
                     }
                     
                     // Si el viaje terminó o se canceló
+                    // Si el viaje terminó o se canceló
                     else if (['completed', 'cancelled'].includes(payload.new.status)) {
                         stopDriverLocationTracking(); 
                         setTimeout(() => { 
                             currentTrip = null; 
+                            
+                            if (destinationMarker) map.removeLayer(destinationMarker);
+                            destinationCoords = null;
+                            dropoffText.textContent = '¿A dónde vas?';
+                            dropoffText.classList.add('placeholder');
+                            setDestinationBtn.style.display = 'none';
+                            
                             updateTripUI(); 
-                            originCoords = null;
-                            locateBtn.click();
+                            
+                            if (originCoords) {
+                                map.setView([originCoords.lat, originCoords.lng], 16);
+                                mapInstructions.innerHTML = 'Toca el mapa para tu destino';
+                            }
                         }, 2000);
-                    } 
+                    }
                     else { 
                         updateTripUI(); 
                     }
