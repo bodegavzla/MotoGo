@@ -37,6 +37,8 @@
         /* --- MEJORAS VISUALES DE MAPA --- */
         .driver-marker-animated { transition: transform 1s linear !important; }
         #motorcycle-inner-icon-passenger { transition: transform 0.5s ease-out; transform-origin: center; }
+        /* NUEVO: Transición suave para el pasajero */
+        .passenger-marker-animated { transition: transform 1s linear !important; }
         
         #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 3000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
 
@@ -702,6 +704,7 @@
 
         let originCoords = null;
         let destinationCoords = null;
+        let passengerWatchId = null; // NUEVO: Para guardar y controlar el rastreo en vivo del pasajero
 
         // DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -1033,26 +1036,37 @@
             locateBtn.classList.add('loading');
             mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación real...';
 
-            navigator.geolocation.getCurrentPosition(
+            // Si ya estábamos rastreando, limpiamos el rastreo anterior para no duplicarlo
+            if (passengerWatchId) {
+                navigator.geolocation.clearWatch(passengerWatchId);
+            }
+
+            // Iniciamos el rastreo en vivo (watchPosition)
+            passengerWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     originCoords = { lat: latitude, lng: longitude };
-                    map.setView([latitude, longitude], 16);
 
-                    if (originMarker) map.removeLayer(originMarker);
+                    if (originMarker) {
+                        // Si el marcador ya existe, simplemente lo deslizamos a la nueva ubicación
+                        originMarker.setLatLng([latitude, longitude]);
+                    } else {
+                        // Si es la primera vez que te ubica, creamos el marcador animado y centramos la cámara
+                        map.setView([latitude, longitude], 16);
 
-                    const originIcon = L.divIcon({
-                        className: 'origin-marker',
-                        html: `<div style="width:18px;height:18px;background:var(--ios-blue);border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(0,122,255,0.2);"></div>`,
-                        iconSize: [24, 24]
-                    });
+                        const originIcon = L.divIcon({
+                            className: 'passenger-marker-animated', // Clase mágica para deslizarse
+                            html: `<div style="width:18px;height:18px;background:var(--ios-blue);border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(0,122,255,0.2);"></div>`,
+                            iconSize: [24, 24]
+                        });
 
-                    originMarker = L.marker([latitude, longitude], { icon: originIcon }).addTo(map);
-                    await updatePickupAddress();
+                        originMarker = L.marker([latitude, longitude], { icon: originIcon }).addTo(map);
+                        await updatePickupAddress();
 
-                    locateBtn.classList.remove('loading');
-                    mapInstructions.innerHTML = 'Toca el mapa para tu destino';
-                    updateTripUI();
+                        locateBtn.classList.remove('loading');
+                        mapInstructions.innerHTML = 'Toca el mapa para tu destino';
+                        updateTripUI();
+                    }
                 },
                 (error) => {
                     locateBtn.classList.remove('loading');
