@@ -906,15 +906,16 @@
         function showLogin() { hideModals(); showModal(loginModal); }
 
         // ==================== MAPA Y MAGIA VISUAL ====================
-        function initMap() {
+      function initMap() {
             if(map) return;
-            map = L.map('map', { center: [19.4326, -99.1332], zoom: 15, zoomControl: false });
+            // Coordenadas actualizadas a Valencia, Carabobo, Venezuela
+            map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
             L.control.zoom({ position: 'topright' }).addTo(map);
         }
 
         // Esta función ahora controla la interpolación, rotación y el auto-pan
-        function updateDriverMarker(lat, lng, bearing = 0) {
+   function updateDriverMarker(lat, lng, bearing = 0) {
             if (driverMarker) {
                 driverMarker.setLatLng([lat, lng]);
                 
@@ -923,7 +924,6 @@
                 if(iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
 
             } else {
-                // Notar la clase 'driver-marker-animated' que habilita la interpolación CSS
                 const driverIcon = L.divIcon({
                     className: 'driver-marker-animated',
                     html: `<div style="width:40px;height:40px;background:#1e3c72;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
@@ -933,11 +933,13 @@
                     iconAnchor: [20, 20]
                 });
                 driverMarker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
+                
+                // ¡SOLUCIÓN AQUÍ! Centramos la cámara en ti la primera vez que el GPS te encuentra
+                map.setView([lat, lng], 16);
             }
 
-            // AUTO-PAN: Seguimiento de cámara automático
+            // AUTO-PAN: Seguimiento de cámara automático (Solo cuando hay viaje activo)
             if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) {
-                // Usamos panTo para un movimiento de cámara suave y constante
                 map.panTo([lat, lng], { animate: true, duration: 1 });
             }
         }
