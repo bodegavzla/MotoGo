@@ -239,9 +239,15 @@ body { background: var(--brand-dark); color: white; min-height: 100vh; min-heigh
                         }
 
                         // Si tenemos la posición de la moto, trazamos ruta
+                      // Si tenemos la posición de la moto, trazamos ruta
                         if (driverMarker) {
                             drawInterceptRoute(lat, lng, driverMarker.getLatLng().lat, driverMarker.getLatLng().lng);
-                            map.fitBounds(L.latLngBounds([[lat, lng], [driverMarker.getLatLng().lat, driverMarker.getLatLng().lng]]), { padding: [50, 50] });
+                            
+                            // ¡MAGIA!: Empujamos el centro del mapa hacia arriba para que no se esconda bajo el panel
+                            map.fitBounds(L.latLngBounds([[lat, lng], [driverMarker.getLatLng().lat, driverMarker.getLatLng().lng]]), { 
+                                paddingTopLeft: [50, 50], 
+                                paddingBottomRight: [50, 320] 
+                            });
                         }
                     },
                     (err) => { alert("Permite el uso de tu GPS para rastrear tu distancia hacia el vehículo."); },
