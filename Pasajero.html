@@ -697,6 +697,7 @@
         let destinationMarker = null;
         let driverMarker = null;
         let routeLine = null; // MEJORA: Línea de ruta OSRM
+        let searchRadiusCircle = null; // NUEVO: Radar de búsqueda de 50km
         let currentTrip = null;
         let subscriptions = [];
         let driverLocationChannel = null; // MEJORA: Transmisión Broadcast Ultra-Rápida
@@ -751,22 +752,32 @@
 
     async function drawRoute() {
             if (routeLine) map.removeLayer(routeLine);
+            if (searchRadiusCircle) map.removeLayer(searchRadiusCircle); // Limpiamos el radar viejo si existe
+
             if (!currentTrip) return;
 
             let startCoords;
             let endCoords;
 
             if (currentTrip.status === 'pending') {
-                // NUEVO: Ruta del pasajero al destino (lo que ves al solicitar)
                 startCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
                 endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
+
+                // ¡MAGIA AQUÍ! Dibujamos el radar de 50km
+                searchRadiusCircle = L.circle([startCoords.lat, startCoords.lng], {
+                    color: 'var(--ios-blue)',
+                    fillColor: 'var(--ios-blue)',
+                    fillOpacity: 0.05, // Muy transparente para no tapar el mapa
+                    weight: 2,
+                    dashArray: '8, 8', // Borde punteado estilo radar
+                    radius: 50000 // 50,000 metros = 50 kilómetros
+                }).addTo(map);
+
             } else if (currentTrip.status === 'accepted') {
-                // Ruta del conductor al pasajero
                 if (!driverMarker) return;
                 startCoords = driverMarker.getLatLng();
                 endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
             } else if (currentTrip.status === 'started') {
-                // Ruta del conductor al destino final
                 if (!driverMarker) return;
                 startCoords = driverMarker.getLatLng();
                 endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
@@ -777,7 +788,7 @@
             const coords = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
             if (coords) {
                 routeLine = L.polyline(coords, { color: 'var(--ios-blue)', weight: 5, opacity: 0.8 }).addTo(map);
-                // La cámara se aleja suavemente para mostrarte todo el viaje que pediste
+                // Mantenemos el zoom enfocado en tu ruta, no en los 50km para que no se vea tan lejos
                 map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
             }
         }
@@ -1165,6 +1176,7 @@
             if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; }
             if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; }
             if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+            if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } // Limpiamos el radar
         }
 
         // ============================================
