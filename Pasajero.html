@@ -716,6 +716,7 @@
         let originCoords = null;
         let destinationCoords = null;
         let passengerWatchId = null; 
+        let fullRouteCoords = null; // NUEVO: Memoria de la ruta exacta
 
         // DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -801,6 +802,7 @@
 
             const coords = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
             if (coords) {
+                fullRouteCoords = coords; // ¡MAGIA! Guardamos la ruta en memoria
                 routeLine = L.polyline(coords, { color: 'var(--ios-blue)', weight: 5, opacity: 0.8 }).addTo(map);
                 map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
             }
