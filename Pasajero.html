@@ -34,6 +34,12 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* --- MEJORAS VISUALES DE MAPA --- */
+        .driver-marker-animated { transition: transform 1s linear !important; }
+        #motorcycle-inner-icon-passenger { transition: transform 0.5s ease-out; transform-origin: center; }
+        
+        #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 3000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
+
         /* Pantalla de carga */
         #loading-screen {
             position: fixed;
@@ -530,6 +536,8 @@
     </style>
 </head>
 <body>
+    <div id="network-status"><i class="fas fa-wifi-slash"></i> Sin conexión a Internet</div>
+    
     <div id="loading-screen">
         <div class="spinner-large"></div>
     </div>
@@ -686,14 +694,14 @@
         let originMarker = null;
         let destinationMarker = null;
         let driverMarker = null;
+        let routeLine = null; // MEJORA: Línea de ruta OSRM
         let currentTrip = null;
         let subscriptions = [];
-        let driverLocationInterval = null;
+        let driverLocationChannel = null; // MEJORA: Transmisión Broadcast Ultra-Rápida
         let permissionStatus = 'prompt';
 
         let originCoords = null;
         let destinationCoords = null;
-        let driverCoords = null;
 
         // DOM
         const loadingScreen = document.getElementById('loading-screen');
@@ -712,6 +720,54 @@
         const tripPanel = document.getElementById('trip-panel');
         const panelHandle = document.getElementById('panel-handle');
         const mapInstructions = document.getElementById('map-instructions');
+        const networkStatus = document.getElementById('network-status');
+
+        // ============================================
+        // MEJORA: RECONEXIÓN DE RED
+        // ============================================
+        window.addEventListener('offline', () => networkStatus.style.display = 'block');
+        window.addEventListener('online', async () => { 
+            networkStatus.style.display = 'none'; 
+            if(currentUser) await checkSession();
+        });
+
+        // ============================================
+        // MEJORA: RUTAS OSRM (Línea Azul)
+        // ============================================
+        async function getRealRoute(lat1, lng1, lat2, lng2) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    return data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                }
+            } catch (error) { console.error("Error ruta OSRM:", error); }
+            return null;
+        }
+
+        async function drawRoute() {
+            if (routeLine) map.removeLayer(routeLine);
+            if (!currentTrip || !driverMarker) return;
+
+            let startCoords = driverMarker.getLatLng();
+            let endCoords;
+
+            if (currentTrip.status === 'accepted') {
+                endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
+            } else if (currentTrip.status === 'started') {
+                endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
+            } else {
+                return;
+            }
+
+            const coords = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+            if (coords) {
+                routeLine = L.polyline(coords, { color: 'var(--ios-blue)', weight: 5, opacity: 0.8 }).addTo(map);
+                // Forzar la cámara a enfocar la ruta completa la primera vez
+                map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            }
+        }
 
         // ============================================
         // MANEJO DE PERMISOS DE UBICACIÓN
@@ -812,7 +868,6 @@
             await checkCurrentTrip();
             subscribeToTripUpdates();
 
-            // NUEVO: Disparador automático para pedir ubicación fresca si no hay viaje en curso
             if (!currentTrip) {
                 locateBtn.click();
             }
@@ -899,8 +954,9 @@
         // ============================================
 
         function initMap() {
-            if (map !== null) return; // Evitar reinicializar si ya existe
-            map = L.map('map', { center: [19.4326, -99.1332], zoom: 14, zoomControl: false });
+            if (map !== null) return; 
+            // MEJORA: Centro por defecto en Valencia, Venezuela
+            map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
@@ -977,7 +1033,6 @@
             locateBtn.classList.add('loading');
             mapInstructions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación real...';
 
-            // maximumAge: 0 asegura que nunca use caché y obtenga la posición actual exacta
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
@@ -1041,36 +1096,51 @@
         });
 
         // ============================================
-        // TRACKING DEL CONDUCTOR
+        // MEJORA: TRACKING DEL CONDUCTOR VÍA BROADCAST
         // ============================================
 
+        function updateDriverVisuals(lat, lng, bearing) {
+            if (driverMarker) {
+                driverMarker.setLatLng([lat, lng]);
+                // Aplicar rotación
+                const iconEl = document.getElementById('motorcycle-inner-icon-passenger');
+                if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
+            } else {
+                // Notar la clase 'driver-marker-animated' para interpolación CSS
+                const icon = L.divIcon({
+                    className: 'driver-marker-animated',
+                    html: `<div style="width:36px;height:36px;background:var(--ios-text);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i id="motorcycle-inner-icon-passenger" class="fas fa-motorcycle" style="color:white;font-size:14px;transform:rotate(${bearing}deg);"></i></div>`,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18]
+                });
+                driverMarker = L.marker([lat, lng], { icon }).addTo(map);
+                
+                // Dibujar ruta azul la primera vez que el conductor aparece
+                drawRoute();
+            }
+        }
+
         function startDriverLocationTracking() {
-            if (driverLocationInterval) return;
-            driverLocationInterval = setInterval(async () => {
-                if (!currentTrip || !currentTrip.driver_id) return;
-                const { data } = await supabaseClient.from('user_profiles').select('driver_lat, driver_lng').eq('id', currentTrip.driver_id).single();
-                if (data && data.driver_lat) {
-                    driverCoords = { lat: data.driver_lat, lng: data.driver_lng };
-                    updateDriverMarker();
-                }
-            }, 3000);
+            if (!currentTrip) return;
+            if (driverLocationChannel) driverLocationChannel.unsubscribe();
+            
+            console.log("📡 Conectando al GPS del conductor por Broadcast...");
+            
+            driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`)
+                .on('broadcast', { event: 'location' }, (payload) => {
+                    const data = payload.payload;
+                    updateDriverVisuals(data.lat, data.lng, data.bearing || 0);
+                })
+                .subscribe();
+                
+            // Intentar dibujar la ruta por si ya teníamos al conductor
+            if(driverMarker) drawRoute();
         }
 
         function stopDriverLocationTracking() {
-            if (driverLocationInterval) clearInterval(driverLocationInterval);
+            if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; }
             if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; }
-        }
-
-        function updateDriverMarker() {
-            if (!driverCoords || !map) return;
-            if (driverMarker) { driverMarker.setLatLng([driverCoords.lat, driverCoords.lng]); } 
-            else {
-                const icon = L.divIcon({
-                    html: `<div style="width:30px;height:30px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-motorcycle" style="color:white;font-size:12px;"></i></div>`,
-                    iconSize: [30, 30]
-                });
-                driverMarker = L.marker([driverCoords.lat, driverCoords.lng], { icon }).addTo(map);
-            }
+            if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
         }
 
         // ============================================
@@ -1147,7 +1217,6 @@
             await supabaseClient.from('trips').update({ status: 'cancelled' }).eq('id', currentTrip.id);
             stopDriverLocationTracking(); 
             
-            // NUEVO: Al cancelar el viaje, reseteamos las coordenadas y volvemos a buscar la ubicación real
             currentTrip = null; 
             originCoords = null;
             if (destinationMarker) map.removeLayer(destinationMarker);
@@ -1157,77 +1226,77 @@
             setDestinationBtn.style.display = 'none';
             
             updateTripUI();
-            locateBtn.click(); // Buscar ubicación fresca nuevamente
+            locateBtn.click(); 
         }
 
-   function subscribeToTripUpdates() {
-    if (!currentUser) return;
+        function subscribeToTripUpdates() {
+            if (!currentUser) return;
 
-    console.log("📡 Suscrito a actualizaciones de viajes...");
+            console.log("📡 Suscrito a actualizaciones de viajes...");
 
-    // Agregamos un filtro específico para escuchar solo los viajes de este pasajero
-    const sub = supabaseClient.channel('trip-passenger').on('postgres_changes', {
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'trips',
-        filter: `passenger_id=eq.${currentUser.id}`
-    }, async (payload) => {
-        console.log("⚡ ¡Cambio detectado en el viaje!", payload.new);
+            const sub = supabaseClient.channel('trip-passenger').on('postgres_changes', {
+                event: 'UPDATE', 
+                schema: 'public', 
+                table: 'trips',
+                filter: `passenger_id=eq.${currentUser.id}`
+            }, async (payload) => {
+                console.log("⚡ ¡Cambio detectado en el viaje!", payload.new);
 
-        if (currentTrip && payload.new.id === currentTrip.id) {
-            currentTrip = { ...currentTrip, ...payload.new };
-            
-            // Si el conductor acaba de aceptar el viaje
-            if (payload.new.status === 'accepted' && payload.new.driver_id) {
-                console.log("🚗 Conductor asignado. Buscando perfil...");
-                
-                // Actualizamos la pantalla de inmediato para que el usuario no espere
-                updateTripUI(); 
+                if (currentTrip && payload.new.id === currentTrip.id) {
+                    const oldStatus = currentTrip.status;
+                    currentTrip = { ...currentTrip, ...payload.new };
+                    
+                    // Si el conductor acaba de aceptar el viaje
+                    if (payload.new.status === 'accepted' && payload.new.driver_id) {
+                        console.log("🚗 Conductor asignado. Buscando perfil...");
+                        updateTripUI(); 
 
-                try {
-                    // Buscamos los datos del conductor
-                    const { data, error } = await supabaseClient
-                        .from('user_profiles')
-                        .select('*')
-                        .eq('id', payload.new.driver_id)
-                        .single();
+                        try {
+                            const { data, error } = await supabaseClient
+                                .from('user_profiles')
+                                .select('*')
+                                .eq('id', payload.new.driver_id)
+                                .single();
 
-                    if (error) {
-                        console.error("❌ Error obteniendo perfil del conductor:", error.message);
+                            if (error) console.error("❌ Error obteniendo perfil del conductor:", error.message);
+
+                            if (data) {
+                                console.log("✅ Datos del conductor obtenidos:", data);
+                                currentTrip.driver = data;
+                                updateTripUI(); 
+                                startDriverLocationTracking();
+                            }
+                        } catch (err) {
+                            console.error("❌ Fallo crítico al procesar aceptación:", err);
+                        }
                     }
-
-                    if (data) {
-                        console.log("✅ Datos del conductor obtenidos:", data);
-                        currentTrip.driver = data;
-                        updateTripUI(); // Actualizamos de nuevo ya con el nombre y código
-                        startDriverLocationTracking();
+                    
+                    // Si el viaje cambia a "started" (En curso hacia el destino)
+                    else if (payload.new.status === 'started' && oldStatus !== 'started') {
+                        updateTripUI();
+                        drawRoute(); // Redibujamos la línea ahora apuntando al destino
                     }
-                } catch (err) {
-                    console.error("❌ Fallo crítico al procesar aceptación:", err);
+                    
+                    // Si el viaje terminó o se canceló
+                    else if (['completed', 'cancelled'].includes(payload.new.status)) {
+                        stopDriverLocationTracking(); 
+                        setTimeout(() => { 
+                            currentTrip = null; 
+                            updateTripUI(); 
+                            originCoords = null;
+                            locateBtn.click();
+                        }, 2000);
+                    } 
+                    else { 
+                        updateTripUI(); 
+                    }
                 }
-            }
+            }).subscribe((status) => {
+                console.log("🔌 Estado de conexión Realtime:", status);
+            });
             
-            // Si el viaje terminó o se canceló
-            else if (['completed', 'cancelled'].includes(payload.new.status)) {
-                stopDriverLocationTracking(); 
-                setTimeout(() => { 
-                    currentTrip = null; 
-                    updateTripUI(); 
-                    originCoords = null;
-                    locateBtn.click();
-                }, 2000);
-            } 
-            // Si el viaje cambia a otro estado (ej. "started")
-            else { 
-                updateTripUI(); 
-            }
+            subscriptions.push(sub);
         }
-    }).subscribe((status) => {
-        console.log("🔌 Estado de conexión Realtime:", status);
-    });
-    
-    subscriptions.push(sub);
-}
 
         // UX Interactions
         let panelCollapsed = false;
