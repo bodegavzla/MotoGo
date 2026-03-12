@@ -38,6 +38,7 @@
         .driver-marker-animated { transition: transform 1s linear !important; }
         #motorcycle-inner-icon-passenger { transition: transform 0.5s ease-out; transform-origin: center; }
         .passenger-marker-animated { transition: transform 1s linear !important; }
+        .nearby-driver-marker { transition: transform 2s linear !important; z-index: 500 !important; }
         
         #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 3000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
 
@@ -716,6 +717,9 @@
         let originCoords = null;
         let destinationCoords = null;
         let passengerWatchId = null; 
+        // NUEVO: Radar de conductores libres
+        let nearbyDriversInterval = null;
+        let nearbyDriverMarkers = {};
         let fullRouteCoords = null; // NUEVO: Memoria de la ruta exacta
 
         // DOM
@@ -1280,9 +1284,11 @@
             }
             updateTripUI();
         }
-
-        function updateTripUI() {
+function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
+                // ENCENDEMOS EL RADAR DE MOTOS LIBRES AL NO TENER VIAJE
+                startNearbyDriversTracking(); 
+
                 const canRequest = originCoords && destinationCoords;
                 tripActions.innerHTML = `
                     <button class="btn-request" id="request-trip-btn" ${!canRequest ? 'disabled' : ''}>
@@ -1304,12 +1310,17 @@
                 let html = '';
                 
                 if (currentTrip.status === 'pending') {
+                    // MIENTRAS BUSCA CONDUCTOR, EL RADAR SIGUE ENCENDIDO
+                    startNearbyDriversTracking();
+
                     html = `<div class="trip-status"><p class="status-text pulse-animation">Buscando conductor...</p></div>`;
-                    
                     mapInstructions.style.display = 'flex';
                     mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Buscando conductor...';
                 } 
                 else if (currentTrip.status === 'accepted') {
+                    // ¡APAGAMOS EL RADAR! Porque ya tienes conductor asignado
+                    stopNearbyDriversTracking();
+
                     html = `
                         <div class="driver-arrival">
                             <div class="driver-icon"><i class="fas fa-motorcycle"></i></div>
@@ -1323,8 +1334,10 @@
                     mapInstructions.innerHTML = '<i class="fas fa-motorcycle"></i> Conductor asignado';
                 } 
                 else if (currentTrip.status === 'started') {
+                    // ¡APAGAMOS EL RADAR! (Por si acaso)
+                    stopNearbyDriversTracking();
+
                     html = `<div class="trip-status"><p class="status-text">En viaje a tu destino</p></div>`;
-                    
                     mapInstructions.style.display = 'flex';
                     mapInstructions.innerHTML = '<i class="fas fa-route"></i> En viaje al destino';
                 }
@@ -1445,6 +1458,97 @@
             });
             
             subscriptions.push(sub);
+        }
+        // ============================================
+        // UTILIDADES
+        // ============================================
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radio de la tierra en km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // ============================================
+        // RADAR DE CONDUCTORES LIBRES (GHOST CARS)
+        // ============================================
+        function startNearbyDriversTracking() {
+            if (nearbyDriversInterval) return;
+            fetchNearbyDrivers(); // Buscar de inmediato
+            nearbyDriversInterval = setInterval(fetchNearbyDrivers, 10000); // Actualizar cada 10 segundos
+        }
+
+        function stopNearbyDriversTracking() {
+            if (nearbyDriversInterval) {
+                clearInterval(nearbyDriversInterval);
+                nearbyDriversInterval = null;
+            }
+            // Limpiar todas las motos libres del mapa
+            Object.values(nearbyDriverMarkers).forEach(marker => map.removeLayer(marker));
+            nearbyDriverMarkers = {};
+        }
+
+        async function fetchNearbyDrivers() {
+            // Si ya tenemos un conductor asignado, no queremos ver a los demás
+            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) return;
+            
+            // Consultamos conductores disponibles con ubicación activa
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('id, full_name, driver_lat, driver_lng')
+                .eq('role', 'conductor')
+                .eq('available', true)
+                .not('driver_lat', 'is', null);
+                
+            if (error || !data) return;
+
+            const activeDriverIds = data.map(d => d.id);
+            
+            // 1. Borramos los que se desconectaron
+            for (const id in nearbyDriverMarkers) {
+                if (!activeDriverIds.includes(id)) {
+                    map.removeLayer(nearbyDriverMarkers[id]);
+                    delete nearbyDriverMarkers[id];
+                }
+            }
+
+            // 2. Dibujamos o deslizamos a los conectados
+            data.forEach(driver => {
+                // Solo mostrar los que estén a menos de 50km de ti
+                if (originCoords) {
+                    const dist = calculateDistance(originCoords.lat, originCoords.lng, driver.driver_lat, driver.driver_lng);
+                    if (dist > 50) return; 
+                }
+
+                if (nearbyDriverMarkers[driver.id]) {
+                    // Si ya existe, lo deslizamos a la nueva posición
+                    nearbyDriverMarkers[driver.id].setLatLng([driver.driver_lat, driver.driver_lng]);
+                } else {
+                    // Si es nuevo, creamos su marcador con el nombre
+                    const shortName = driver.full_name.split(' ')[0];
+                    const icon = L.divIcon({
+                        className: 'nearby-driver-marker',
+                        html: `
+                            <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-15px);">
+                                <div style="background:rgba(0,0,0,0.65); color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; margin-bottom:4px; white-space:nowrap; backdrop-filter:blur(4px); border: 0.5px solid rgba(255,255,255,0.2);">
+                                    ${shortName}
+                                </div>
+                                <div style="width:26px;height:26px;background:var(--ios-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);">
+                                    <i class="fas fa-motorcycle" style="color:white;font-size:12px;"></i>
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [40, 60],
+                        iconAnchor: [20, 50]
+                    });
+                    const marker = L.marker([driver.driver_lat, driver.driver_lng], { icon }).addTo(map);
+                    nearbyDriverMarkers[driver.id] = marker;
+                }
+            });
         }
 
         // UX Interactions
