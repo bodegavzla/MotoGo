@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
-            var(--brand-yellow): #FFC300;
             --brand-yellow: #FFC300;
             --brand-dark: #2E2725;
             --brand-dark-light: #3D3532;
@@ -295,6 +294,13 @@
             if (map !== null) return; 
             map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+            map.on('click', onMapClick); // Reactivamos el clic en el mapa
+        }
+
+        function onMapClick(e) {
+            if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) return;
+            if (!originCoords) { mapInstructions.innerHTML = '<i class="fas fa-search-location"></i> Buscando tu ubicación...'; locateBtn.click(); return; }
+            setDestination(e.latlng.lat, e.latlng.lng);
         }
 
         async function setDestination(lat, lng) {
@@ -316,6 +322,8 @@
                 }
             }
             try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) {}
+            
+            updateTripUI(); // Actualizar el panel para mostrar el botón habilitado
         }
 
         dropoffInput.addEventListener('input', (e) => {
