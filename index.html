@@ -266,6 +266,7 @@
         function showModal(modal) { modal.classList.add('active'); }
         function hideModals() { loginModal.classList.remove('active'); registerModal.classList.remove('active'); }
         function unsubscribeAll() { subscriptions.forEach(sub => sub.unsubscribe()); subscriptions = []; }
+        function showLogin() { hideModals(); showModal(loginModal); }
 
         async function checkSession() { try { const { data: { session } } = await supabaseClient.auth.getSession(); if (session) await loadUserProfile(session.user.id); else showLogin(); } catch(e) { showLogin(); } finally { loadingScreen.style.display = 'none'; } }
         async function loadUserProfile(userId) {
