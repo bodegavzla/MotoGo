@@ -19,21 +19,25 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--brand-dark); color: white; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-
-        /* Mapa y Marcadores */
-        .driver-marker-animated { transition: transform 1s linear !important; }
-        #motorcycle-inner-icon-passenger { transition: transform 0.5s ease-out; transform-origin: center; }
-        .passenger-marker-animated { transition: transform 1s linear !important; }
-        .nearby-driver-marker { transition: transform 2s linear !important; z-index: 500 !important; }
         
-        #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 3000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
-        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-dark); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--brand-dark); 
+            color: white; 
+            min-height: 100vh; 
+            min-height: 100dvh; 
+            overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased; 
+        }
+
+        /* --- ESTILOS GENERALES Y MODALES --- */
+        #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 5000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-dark); display: flex; justify-content: center; align-items: center; z-index: 4000; }
+        
         .spinner-large { border: 4px solid rgba(255, 195, 0, 0.2); border-left-color: var(--brand-yellow); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Modales */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
         .modal.active { display: flex; opacity: 1; }
         .modal-content { background-color: var(--brand-dark-light); border-radius: 20px; width: 90%; max-width: 400px; padding: 30px 25px; position: relative; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 20px 40px rgba(0,0,0,0.4); max-height: 90vh; overflow-y: auto; color: white; border: 1px solid rgba(255,255,255,0.1); }
         .modal.active .modal-content { transform: scale(1); }
@@ -44,10 +48,12 @@
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--ios-gray); font-weight: 500; }
         input { width: 100%; padding: 14px 16px; background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 16px; color: white; font-family: inherit; transition: border 0.2s; }
         input:focus { border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); }
+        input:disabled { background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; }
         
         button { width: 100%; padding: 16px; background-color: var(--brand-yellow); color: var(--brand-dark); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
         button:active { transform: scale(0.98); opacity: 0.9; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         .switch-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--ios-gray); }
         .switch-link a { color: var(--brand-yellow); text-decoration: none; font-weight: 500; cursor: pointer; }
 
@@ -58,26 +64,58 @@
         .permission-text { color: var(--ios-gray); font-size: 15px; text-align: center; margin-bottom: 24px; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: white; margin-top: 12px; }
 
-        /* Estructura Principal */
-        #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
-        header { display: flex; justify-content: space-between; align-items: center; background: rgba(46, 39, 37, 0.85); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 1000; position: absolute; top: 0; width: 100%; }
-        header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
-        .user-info { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 15px; color: white; }
-        #logout-btn { width: 36px; height: 36px; padding: 0; border-radius: 18px; background-color: rgba(255, 59, 48, 0.15); color: var(--ios-red); display: flex; align-items: center; justify-content: center; }
+        .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 14px; display: none; font-weight: 500; }
+        .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); }
+        .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); }
+        .profile-spinner { font-size: 20px; animation: spin 1s linear infinite; display: none; }
 
+        /* --- HEADER Y PERFIL --- */
+        #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
+        header { display: flex; justify-content: space-between; align-items: center; background: rgba(46, 39, 37, 0.85); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 2000; position: absolute; top: 0; width: 100%; }
+        header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
+        
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white;}
+        .user-info-btn:active { transform: scale(0.95); background: rgba(255,195,0,0.1); border-color: var(--brand-yellow); color: var(--brand-yellow); }
+        .user-info-avatar { width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); color: var(--brand-dark); display: flex; justify-content: center; align-items: center; font-size: 12px; overflow: hidden; }
+        .user-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Vista de Perfil Deslizable */
+        .profile-view { position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; background: rgba(46, 39, 37, 0.98); backdrop-filter: blur(20px); z-index: 3500; transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; overflow-y: auto; }
+        .profile-view.active { left: 0; }
+        
+        .profile-header { padding: 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; background: var(--brand-dark); z-index: 10;}
+        .profile-header h2 { margin: 0; flex: 1; text-align: left; font-size: 18px; margin-left: 15px; color: white; }
+        .btn-back-profile { background: transparent; border: none; color: var(--brand-yellow); font-size: 20px; padding: 0; width: auto; cursor: pointer; }
+        .btn-logout-profile { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); padding: 8px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; width: auto; border: 1px solid rgba(255, 59, 48, 0.2); cursor: pointer; }
+        
+        .profile-content { padding: 30px 20px; flex: 1; }
+        .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; }
+        .avatar-upload { width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); position: relative; border: 3px solid var(--brand-yellow); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .avatar-upload img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .avatar-upload .placeholder-icon { font-size: 40px; color: var(--brand-yellow); }
+        .avatar-upload .overlay { position: absolute; bottom: 0; background: rgba(0,0,0,0.7); width: 100%; text-align: center; padding: 8px 0; color: white; font-size: 12px; font-weight: 600; }
+        input[type="file"] { display: none; }
+        .btn-save-profile { margin-top: 20px; }
+
+        /* --- MAPA Y MARCADORES --- */
         #map-container { flex: 1; position: relative; margin-top: 0; }
         #map { width: 100%; height: 100%; }
-
+        
         .map-instructions { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 500; z-index: 1000; text-align: center; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; }
         .map-instructions i { color: var(--brand-yellow); }
 
         .locate-btn { position: absolute; bottom: 230px; right: 20px; width: 48px; height: 48px; border-radius: 24px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); transition: all 0.2s ease; }
         
-        /* PANEL INTELIGENTE */
+        .driver-marker-animated { transition: margin 0.5s linear !important; }
+        .passenger-marker-animated { transition: transform 1s linear !important; }
+        .nearby-driver-marker { transition: transform 2s linear !important; z-index: 500 !important; }
+
+        /* --- PANEL INTELIGENTE --- */
         .trip-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--brand-dark); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding: 20px 24px calc(30px + env(safe-area-inset-bottom)) 24px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); border-top: 1px solid rgba(255,255,255,0.1); }
         .panel-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: pointer; }
 
-        /* Cotizador y Origen/Destino */
+        /* Cotizador y Destino */
         #setup-section { transition: opacity 0.3s; }
         .location-section { margin-bottom: 16px; }
         .location-section h3 { font-size: 12px; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
@@ -85,6 +123,7 @@
         .location-icon { width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .location-box.pickup .location-icon { background: rgba(52, 199, 89, 0.15); color: var(--ios-green); }
         .location-box.dropoff .location-icon { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); }
+        
         .location-content { flex: 1; }
         .location-text { font-size: 15px; color: white; font-weight: 500; }
         .location-text.placeholder { color: var(--ios-gray); font-weight: 400; }
@@ -93,22 +132,20 @@
         
         .search-results-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--brand-dark-light); border-radius: 12px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); margin-bottom: 8px; z-index: 2000; max-height: 200px; overflow-y: auto; display: none; border: 1px solid rgba(255,255,255,0.1); }
         .search-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: white; }
-        
-        /* Controles de Negociación (Precio) */
+
+        /* Controles de Precio */
         .price-negotiator { background: rgba(255, 195, 0, 0.05); border: 1px solid rgba(255, 195, 0, 0.2); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; }
         .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; }
         .price-controls { display: flex; align-items: center; gap: 15px; }
         .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s;}
         .price-btn:active { transform: scale(0.9); }
         
-        /* Contenedor y Input de Precio + Conversor BS */
         .price-center { display: flex; flex-direction: column; align-items: center; }
         .price-display-wrapper { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; min-width: 80px; }
         .currency-symbol { margin-right: 2px; }
         .price-input { background: transparent; border: none; color: white; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; -moz-appearance: textfield; padding: 0; }
         .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
-        /* NUEVO: Botón Píldora de BS BCV */
         .bs-conversion { font-size: 11px; color: var(--ios-gray); margin-top: 2px; cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
         .bs-conversion:active { background: rgba(255, 195, 0, 0.1); transform: scale(0.95); }
 
@@ -120,9 +157,10 @@
         
         .offer-card { flex: 0 0 85%; scroll-snap-align: center; background: var(--brand-dark-light); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,195,0,0.3); display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
         .offer-header { display: flex; justify-content: space-between; align-items: center; }
         .offer-driver { display: flex; align-items: center; gap: 10px; }
-        .offer-avatar { width: 40px; height: 40px; background: rgba(255,195,0,0.1); border-radius: 20px; color: var(--brand-yellow); display: flex; justify-content: center; align-items: center; font-size: 18px; }
+        .offer-avatar { width: 40px; height: 40px; background: var(--brand-dark); border-radius: 20px; color: var(--brand-yellow); border: 1px solid var(--brand-yellow); display: flex; justify-content: center; align-items: center; font-size: 18px; overflow: hidden; }
         .offer-name { font-weight: 600; font-size: 15px; color: white; }
         .offer-dist { font-size: 12px; color: var(--ios-gray); }
         .offer-price { font-size: 22px; font-weight: 700; color: var(--brand-yellow); }
@@ -130,7 +168,7 @@
 
         /* Conductor Seleccionado (Match) */
         .driver-card { background: var(--brand-dark-light); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
-        .driver-avatar { width: 50px; height: 50px; background: rgba(255, 195, 0, 0.1); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); border: 1px solid rgba(255,195,0,0.3); }
+        .driver-avatar { width: 50px; height: 50px; background: var(--brand-dark); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); border: 2px solid var(--brand-yellow); overflow: hidden; }
         .driver-details { flex: 1; }
         .driver-details h4 { font-size: 16px; color: white; margin-bottom: 2px; }
         .driver-details p { font-size: 13px; color: var(--ios-gray); margin-bottom: 2px; }
@@ -146,21 +184,103 @@
     <div id="network-status"><i class="fas fa-wifi-slash"></i> Sin conexión a Internet</div>
     <div id="loading-screen"><div class="spinner-large"></div></div>
 
-    <div id="permission-modal" class="modal"><div class="modal-content"><div class="permission-icon"><i class="fas fa-location-arrow"></i></div><h2>Permitir Ubicación</h2><p class="permission-text">Mi Uber necesita acceso a tu ubicación.</p><button id="allow-permission-btn">Permitir</button><button class="btn-secondary" id="later-permission-btn">Más tarde</button></div></div>
-    <div id="permission-denied-modal" class="modal"><div class="modal-content"><div class="permission-icon denied"><i class="fas fa-location-slash"></i></div><h2>Ubicación Bloqueada</h2><p class="permission-text">Habilita el permiso en ajustes.</p><button id="understand-btn">Entendido</button></div></div>
+    <div id="permission-modal" class="modal">
+        <div class="modal-content">
+            <div class="permission-icon"><i class="fas fa-location-arrow"></i></div>
+            <h2>Permitir Ubicación</h2>
+            <p class="permission-text">Mi Uber necesita acceso a tu ubicación.</p>
+            <button id="allow-permission-btn">Permitir</button>
+            <button class="btn-secondary" id="later-permission-btn">Más tarde</button>
+        </div>
+    </div>
+    
+    <div id="permission-denied-modal" class="modal">
+        <div class="modal-content">
+            <div class="permission-icon denied"><i class="fas fa-location-slash"></i></div>
+            <h2>Ubicación Bloqueada</h2>
+            <p class="permission-text">Habilita el permiso en ajustes.</p>
+            <button id="understand-btn">Entendido</button>
+        </div>
+    </div>
 
     <div id="login-modal" class="modal">
-        <div class="modal-content"><span class="close-modal" id="close-login">&times;</span><h2>Iniciar Sesión</h2><form id="login-form"><div class="form-group"><label>Correo</label><input type="email" id="login-email" required></div><div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div><button type="submit" id="login-btn">Entrar</button><div class="message error-message" id="login-error"></div></form><div class="switch-link">¿No tienes cuenta? <a id="show-register">Regístrate</a></div></div>
+        <div class="modal-content">
+            <span class="close-modal" id="close-login">&times;</span>
+            <h2>Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="form-group"><label>Correo</label><input type="email" id="login-email" required></div>
+                <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div>
+                <button type="submit" id="login-btn">Entrar</button>
+                <div class="message error-message" id="login-error"></div>
+            </form>
+            <div class="switch-link">¿No tienes cuenta? <a id="show-register">Regístrate</a></div>
+        </div>
     </div>
 
     <div id="register-modal" class="modal">
-        <div class="modal-content"><span class="close-modal" id="close-register">&times;</span><h2>Crear Cuenta</h2><form id="register-form"><div class="form-group"><label>Nombre</label><input type="text" id="register-fullname" required></div><div class="form-group"><label>Código (8 dígitos)</label><input type="text" id="register-code" maxlength="8" pattern="\d{8}" required></div><div class="form-group"><label>Correo</label><input type="email" id="register-email" required></div><div class="form-group"><label>Contraseña</label><input type="password" id="register-password" required></div><button type="submit" id="register-btn">Registrarse</button><div class="message error-message" id="register-error"></div><div class="message success-message" id="register-success"></div></form><div class="switch-link">¿Ya tienes cuenta? <a id="show-login">Inicia sesión</a></div></div>
+        <div class="modal-content">
+            <span class="close-modal" id="close-register">&times;</span>
+            <h2>Crear Cuenta</h2>
+            <form id="register-form">
+                <div class="form-group"><label>Nombre</label><input type="text" id="register-fullname" required></div>
+                <div class="form-group"><label>PIN de Seguridad (4 a 8 dígitos)</label><input type="text" id="register-code" maxlength="8" pattern="\d{4,8}" required></div>
+                <div class="form-group"><label>Correo</label><input type="email" id="register-email" required></div>
+                <div class="form-group"><label>Contraseña</label><input type="password" id="register-password" required></div>
+                <button type="submit" id="register-btn">Registrarse</button>
+                <div class="message error-message" id="register-error"></div>
+                <div class="message success-message" id="register-success"></div>
+            </form>
+            <div class="switch-link">¿Ya tienes cuenta? <a id="show-login">Inicia sesión</a></div>
+        </div>
+    </div>
+
+    <div id="profile-view" class="profile-view">
+        <div class="profile-header">
+            <button class="btn-back-profile" onclick="closeProfile()"><i class="fas fa-arrow-left"></i></button>
+            <h2>Mi Perfil</h2>
+            <button class="btn-logout-profile" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+        </div>
+        <div class="profile-content">
+            <form id="profile-form">
+                <div class="avatar-upload-container">
+                    <label for="avatar-input" class="avatar-upload" id="avatar-preview-container">
+                        <i class="fas fa-user placeholder-icon" id="avatar-placeholder"></i>
+                        <img id="avatar-image" src="" alt="Avatar">
+                        <div class="overlay"><i class="fas fa-camera"></i></div>
+                    </label>
+                    <input type="file" id="avatar-input" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="profile-fullname" required>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono de Contacto</label>
+                    <input type="tel" id="profile-phone" placeholder="Ej: 0414 123 4567" required>
+                </div>
+                <div class="form-group">
+                    <label>PIN de Seguridad (Solo Lectura)</label>
+                    <input type="text" id="profile-code" disabled>
+                </div>
+                <button type="submit" class="btn-save-profile" id="btn-save-profile">
+                    <span id="save-text">Guardar Cambios</span>
+                    <i class="fas fa-circle-notch profile-spinner" id="save-spinner"></i>
+                </button>
+                <div class="message success-message" id="profile-success"></div>
+                <div class="message error-message" id="profile-error"></div>
+            </form>
+        </div>
     </div>
 
     <div id="main-panel">
         <header>
             <h1>Mi Uber</h1>
-            <div class="user-info"><span id="user-name"></span><button id="logout-btn"><i class="fas fa-sign-out-alt"></i></button></div>
+            <div class="header-actions">
+                <div class="user-info-btn" onclick="openProfile()">
+                    <div class="user-info-avatar" id="mini-avatar"><i class="fas fa-user"></i></div>
+                    <span id="user-name"></span>
+                </div>
+            </div>
         </header>
 
         <div id="map-container">
@@ -174,7 +294,12 @@
                 <div id="setup-section">
                     <div class="location-section">
                         <h3><i class="fas fa-dot-circle"></i> Origen</h3>
-                        <div class="location-box pickup"><div class="location-icon"><i class="fas fa-circle"></i></div><div class="location-content"><p class="location-text placeholder" id="pickup-text">Buscando...</p></div></div>
+                        <div class="location-box pickup">
+                            <div class="location-icon"><i class="fas fa-circle"></i></div>
+                            <div class="location-content">
+                                <p class="location-text placeholder" id="pickup-text">Buscando...</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="location-section">
@@ -217,43 +342,74 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // Supabase Init
+        // ==========================================
+        // CONFIGURACIÓN SUPABASE
+        // ==========================================
         const SUPABASE_URL = 'https://ajmxtbafpcwjbhtkswuu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbXh0YmFmcGN3amJodGtzd3V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzQyMTEsImV4cCI6MjA4ODc1MDIxMX0.NNNOTr05ef6umCGhKH5GId_j9uoVBzJJfGk6e4rsmQ0';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Global State
-        let currentUser = null; let userProfile = null; let map = null;
-        let originMarker = null; let destinationMarker = null; let driverMarker = null;
-        let routeLine = null; let searchRadiusCircle = null; let currentTrip = null;
-        let subscriptions = []; let driverLocationChannel = null; let permissionStatus = 'prompt';
-        let originCoords = null; let destinationCoords = null; let passengerWatchId = null; 
-        let nearbyDriversInterval = null; let nearbyDriverMarkers = {}; let fullRouteCoords = null; 
+        // ==========================================
+        // ESTADO GLOBAL
+        // ==========================================
+        let currentUser = null; 
+        let userProfile = null; 
+        let map = null;
+        let originMarker = null; 
+        let destinationMarker = null; 
+        let driverMarker = null;
+        let routeLine = null; 
+        let searchRadiusCircle = null; 
+        let currentTrip = null;
+        let subscriptions = []; 
+        let driverLocationChannel = null; 
+        let permissionStatus = 'prompt';
+        let originCoords = null; 
+        let destinationCoords = null; 
+        let passengerWatchId = null; 
+        let nearbyDriversInterval = null; 
+        let nearbyDriverMarkers = {}; 
+        let fullRouteCoords = null; 
         
-        // Negociación y BCV
-        let currentOfferPrice = 0;
+        let currentOfferPrice = 0; 
         let incomingOffers = {}; 
-        let offersChannel = null;
+        let offersChannel = null; 
         let tasaBCV = null;
 
+        // Elementos DOM
         const loadingScreen = document.getElementById('loading-screen');
-        const loginModal = document.getElementById('login-modal'); const registerModal = document.getElementById('register-modal');
-        const permissionModal = document.getElementById('permission-modal'); const permissionDeniedModal = document.getElementById('permission-denied-modal');
-        const mainPanel = document.getElementById('main-panel'); const userNameSpan = document.getElementById('user-name');
-        const logoutBtn = document.getElementById('logout-btn'); const locateBtn = document.getElementById('locate-btn');
-        const pickupText = document.getElementById('pickup-text'); const dropoffInput = document.getElementById('dropoff-input');
-        const searchResults = document.getElementById('search-results'); let searchTimeout = null;
-        const setupSection = document.getElementById('setup-section'); const tripActions = document.getElementById('trip-actions');
-        const tripPanel = document.getElementById('trip-panel'); const mapInstructions = document.getElementById('map-instructions');
+        const loginModal = document.getElementById('login-modal'); 
+        const registerModal = document.getElementById('register-modal');
+        const permissionModal = document.getElementById('permission-modal'); 
+        const permissionDeniedModal = document.getElementById('permission-denied-modal');
+        const mainPanel = document.getElementById('main-panel'); 
+        const userNameSpan = document.getElementById('user-name');
+        const locateBtn = document.getElementById('locate-btn');
+        const pickupText = document.getElementById('pickup-text'); 
+        const dropoffInput = document.getElementById('dropoff-input');
+        const searchResults = document.getElementById('search-results'); 
+        let searchTimeout = null;
         
-        // Elementos del Cotizador
+        const setupSection = document.getElementById('setup-section'); 
+        const tripActions = document.getElementById('trip-actions');
+        const tripPanel = document.getElementById('trip-panel'); 
+        const mapInstructions = document.getElementById('map-instructions');
+        
         const priceNegotiator = document.getElementById('price-negotiator');
         const currentOfferInput = document.getElementById('current-offer-input');
         const requestTripBtn = document.getElementById('request-trip-btn');
+        
+        // Elementos Perfil
+        const miniAvatar = document.getElementById('mini-avatar');
+        const profileView = document.getElementById('profile-view');
+        const avatarInput = document.getElementById('avatar-input');
+        const avatarImage = document.getElementById('avatar-image');
+        const avatarPlaceholder = document.getElementById('avatar-placeholder');
+        let selectedAvatarFile = null;
 
-        // ============================================
+        // ==========================================
         // API DOLAR BCV
-        // ============================================
+        // ==========================================
         window.convertirABs = async function() {
             const bsLabel = document.getElementById('bs-conversion');
             if (!tasaBCV) {
@@ -280,9 +436,154 @@
             }
         }
 
-        // ============================================
+        // ==========================================
+        // GESTIÓN DE PERFIL Y OPTIMIZACIÓN DE IMAGEN
+        // ==========================================
+        function openProfile() {
+            document.getElementById('profile-fullname').value = userProfile.full_name;
+            document.getElementById('profile-phone').value = userProfile.phone || '';
+            document.getElementById('profile-code').value = userProfile.numeric_code;
+            
+            if (userProfile.avatar_url) {
+                avatarImage.src = userProfile.avatar_url;
+                avatarImage.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            }
+            profileView.classList.add('active');
+        }
+
+        function closeProfile() {
+            profileView.classList.remove('active');
+            selectedAvatarFile = null; 
+        }
+
+        // Preview Local
+        avatarInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                selectedAvatarFile = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarImage.src = e.target.result;
+                    avatarImage.style.display = 'block';
+                    avatarPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(selectedAvatarFile);
+            }
+        });
+
+        // Compresor en vivo
+        function compressImage(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let width = img.width; let height = img.height;
+                        if (width > height) { 
+                            if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } 
+                        } else { 
+                            if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } 
+                        }
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', quality);
+                    }
+                }
+            });
+        }
+
+        // Guardar Perfil
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-profile');
+            const text = document.getElementById('save-text');
+            const spin = document.getElementById('save-spinner');
+            const errorDiv = document.getElementById('profile-error');
+            const successDiv = document.getElementById('profile-success');
+            
+            btn.disabled = true; text.style.display = 'none'; spin.style.display = 'inline-block';
+            errorDiv.style.display = 'none'; successDiv.style.display = 'none';
+
+            let newAvatarUrl = userProfile.avatar_url;
+
+            try {
+                // Subir foto empaquetada
+                if (selectedAvatarFile) {
+                    const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7); 
+                    const fileName = `passenger_${currentUser.id}_${Date.now()}.jpg`; 
+                    const imageFile = new File([compressedBlob], fileName, { type: 'image/jpeg' });
+                    
+                    const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, imageFile, { 
+                        cacheControl: '3600', 
+                        upsert: true, 
+                        contentType: 'image/jpeg' 
+                    });
+                    if (error) throw error;
+                    
+                    const { data: publicUrlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName); 
+                    newAvatarUrl = publicUrlData.publicUrl;
+                }
+                
+                // Guardar info
+                const newName = document.getElementById('profile-fullname').value; 
+                const newPhone = document.getElementById('profile-phone').value;
+                
+                const { error: dbError } = await supabaseClient.from('user_profiles')
+                    .update({ full_name: newName, phone: newPhone, avatar_url: newAvatarUrl })
+                    .eq('id', currentUser.id);
+                if (dbError) throw dbError;
+                
+                userProfile.full_name = newName; 
+                userProfile.phone = newPhone; 
+                userProfile.avatar_url = newAvatarUrl;
+                
+                updateHeaderUI(); 
+                
+                // Actualizar mi propia foto en el mapa (El Marcador de Origen)
+                if(originCoords && originMarker) { 
+                    const avHtml = userProfile.avatar_url ? 
+                        `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
+                    
+                    const iconHtml = userProfile.avatar_url ? 
+                        `<div style="width:40px;height:40px;border-radius:50%;border:3px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.4);background:var(--brand-dark);">${avHtml}</div>` : 
+                        avHtml;
+
+                    originMarker.setIcon(L.divIcon({ 
+                        className: 'passenger-marker-animated', 
+                        html: iconHtml, 
+                        iconSize: userProfile.avatar_url ? [40, 40] : [24, 24] 
+                    }));
+                }
+                
+                successDiv.textContent = "¡Perfil actualizado con éxito!"; 
+                successDiv.style.display = 'block'; 
+                setTimeout(() => closeProfile(), 1500);
+
+            } catch (error) {
+                console.error(error);
+                errorDiv.textContent = "Hubo un error al guardar. Revisa tu conexión."; 
+                errorDiv.style.display = 'block'; 
+            } finally {
+                btn.disabled = false; text.style.display = 'inline'; spin.style.display = 'none'; 
+            }
+        });
+
+        function updateHeaderUI() {
+            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
+            if(userProfile.avatar_url) {
+                miniAvatar.innerHTML = `<img src="${userProfile.avatar_url}" alt="user">`;
+            }
+        }
+
+        // ==========================================
         // MOTOR DE RUTAS Y COTIZADOR
-        // ============================================
+        // ==========================================
         async function getRealRoute(lat1, lng1, lat2, lng2) {
             try {
                 const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
@@ -336,7 +637,6 @@
             actualizarTextoBs();
         }
 
-        // Escuchar teclado
         currentOfferInput.addEventListener('input', (e) => {
             let val = parseFloat(e.target.value);
             if (!isNaN(val)) {
@@ -351,9 +651,9 @@
             actualizarTextoBs();
         });
 
-        // ============================================
+        // ==========================================
         // UBICACIÓN Y DESTINO
-        // ============================================
+        // ==========================================
         function initMap() {
             if (map !== null) return; 
             map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
@@ -415,10 +715,22 @@
             passengerWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords; originCoords = { lat: latitude, lng: longitude };
-                    if (originMarker) originMarker.setLatLng([latitude, longitude]);
-                    else {
+                    if (originMarker) {
+                        originMarker.setLatLng([latitude, longitude]);
+                    } else {
                         map.setView([latitude, longitude], 16);
-                        const originIcon = L.divIcon({ className: 'passenger-marker-animated', html: `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;box-shadow:0 0 0 4px rgba(255,195,0,0.2);"></div>`, iconSize: [24, 24] });
+                        
+                        // MAGIA: El marcador del pasajero al iniciar
+                        const avHtml = userProfile.avatar_url ? 
+                            `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                            `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
+                            
+                        const iconHtml = userProfile.avatar_url ? 
+                            `<div style="width:40px;height:40px;border-radius:50%;border:3px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.4);background:var(--brand-dark);">${avHtml}</div>` : 
+                            avHtml;
+
+                        const originIcon = L.divIcon({ className: 'passenger-marker-animated', html: iconHtml, iconSize: userProfile.avatar_url ? [40, 40] : [24, 24] });
+                        
                         originMarker = L.marker([latitude, longitude], { icon: originIcon }).addTo(map);
                         try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`); const data = await res.json(); pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual'; pickupText.classList.remove('placeholder'); } catch (e) {}
                         locateBtn.classList.remove('loading'); updateTripUI();
@@ -429,11 +741,12 @@
             );
         });
 
-        // ============================================
+        // ==========================================
         // LÓGICA DE VIAJES Y SUBASTA
-        // ============================================
+        // ==========================================
         async function checkCurrentTrip() {
-            const { data } = await supabaseClient.from('trips').select('*, driver:driver_id(full_name, numeric_code)').eq('passenger_id', currentUser.id).in('status', ['pending', 'accepted', 'started']).maybeSingle();
+            // Extraer la info del conductor para el viaje
+            const { data } = await supabaseClient.from('trips').select('*, driver:driver_id(full_name, numeric_code, avatar_url)').eq('passenger_id', currentUser.id).in('status', ['pending', 'accepted', 'started']).maybeSingle();
             if (data) {
                 currentTrip = data;
                 if (data.pickup_lat) originCoords = { lat: data.pickup_lat, lng: data.pickup_lng };
@@ -493,11 +806,16 @@
                         <div class="offers-list">
                 `;
                 offersArr.forEach(off => {
+                    // MAGIA: Foto del conductor en la tarjeta de oferta
+                    const dAv = off.avatar_url ? 
+                        `<img src="${off.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<i class="fas fa-user-tie"></i>`;
+                        
                     html += `
                         <div class="offer-card">
                             <div class="offer-header">
                                 <div class="offer-driver">
-                                    <div class="offer-avatar"><i class="fas fa-user-tie"></i></div>
+                                    <div class="offer-avatar">${dAv}</div>
                                     <div><div class="offer-name">${off.driver_name}</div><div class="offer-dist">A ${off.distance.toFixed(1)} km de ti</div></div>
                                 </div>
                                 <div class="offer-price">$${off.price.toFixed(2)}</div>
@@ -544,9 +862,13 @@
                 } 
                 else if (currentTrip.status === 'accepted') {
                     stopNearbyDriversTracking();
+                    const dAv = currentTrip.driver?.avatar_url ? 
+                        `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<i class="fas fa-motorcycle"></i>`;
+                        
                     tripActions.innerHTML = `
                         <div class="driver-card">
-                            <div class="driver-avatar"><i class="fas fa-motorcycle"></i></div>
+                            <div class="driver-avatar">${dAv}</div>
                             <div class="driver-details">
                                 <h4>${currentTrip.driver?.full_name || 'Conductor'}</h4>
                                 <p>Código: ${currentTrip.driver?.numeric_code || '...'}</p>
@@ -559,9 +881,13 @@
                 } 
                 else if (currentTrip.status === 'started') {
                     stopNearbyDriversTracking();
+                    const dAv = currentTrip.driver?.avatar_url ? 
+                        `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<i class="fas fa-route"></i>`;
+                        
                     tripActions.innerHTML = `
                         <div class="driver-card">
-                            <div class="driver-avatar" style="color:white; background:var(--brand-yellow); border-color:var(--brand-yellow);"><i class="fas fa-route"></i></div>
+                            <div class="driver-avatar" style="border-color:var(--brand-yellow);">${dAv}</div>
                             <div class="driver-details">
                                 <h4>En viaje hacia tu destino</h4>
                                 <p>Con ${currentTrip.driver?.full_name}</p>
@@ -618,64 +944,80 @@
             }).subscribe());
         }
 
+        // MAGIA: El marcador del conductor en movimiento ahora muestra su foto y el anillo
         function updateDriverVisuals(lat, lng, bearing) {
-            if (driverMarker) {
-                driverMarker.setLatLng([lat, lng]); const iconEl = document.getElementById('motorcycle-inner-icon-passenger'); if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
-                if (fullRouteCoords && routeLine) {
-                    let closestIndex = 0; let minDist = Infinity; const currentPos = L.latLng(lat, lng);
-                    for (let i = 0; i < fullRouteCoords.length; i++) { const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1])); if (dist < minDist) { minDist = dist; closestIndex = i; } }
-                    const remainingRoute = fullRouteCoords.slice(closestIndex); if (remainingRoute.length > 1) routeLine.setLatLngs(remainingRoute);
-                }
-            } else {
-                const icon = L.divIcon({ className: 'driver-marker-animated', html: `<div style="width:36px;height:36px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);"><i id="motorcycle-inner-icon-passenger" class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:14px;transform:rotate(${bearing}deg);"></i></div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
-                driverMarker = L.marker([lat, lng], { icon }).addTo(map); drawRoute();
+            if(!lat || !lng) return;
+            
+            const drvAv = currentTrip?.driver?.avatar_url ? 
+                `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:14px;"></i>`;
+                
+            const iconHtml = `
+                <div style="width:40px;height:40px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);position:relative;">
+                    ${drvAv}
+                    <div id="motorcycle-inner-icon-passenger" style="position:absolute; bottom:-4px; right:-4px; background:var(--brand-dark); width:18px; height:18px; border-radius:50%; border:1px solid var(--brand-yellow); display:flex; align-items:center; justify-content:center; transform:rotate(${bearing}deg); transition: transform 0.5s ease-out;">
+                        <i class="fas fa-location-arrow" style="color:var(--brand-yellow); font-size:8px; transform:rotate(-45deg);"></i>
+                    </div>
+                </div>`;
+            
+            if (driverMarker) { 
+                driverMarker.setLatLng([lat, lng]); 
+                driverMarker.setIcon(L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] })); 
+            } 
+            else { 
+                driverMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] }) }).addTo(map); 
+                drawRoute(); 
             }
         }
+        
         function startDriverLocationTracking() { if (!currentTrip) return; if (driverLocationChannel) driverLocationChannel.unsubscribe(); driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`).on('broadcast', { event: 'location' }, (payload) => { updateDriverVisuals(payload.payload.lat, payload.payload.lng, payload.payload.bearing || 0); }).subscribe(); if(driverMarker) drawRoute(); }
         function stopDriverLocationTracking() { if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; } if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } if (routeLine) { map.removeLayer(routeLine); routeLine = null; } if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } }
 
-        function calculateDistance(lat1, lon1, lat2, lon2) { const p = 0.017453292519943295, c = Math.cos; return 12742 * Math.asin(Math.sqrt(0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2)); }
+        // ==========================================
+        // RADAR GHOST CARS (Conductores cercanos)
+        // ==========================================
         function startNearbyDriversTracking() { if (nearbyDriversInterval) return; fetchNearbyDrivers(); nearbyDriversInterval = setInterval(fetchNearbyDrivers, 10000); }
         function stopNearbyDriversTracking() { if (nearbyDriversInterval) { clearInterval(nearbyDriversInterval); nearbyDriversInterval = null; } Object.values(nearbyDriverMarkers).forEach(marker => map.removeLayer(marker)); nearbyDriverMarkers = {}; }
 
         async function fetchNearbyDrivers() {
             if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) return;
-            const { data, error } = await supabaseClient.from('user_profiles').select('id, full_name, driver_lat, driver_lng').eq('role', 'conductor').eq('available', true).not('driver_lat', 'is', null);
+            // Traemos el avatar_url de los conductores cercanos
+            const { data, error } = await supabaseClient.from('user_profiles').select('id, full_name, driver_lat, driver_lng, avatar_url').eq('role', 'conductor').eq('available', true).not('driver_lat', 'is', null);
             if (error || !data) return;
             const activeIds = data.map(d => d.id);
             for (const id in nearbyDriverMarkers) { if (!activeIds.includes(id)) { map.removeLayer(nearbyDriverMarkers[id]); delete nearbyDriverMarkers[id]; } }
+            
             data.forEach(driver => {
                 if (originCoords && calculateDistance(originCoords.lat, originCoords.lng, driver.driver_lat, driver.driver_lng) > 50) return; 
-                if (nearbyDriverMarkers[driver.id]) nearbyDriverMarkers[driver.id].setLatLng([driver.driver_lat, driver.driver_lng]);
-                else {
-                    const icon = L.divIcon({ className: 'nearby-driver-marker', html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-15px);"><div style="background:var(--brand-dark-light); color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; margin-bottom:4px; white-space:nowrap; border: 1px solid rgba(255,255,255,0.1);">${driver.full_name.split(' ')[0]}</div><div style="width:26px;height:26px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 3px 8px rgba(0,0,0,0.5);"><i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:12px;"></i></div></div>`, iconSize: [40, 60], iconAnchor: [20, 50] });
-                    nearbyDriverMarkers[driver.id] = L.marker([driver.driver_lat, driver.driver_lng], { icon }).addTo(map);
+                
+                const dAv = driver.avatar_url ? 
+                    `<img src="${driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                    `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:12px;"></i>`;
+                    
+                const iconHtml = `
+                    <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-15px);">
+                        <div style="background:var(--brand-dark-light); color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; margin-bottom:4px; white-space:nowrap; border: 1px solid rgba(255,255,255,0.1);">${driver.full_name.split(' ')[0]}</div>
+                        <div style="width:30px;height:30px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 3px 8px rgba(0,0,0,0.5);">${dAv}</div>
+                    </div>`;
+                    
+                if (nearbyDriverMarkers[driver.id]) { 
+                    nearbyDriverMarkers[driver.id].setLatLng([driver.driver_lat, driver.driver_lng]); 
+                    nearbyDriverMarkers[driver.id].setIcon(L.divIcon({ className: 'nearby-driver-marker', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 50] }));
+                } else { 
+                    nearbyDriverMarkers[driver.id] = L.marker([driver.driver_lat, driver.driver_lng], { icon: L.divIcon({ className: 'nearby-driver-marker', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 50] }) }).addTo(map); 
                 }
             });
         }
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const btn = document.getElementById('login-btn'); btn.disabled=true; const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); if (!error) loadUserProfile(data.user.id); else { btn.disabled=false; alert(error.message); } });
-        document.getElementById('show-register').addEventListener('click', () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); });
-        document.getElementById('show-login').addEventListener('click', () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); });
-        document.getElementById('close-login').addEventListener('click', () => loginModal.classList.remove('active'));
-        document.getElementById('close-register').addEventListener('click', () => registerModal.classList.remove('active'));
-        logoutBtn.addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.reload(); });
-        
-        async function loadUserProfile(userId) {
-            const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
-            if (data.role !== 'pasajero') { alert('Cuenta de Conductor.'); await supabaseClient.auth.signOut(); return location.reload(); }
-            userProfile = data; currentUser = (await supabaseClient.auth.getUser()).data.user;
-            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
-            mainPanel.style.display = 'flex'; loginModal.classList.remove('active'); registerModal.classList.remove('active');
-            initMap(); await checkCurrentTrip(); subscribeToTripUpdates();
-            if (!currentTrip) locateBtn.click();
-        }
+        // ==========================================
+        // INIT Y LISTENERS DE LOGIN
+        // ==========================================
+        let panelCollapsed = false; document.getElementById('panel-handle').addEventListener('click', () => { panelCollapsed = !panelCollapsed; tripPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 70px))' : 'translateY(0)'; });
 
-        async function checkSession() { const { data } = await supabaseClient.auth.getSession(); if (data.session) loadUserProfile(data.session.user.id); else loginModal.classList.add('active'); loadingScreen.style.display = 'none'; }
+        document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const btn = document.getElementById('login-btn'); btn.disabled=true; const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); if (error) { btn.disabled=false; document.getElementById('login-error').textContent=error.message; document.getElementById('login-error').style.display='block'; } else loadUserProfile(data.user.id); });
+        document.getElementById('show-register').addEventListener('click', () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); }); document.getElementById('show-login').addEventListener('click', () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); }); document.getElementById('close-login').addEventListener('click', () => loginModal.classList.remove('active')); document.getElementById('close-register').addEventListener('click', () => registerModal.classList.remove('active'));
         
-        let panelCollapsed = false;
-        document.getElementById('panel-handle').addEventListener('click', () => { panelCollapsed = !panelCollapsed; tripPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 70px))' : 'translateY(0)'; });
-
+        window.logout = async function() { stopDriverLocationTracking(); unsubscribeAll(); await supabaseClient.auth.signOut(); location.reload(); }
         document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
