@@ -99,8 +99,12 @@
         .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; }
         .price-controls { display: flex; align-items: center; gap: 15px; }
         .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; }
-        .price-display { font-size: 24px; font-weight: 700; color: white; min-width: 80px; text-align: center; }
-        
+        /* Contenedor y Input de Precio */
+        .price-display-wrapper { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; min-width: 80px; }
+        .currency-symbol { margin-right: 2px; }
+        .price-input { background: transparent; border: none; color: white; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; -moz-appearance: textfield; padding: 0; }
+        /* Ocultar las flechitas nativas del input numérico */
+        .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         /* NUEVO: Lista de Subasta Magnética */
         .auction-container { margin-top: 15px; }
         .auction-title { color: var(--brand-yellow); font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
@@ -177,14 +181,10 @@
                         </div>
                     </div>
                     
-                    <div class="price-negotiator" id="price-negotiator">
-                        <h4>Ofrece una tarifa:</h4>
-                        <div class="price-controls">
-                            <button class="price-btn" onclick="adjustOffer(-0.5)">-</button>
-                            <div class="price-display">$<span id="current-offer-display">0.00</span></div>
-                            <button class="price-btn" onclick="adjustOffer(0.5)">+</button>
+                    <div class="price-display-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="current-offer-input" class="price-input" inputmode="decimal" step="0.5" min="1.00" value="0.00">
                         </div>
-                    </div>
                 </div>
 
                 <div id="trip-actions" style="margin-top: 20px;">
@@ -228,7 +228,7 @@
         
         // Elementos del Cotizador
         const priceNegotiator = document.getElementById('price-negotiator');
-        const currentOfferDisplay = document.getElementById('current-offer-display');
+        const currentOfferInput = document.getElementById('current-offer-input');
         const requestTripBtn = document.getElementById('request-trip-btn');
 
         // ============================================
@@ -284,8 +284,20 @@
         window.adjustOffer = function(amount) {
             currentOfferPrice += amount;
             if(currentOfferPrice < 1.0) currentOfferPrice = 1.0; // Piso mínimo global
-            currentOfferDisplay.textContent = currentOfferPrice.toFixed(2);
+            currentOfferInput.value = currentOfferPrice.toFixed(2);
         }
+
+        // NUEVO: Escuchar cuando el usuario escribe con el teclado
+        currentOfferInput.addEventListener('input', (e) => {
+            let val = parseFloat(e.target.value);
+            if (!isNaN(val)) currentOfferPrice = val;
+        });
+
+        // NUEVO: Formatear a 2 decimales cuando cierra el teclado (pierde el foco)
+        currentOfferInput.addEventListener('blur', (e) => {
+            if (currentOfferPrice < 1.0) currentOfferPrice = 1.0; // Evitar que ofrezca $0
+            e.target.value = currentOfferPrice.toFixed(2);
+        });
 
         // ============================================
         // UBICACIÓN Y DESTINO
@@ -315,7 +327,7 @@
                 if(routeData) {
                     map.fitBounds(L.latLngBounds(routeData.coordinates), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
                     currentOfferPrice = calculateSuggestedPrice(routeData.distance);
-                    currentOfferDisplay.textContent = currentOfferPrice.toFixed(2);
+                    currentOfferInput.value = currentOfferPrice.toFixed(2);
                     priceNegotiator.style.display = 'flex'; // Mostrar cotizador
                     requestTripBtn.textContent = 'Solicitar Viaje';
                     requestTripBtn.disabled = false;
