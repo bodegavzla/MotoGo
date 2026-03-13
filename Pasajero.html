@@ -94,18 +94,20 @@
         .search-results-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--brand-dark-light); border-radius: 12px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); margin-bottom: 8px; z-index: 2000; max-height: 200px; overflow-y: auto; display: none; border: 1px solid rgba(255,255,255,0.1); }
         .search-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: white; }
         
-        /* NUEVO: Controles de Negociación (Precio) */
+        /* Controles de Negociación (Precio) */
         .price-negotiator { background: rgba(255, 195, 0, 0.1); border: 1px solid rgba(255, 195, 0, 0.3); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; }
         .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; }
         .price-controls { display: flex; align-items: center; gap: 15px; }
         .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; }
+        
         /* Contenedor y Input de Precio */
         .price-display-wrapper { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; min-width: 80px; }
         .currency-symbol { margin-right: 2px; }
         .price-input { background: transparent; border: none; color: white; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; -moz-appearance: textfield; padding: 0; }
         /* Ocultar las flechitas nativas del input numérico */
         .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        /* NUEVO: Lista de Subasta Magnética */
+        
+        /* Lista de Subasta Magnética */
         .auction-container { margin-top: 15px; }
         .auction-title { color: var(--brand-yellow); font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .offers-list { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; scrollbar-width: none; }
@@ -181,10 +183,17 @@
                         </div>
                     </div>
                     
-                    <div class="price-display-wrapper">
-                            <span class="currency-symbol">$</span>
-                            <input type="number" id="current-offer-input" class="price-input" inputmode="decimal" step="0.5" min="1.00" value="0.00">
+                    <div class="price-negotiator" id="price-negotiator">
+                        <h4>Ofrece una tarifa:</h4>
+                        <div class="price-controls">
+                            <button class="price-btn" onclick="adjustOffer(-0.5)">-</button>
+                            <div class="price-display-wrapper">
+                                <span class="currency-symbol">$</span>
+                                <input type="number" id="current-offer-input" class="price-input" inputmode="decimal" step="0.5" min="1.00" value="0.00">
+                            </div>
+                            <button class="price-btn" onclick="adjustOffer(0.5)">+</button>
                         </div>
+                    </div>
                 </div>
 
                 <div id="trip-actions" style="margin-top: 20px;">
@@ -287,13 +296,13 @@
             currentOfferInput.value = currentOfferPrice.toFixed(2);
         }
 
-        // NUEVO: Escuchar cuando el usuario escribe con el teclado
+        // Escuchar cuando el usuario escribe con el teclado
         currentOfferInput.addEventListener('input', (e) => {
             let val = parseFloat(e.target.value);
             if (!isNaN(val)) currentOfferPrice = val;
         });
 
-        // NUEVO: Formatear a 2 decimales cuando cierra el teclado (pierde el foco)
+        // Formatear a 2 decimales cuando cierra el teclado (pierde el foco)
         currentOfferInput.addEventListener('blur', (e) => {
             if (currentOfferPrice < 1.0) currentOfferPrice = 1.0; // Evitar que ofrezca $0
             e.target.value = currentOfferPrice.toFixed(2);
@@ -328,14 +337,11 @@
                     map.fitBounds(L.latLngBounds(routeData.coordinates), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
                     currentOfferPrice = calculateSuggestedPrice(routeData.distance);
                     currentOfferInput.value = currentOfferPrice.toFixed(2);
-                    priceNegotiator.style.display = 'flex'; // Mostrar cotizador
-                    requestTripBtn.textContent = 'Solicitar Viaje';
-                    requestTripBtn.disabled = false;
                 }
             }
             try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) {}
             
-            updateTripUI(); // Actualizar el panel para mostrar el botón habilitado
+            updateTripUI(); // Actualizar el panel para mostrar el cotizador y el botón habilitado
         }
 
         dropoffInput.addEventListener('input', (e) => {
@@ -481,7 +487,8 @@
         // ============================================
         function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
-                setupSection.style.display = 'block'; priceNegotiator.style.display = (originCoords && destinationCoords) ? 'flex' : 'none';
+                setupSection.style.display = 'block'; 
+                priceNegotiator.style.display = (originCoords && destinationCoords) ? 'flex' : 'none';
                 startNearbyDriversTracking(); 
                 
                 tripActions.innerHTML = `<button class="btn-request" id="request-trip-btn" ${!(originCoords && destinationCoords) ? 'disabled' : ''}>Solicitar Viaje</button>`;
@@ -529,6 +536,26 @@
                     `;
                     mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-shield-alt" style="color:var(--brand-yellow);"></i> Viaje seguro iniciado';
                 }
+            }
+        }
+
+        window.shareRoute = async function() {
+            const dest = dropoffInput.value || 'mi destino';
+            const driverName = currentTrip.driver?.full_name || 'un conductor';
+            const driverCode = currentTrip.driver?.numeric_code || 'desconocido';
+            
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const trackingUrl = `${baseUrl}/invitado.html?viaje=${currentTrip.id}`;
+            
+            const textToShare = `📍 Sigue mi viaje en Mi Uber en tiempo real.\nVoy hacia: ${dest}\nConductor: ${driverName} (Cód: ${driverCode}).\n\nSigue mi ruta aquí: ${trackingUrl}`;
+
+            if (navigator.share) {
+                try { 
+                    await navigator.share({ title: 'Mi viaje seguro', text: textToShare }); 
+                } catch (err) { console.error('Error compartiendo:', err); }
+            } else {
+                navigator.clipboard.writeText(textToShare);
+                alert("Link de rastreo copiado al portapapeles. Pégalo en WhatsApp.");
             }
         }
 
