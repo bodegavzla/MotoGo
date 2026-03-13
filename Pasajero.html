@@ -95,18 +95,23 @@
         .search-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: white; }
         
         /* Controles de Negociación (Precio) */
-        .price-negotiator { background: rgba(255, 195, 0, 0.1); border: 1px solid rgba(255, 195, 0, 0.3); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; }
+        .price-negotiator { background: rgba(255, 195, 0, 0.05); border: 1px solid rgba(255, 195, 0, 0.2); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; }
         .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; }
         .price-controls { display: flex; align-items: center; gap: 15px; }
-        .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; }
+        .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s;}
+        .price-btn:active { transform: scale(0.9); }
         
-        /* Contenedor y Input de Precio */
+        /* Contenedor y Input de Precio + Conversor BS */
+        .price-center { display: flex; flex-direction: column; align-items: center; }
         .price-display-wrapper { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; min-width: 80px; }
         .currency-symbol { margin-right: 2px; }
         .price-input { background: transparent; border: none; color: white; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; -moz-appearance: textfield; padding: 0; }
-        /* Ocultar las flechitas nativas del input numérico */
         .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
+        /* NUEVO: Botón Píldora de BS BCV */
+        .bs-conversion { font-size: 11px; color: var(--ios-gray); margin-top: 2px; cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .bs-conversion:active { background: rgba(255, 195, 0, 0.1); transform: scale(0.95); }
+
         /* Lista de Subasta Magnética */
         .auction-container { margin-top: 15px; }
         .auction-title { color: var(--brand-yellow); font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
@@ -187,9 +192,14 @@
                         <h4>Ofrece una tarifa:</h4>
                         <div class="price-controls">
                             <button class="price-btn" onclick="adjustOffer(-0.5)">-</button>
-                            <div class="price-display-wrapper">
-                                <span class="currency-symbol">$</span>
-                                <input type="number" id="current-offer-input" class="price-input" inputmode="decimal" step="0.5" min="1.00" value="0.00">
+                            <div class="price-center">
+                                <div class="price-display-wrapper">
+                                    <span class="currency-symbol">$</span>
+                                    <input type="number" id="current-offer-input" class="price-input" inputmode="decimal" step="0.5" min="1.00" value="0.00">
+                                </div>
+                                <div id="bs-conversion" class="bs-conversion" onclick="convertirABs()" title="Toca para ver en Bolívares (BCV)">
+                                    <i class="fas fa-exchange-alt"></i> Ver en Bs
+                                </div>
                             </div>
                             <button class="price-btn" onclick="adjustOffer(0.5)">+</button>
                         </div>
@@ -220,10 +230,11 @@
         let originCoords = null; let destinationCoords = null; let passengerWatchId = null; 
         let nearbyDriversInterval = null; let nearbyDriverMarkers = {}; let fullRouteCoords = null; 
         
-        // Negociación
+        // Negociación y BCV
         let currentOfferPrice = 0;
-        let incomingOffers = {}; // Almacena las ofertas de los conductores { driverId: offerData }
+        let incomingOffers = {}; 
         let offersChannel = null;
+        let tasaBCV = null;
 
         const loadingScreen = document.getElementById('loading-screen');
         const loginModal = document.getElementById('login-modal'); const registerModal = document.getElementById('register-modal');
@@ -239,6 +250,35 @@
         const priceNegotiator = document.getElementById('price-negotiator');
         const currentOfferInput = document.getElementById('current-offer-input');
         const requestTripBtn = document.getElementById('request-trip-btn');
+
+        // ============================================
+        // API DOLAR BCV
+        // ============================================
+        window.convertirABs = async function() {
+            const bsLabel = document.getElementById('bs-conversion');
+            if (!tasaBCV) {
+                bsLabel.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> BCV...';
+                try {
+                    const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+                    const data = await res.json();
+                    tasaBCV = data.promedio;
+                } catch (e) {
+                    bsLabel.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error BCV';
+                    return;
+                }
+            }
+            actualizarTextoBs();
+        }
+
+        function actualizarTextoBs() {
+            if(tasaBCV && currentOfferPrice) {
+                const bsLabel = document.getElementById('bs-conversion');
+                const total = (currentOfferPrice * tasaBCV).toFixed(2);
+                bsLabel.innerHTML = `Bs. ${total} <span style="font-size:9px; font-weight:normal; opacity:0.7;">(BCV)</span>`;
+                bsLabel.style.color = 'var(--brand-yellow)';
+                bsLabel.style.borderColor = 'rgba(255,195,0,0.3)';
+            }
+        }
 
         // ============================================
         // MOTOR DE RUTAS Y COTIZADOR
@@ -285,27 +325,30 @@
         }
 
         function calculateSuggestedPrice(distanceKm) {
-            // FÓRMULA: $1 Base + $0.40 por KM. Mínimo $1.50
             let price = 1.00 + (distanceKm * 0.40);
             return Math.max(1.50, price);
         }
 
         window.adjustOffer = function(amount) {
             currentOfferPrice += amount;
-            if(currentOfferPrice < 1.0) currentOfferPrice = 1.0; // Piso mínimo global
+            if(currentOfferPrice < 1.0) currentOfferPrice = 1.0; 
             currentOfferInput.value = currentOfferPrice.toFixed(2);
+            actualizarTextoBs();
         }
 
-        // Escuchar cuando el usuario escribe con el teclado
+        // Escuchar teclado
         currentOfferInput.addEventListener('input', (e) => {
             let val = parseFloat(e.target.value);
-            if (!isNaN(val)) currentOfferPrice = val;
+            if (!isNaN(val)) {
+                currentOfferPrice = val;
+                actualizarTextoBs();
+            }
         });
 
-        // Formatear a 2 decimales cuando cierra el teclado (pierde el foco)
         currentOfferInput.addEventListener('blur', (e) => {
-            if (currentOfferPrice < 1.0) currentOfferPrice = 1.0; // Evitar que ofrezca $0
+            if (currentOfferPrice < 1.0) currentOfferPrice = 1.0; 
             e.target.value = currentOfferPrice.toFixed(2);
+            actualizarTextoBs();
         });
 
         // ============================================
@@ -315,7 +358,7 @@
             if (map !== null) return; 
             map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-            map.on('click', onMapClick); // Reactivamos el clic en el mapa
+            map.on('click', onMapClick); 
         }
 
         function onMapClick(e) {
@@ -331,17 +374,21 @@
             destinationMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
             
             if (originCoords) {
-                // Dibujar ruta simulada para calcular precio antes de pedir
                 const routeData = await getRealRoute(originCoords.lat, originCoords.lng, lat, lng);
                 if(routeData) {
                     map.fitBounds(L.latLngBounds(routeData.coordinates), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
                     currentOfferPrice = calculateSuggestedPrice(routeData.distance);
                     currentOfferInput.value = currentOfferPrice.toFixed(2);
+                    actualizarTextoBs();
+                    
+                    priceNegotiator.style.display = 'flex';
+                    requestTripBtn.textContent = 'Solicitar Viaje';
+                    requestTripBtn.disabled = false;
                 }
             }
             try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) {}
             
-            updateTripUI(); // Actualizar el panel para mostrar el cotizador y el botón habilitado
+            updateTripUI(); 
         }
 
         dropoffInput.addEventListener('input', (e) => {
@@ -393,7 +440,7 @@
                 if (data.dropoff_lat) { destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng }; }
                 
                 if (currentTrip.status === 'pending') {
-                    startOffersListener(); // Si recarga buscando, reconectar a ofertas
+                    startOffersListener(); 
                     drawRoute();
                 } else {
                     startDriverLocationTracking();
@@ -405,7 +452,6 @@
         async function requestTrip() {
             requestTripBtn.disabled = true; requestTripBtn.textContent = 'Procesando...';
             
-            // Insertar con el offered_price
             const { data, error } = await supabaseClient.from('trips').insert({ 
                 passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffInput.value, 
                 pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, 
@@ -414,15 +460,13 @@
             }).select().single();
             
             if (error) { alert('Error: ' + error.message); requestTripBtn.disabled = false; requestTripBtn.textContent = 'Solicitar Viaje'; return; }
-            currentTrip = data; incomingOffers = {}; // Reset ofertas
+            currentTrip = data; incomingOffers = {}; 
             startOffersListener();
             updateTripUI(); drawRoute(); 
         }
 
-        // --- SISTEMA DE SUBASTA ---
         function startOffersListener() {
             if(offersChannel) offersChannel.unsubscribe();
-            // Escuchamos ofertas directas de los conductores para ESTE viaje
             offersChannel = supabaseClient.channel(`trip-offers-${currentTrip.id}`)
                 .on('broadcast', { event: 'new_offer' }, (payload) => {
                     const offer = payload.payload;
@@ -433,7 +477,7 @@
 
         function renderOffersUI() {
             if(!currentTrip || currentTrip.status !== 'pending') return;
-            const offersArr = Object.values(incomingOffers).sort((a,b) => a.price - b.price); // Ordenar por precio
+            const offersArr = Object.values(incomingOffers).sort((a,b) => a.price - b.price);
             
             if(offersArr.length === 0) {
                 tripActions.innerHTML = `
@@ -468,23 +512,14 @@
         }
 
         window.acceptDriverOffer = async function(driverId, agreedPrice) {
-            // El pasajero elige a un conductor y cierra el precio
             const btn = event.target; btn.disabled = true; btn.textContent = 'Cerrando trato...';
-            
             const { error } = await supabaseClient.from('trips').update({ 
-                driver_id: driverId, 
-                status: 'accepted',
-                final_price: agreedPrice
+                driver_id: driverId, status: 'accepted', final_price: agreedPrice
             }).eq('id', currentTrip.id);
-            
             if(error) { alert('Hubo un error al confirmar.'); btn.disabled=false; return; }
             if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
-            // Supabase Realtime disparará la actualización a currentTrip automáticamente
         }
 
-        // ============================================
-        // ACTUALIZACIÓN DE INTERFAZ GENERAL
-        // ============================================
         function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
                 setupSection.style.display = 'block'; 
@@ -500,11 +535,11 @@
                 else mapInstructions.style.display = 'none'; 
 
             } else {
-                setupSection.style.display = 'none'; // Ocultar cotizador al buscar
+                setupSection.style.display = 'none'; 
                 
                 if (currentTrip.status === 'pending') {
                     startNearbyDriversTracking();
-                    renderOffersUI(); // Dibuja la subasta o el radar
+                    renderOffersUI(); 
                     mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-comment-dollar"></i> Negociando tarifa...';
                 } 
                 else if (currentTrip.status === 'accepted') {
@@ -543,16 +578,12 @@
             const dest = dropoffInput.value || 'mi destino';
             const driverName = currentTrip.driver?.full_name || 'un conductor';
             const driverCode = currentTrip.driver?.numeric_code || 'desconocido';
-            
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
             const trackingUrl = `${baseUrl}/invitado.html?viaje=${currentTrip.id}`;
-            
             const textToShare = `📍 Sigue mi viaje en Mi Uber en tiempo real.\nVoy hacia: ${dest}\nConductor: ${driverName} (Cód: ${driverCode}).\n\nSigue mi ruta aquí: ${trackingUrl}`;
 
             if (navigator.share) {
-                try { 
-                    await navigator.share({ title: 'Mi viaje seguro', text: textToShare }); 
-                } catch (err) { console.error('Error compartiendo:', err); }
+                try { await navigator.share({ title: 'Mi viaje seguro', text: textToShare }); } catch (err) {}
             } else {
                 navigator.clipboard.writeText(textToShare);
                 alert("Link de rastreo copiado al portapapeles. Pégalo en WhatsApp.");
@@ -587,9 +618,6 @@
             }).subscribe());
         }
 
-        // ============================================
-        // TRACKING Y EXTRAS
-        // ============================================
         function updateDriverVisuals(lat, lng, bearing) {
             if (driverMarker) {
                 driverMarker.setLatLng([lat, lng]); const iconEl = document.getElementById('motorcycle-inner-icon-passenger'); if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
@@ -626,7 +654,6 @@
             });
         }
 
-        // AUTH & INIT (Reducido)
         document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const btn = document.getElementById('login-btn'); btn.disabled=true; const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); if (!error) loadUserProfile(data.user.id); else { btn.disabled=false; alert(error.message); } });
         document.getElementById('show-register').addEventListener('click', () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); });
         document.getElementById('show-login').addEventListener('click', () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); });
