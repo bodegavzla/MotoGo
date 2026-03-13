@@ -8,11 +8,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
-            /* NUEVA PALETA PREMIUM */
+            var(--brand-yellow): #FFC300;
             --brand-yellow: #FFC300;
             --brand-dark: #2E2725;
             --brand-dark-light: #3D3532;
-            
             --ios-bg: #F2F2F7;
             --ios-surface: #FFFFFF;
             --ios-gray: #A0A0A0;
@@ -20,30 +19,16 @@
             --ios-green: #34C759;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--brand-dark); color: white; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--brand-dark);
-            color: white;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* --- MEJORAS VISUALES DE MAPA --- */
+        /* Mapa y Marcadores */
         .driver-marker-animated { transition: transform 1s linear !important; }
         #motorcycle-inner-icon-passenger { transition: transform 0.5s ease-out; transform-origin: center; }
         .passenger-marker-animated { transition: transform 1s linear !important; }
         .nearby-driver-marker { transition: transform 2s linear !important; z-index: 500 !important; }
         
         #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 3000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
-
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-dark); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .spinner-large { border: 4px solid rgba(255, 195, 0, 0.2); border-left-color: var(--brand-yellow); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -74,7 +59,7 @@
         .permission-text { color: var(--ios-gray); font-size: 15px; text-align: center; margin-bottom: 24px; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: white; margin-top: 12px; }
 
-        /* Panel Principal */
+        /* Estructura Principal */
         #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
         header { display: flex; justify-content: space-between; align-items: center; background: rgba(46, 39, 37, 0.85); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 1000; position: absolute; top: 0; width: 100%; }
         header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
@@ -88,45 +73,52 @@
         .map-instructions i { color: var(--brand-yellow); }
 
         .locate-btn { position: absolute; bottom: 230px; right: 20px; width: 48px; height: 48px; border-radius: 24px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); transition: all 0.2s ease; }
-        .locate-btn.pulse-initial { animation: ripple 2s infinite; }
-        @keyframes ripple { 0% { box-shadow: 0 0 0 0 rgba(255, 195, 0, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 195, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 195, 0, 0); } }
-
-        /* EL PANEL INTELIGENTE (Traje Nuevo) */
-        .trip-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--brand-dark); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding: 20px 24px 30px 24px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); border-top: 1px solid rgba(255,255,255,0.1); }
-        .trip-panel.collapsed { transform: translateY(calc(100% - 70px)); }
+        
+        /* PANEL INTELIGENTE */
+        .trip-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--brand-dark); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding: 20px 24px calc(30px + env(safe-area-inset-bottom)) 24px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); border-top: 1px solid rgba(255,255,255,0.1); }
         .panel-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: pointer; }
 
-        /* SECCIÓN 1: SETUP (Origen / Destino) */
+        /* Cotizador y Origen/Destino */
         #setup-section { transition: opacity 0.3s; }
         .location-section { margin-bottom: 16px; }
         .location-section h3 { font-size: 12px; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
         .location-box { background: var(--brand-dark-light); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        
         .location-icon { width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .location-box.pickup .location-icon { background: rgba(52, 199, 89, 0.15); color: var(--ios-green); }
         .location-box.dropoff .location-icon { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); }
-        
         .location-content { flex: 1; }
         .location-text { font-size: 15px; color: white; font-weight: 500; }
         .location-text.placeholder { color: var(--ios-gray); font-weight: 400; }
-        
         .location-text-input { width: 100%; border: none; background: transparent; font-size: 15px; color: white; font-weight: 500; outline: none; padding: 0; }
         .location-text-input::placeholder { color: var(--ios-gray); font-weight: 400; }
         
-        /* Buscador Dropdown */
         .search-results-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--brand-dark-light); border-radius: 12px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); margin-bottom: 8px; z-index: 2000; max-height: 200px; overflow-y: auto; display: none; border: 1px solid rgba(255,255,255,0.1); }
         .search-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: white; }
-        .search-result-item:last-child { border-bottom: none; }
-        .search-result-item:active { background: rgba(255,255,255,0.05); }
-        .search-result-item i { color: var(--ios-gray); }
-
-        /* SECCIÓN 2: ACCIONES INTELIGENTES (Radar, Driver, Viaje) */
-        #trip-actions { margin-top: 20px; }
         
-        .radar-state { text-align: center; padding: 20px; }
-        .radar-spinner { font-size: 40px; color: var(--brand-yellow); margin-bottom: 15px; }
-        .radar-state h4 { color: white; font-weight: 600; font-size: 16px; }
+        /* NUEVO: Controles de Negociación (Precio) */
+        .price-negotiator { background: rgba(255, 195, 0, 0.1); border: 1px solid rgba(255, 195, 0, 0.3); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; }
+        .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; }
+        .price-controls { display: flex; align-items: center; gap: 15px; }
+        .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; }
+        .price-display { font-size: 24px; font-weight: 700; color: white; min-width: 80px; text-align: center; }
+        
+        /* NUEVO: Lista de Subasta Magnética */
+        .auction-container { margin-top: 15px; }
+        .auction-title { color: var(--brand-yellow); font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .offers-list { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; scrollbar-width: none; }
+        .offers-list::-webkit-scrollbar { display: none; }
+        
+        .offer-card { flex: 0 0 85%; scroll-snap-align: center; background: var(--brand-dark-light); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,195,0,0.3); display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .offer-header { display: flex; justify-content: space-between; align-items: center; }
+        .offer-driver { display: flex; align-items: center; gap: 10px; }
+        .offer-avatar { width: 40px; height: 40px; background: rgba(255,195,0,0.1); border-radius: 20px; color: var(--brand-yellow); display: flex; justify-content: center; align-items: center; font-size: 18px; }
+        .offer-name { font-weight: 600; font-size: 15px; color: white; }
+        .offer-dist { font-size: 12px; color: var(--ios-gray); }
+        .offer-price { font-size: 22px; font-weight: 700; color: var(--brand-yellow); }
+        .btn-accept-offer { background: var(--brand-yellow); color: var(--brand-dark); width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; }
 
+        /* Conductor Seleccionado (Match) */
         .driver-card { background: var(--brand-dark-light); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
         .driver-avatar { width: 50px; height: 50px; background: rgba(255, 195, 0, 0.1); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); border: 1px solid rgba(255,195,0,0.3); }
         .driver-details { flex: 1; }
@@ -142,79 +134,29 @@
 </head>
 <body>
     <div id="network-status"><i class="fas fa-wifi-slash"></i> Sin conexión a Internet</div>
-    
-    <div id="loading-screen">
-        <div class="spinner-large"></div>
-    </div>
+    <div id="loading-screen"><div class="spinner-large"></div></div>
 
-    <div id="permission-modal" class="modal">
-        <div class="modal-content">
-            <div class="permission-icon"><i class="fas fa-location-arrow"></i></div>
-            <h2>Permitir Ubicación</h2>
-            <p class="permission-text">Mi Uber necesita acceso a tu ubicación para mostrarte en el mapa y buscar tu destino.</p>
-            <button id="allow-permission-btn">Permitir Ubicación</button>
-            <button class="btn-secondary" id="later-permission-btn">Más tarde</button>
-        </div>
-    </div>
-
-    <div id="permission-denied-modal" class="modal">
-        <div class="modal-content">
-            <div class="permission-icon denied"><i class="fas fa-location-slash"></i></div>
-            <h2>Ubicación Bloqueada</h2>
-            <p class="permission-text">El permiso de ubicación fue denegado. Para usar Mi Uber necesitas habilitar la ubicación.</p>
-            <div class="permission-instructions">
-                <strong style="color:white;">¿Cómo habilitar?</strong><br>
-                iOS: Ajustes → Privacidad → Ubicación → Mi Uber<br>
-                Android: Ajustes → Aplicaciones → Mi Uber → Permisos
-            </div>
-            <button id="understand-btn">Entendido</button>
-        </div>
-    </div>
+    <div id="permission-modal" class="modal"><div class="modal-content"><div class="permission-icon"><i class="fas fa-location-arrow"></i></div><h2>Permitir Ubicación</h2><p class="permission-text">Mi Uber necesita acceso a tu ubicación.</p><button id="allow-permission-btn">Permitir</button><button class="btn-secondary" id="later-permission-btn">Más tarde</button></div></div>
+    <div id="permission-denied-modal" class="modal"><div class="modal-content"><div class="permission-icon denied"><i class="fas fa-location-slash"></i></div><h2>Ubicación Bloqueada</h2><p class="permission-text">Habilita el permiso en ajustes.</p><button id="understand-btn">Entendido</button></div></div>
 
     <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="close-login">&times;</span>
-            <h2>Iniciar Sesión</h2>
-            <form id="login-form">
-                <div class="form-group"><label>Correo electrónico</label><input type="email" id="login-email" required></div>
-                <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div>
-                <button type="submit" id="login-btn">Entrar</button>
-                <div class="message error-message" id="login-error"></div>
-            </form>
-            <div class="switch-link">¿No tienes cuenta? <a id="show-register">Regístrate aquí</a></div>
-        </div>
+        <div class="modal-content"><span class="close-modal" id="close-login">&times;</span><h2>Iniciar Sesión</h2><form id="login-form"><div class="form-group"><label>Correo</label><input type="email" id="login-email" required></div><div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div><button type="submit" id="login-btn">Entrar</button><div class="message error-message" id="login-error"></div></form><div class="switch-link">¿No tienes cuenta? <a id="show-register">Regístrate</a></div></div>
     </div>
 
     <div id="register-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="close-register">&times;</span>
-            <h2>Crear Cuenta</h2>
-            <form id="register-form">
-                <div class="form-group"><label>Nombre completo</label><input type="text" id="register-fullname" required></div>
-                <div class="form-group"><label>Código numérico (8 dígitos)</label><input type="text" id="register-code" maxlength="8" pattern="\d{8}" required></div>
-                <div class="form-group"><label>Correo electrónico</label><input type="email" id="register-email" required></div>
-                <div class="form-group"><label>Contraseña</label><input type="password" id="register-password" required></div>
-                <button type="submit" id="register-btn">Registrarse</button>
-                <div class="message error-message" id="register-error"></div>
-                <div class="message success-message" id="register-success"></div>
-            </form>
-            <div class="switch-link">¿Ya tienes cuenta? <a id="show-login">Inicia sesión aquí</a></div>
-        </div>
+        <div class="modal-content"><span class="close-modal" id="close-register">&times;</span><h2>Crear Cuenta</h2><form id="register-form"><div class="form-group"><label>Nombre</label><input type="text" id="register-fullname" required></div><div class="form-group"><label>Código (8 dígitos)</label><input type="text" id="register-code" maxlength="8" pattern="\d{8}" required></div><div class="form-group"><label>Correo</label><input type="email" id="register-email" required></div><div class="form-group"><label>Contraseña</label><input type="password" id="register-password" required></div><button type="submit" id="register-btn">Registrarse</button><div class="message error-message" id="register-error"></div><div class="message success-message" id="register-success"></div></form><div class="switch-link">¿Ya tienes cuenta? <a id="show-login">Inicia sesión</a></div></div>
     </div>
 
     <div id="main-panel">
         <header>
             <h1>Mi Uber</h1>
-            <div class="user-info">
-                <span id="user-name"></span>
-                <button id="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
+            <div class="user-info"><span id="user-name"></span><button id="logout-btn"><i class="fas fa-sign-out-alt"></i></button></div>
         </header>
 
         <div id="map-container">
             <div id="map"></div>
             <div class="map-instructions" id="map-instructions">Cargando mapa...</div>
-            <button class="locate-btn pulse-initial" id="locate-btn" title="Mi ubicación"><i class="fas fa-location-arrow"></i></button>
+            <button class="locate-btn" id="locate-btn" title="Mi ubicación"><i class="fas fa-location-arrow"></i></button>
 
             <div class="trip-panel" id="trip-panel">
                 <div class="panel-handle" id="panel-handle"></div>
@@ -222,12 +164,7 @@
                 <div id="setup-section">
                     <div class="location-section">
                         <h3><i class="fas fa-dot-circle"></i> Origen</h3>
-                        <div class="location-box pickup">
-                            <div class="location-icon"><i class="fas fa-circle"></i></div>
-                            <div class="location-content">
-                                <p class="location-text placeholder" id="pickup-text">Buscando tu ubicación...</p>
-                            </div>
-                        </div>
+                        <div class="location-box pickup"><div class="location-icon"><i class="fas fa-circle"></i></div><div class="location-content"><p class="location-text placeholder" id="pickup-text">Buscando...</p></div></div>
                     </div>
 
                     <div class="location-section">
@@ -240,10 +177,19 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="price-negotiator" id="price-negotiator">
+                        <h4>Ofrece una tarifa:</h4>
+                        <div class="price-controls">
+                            <button class="price-btn" onclick="adjustOffer(-0.5)">-</button>
+                            <div class="price-display">$<span id="current-offer-display">0.00</span></div>
+                            <button class="price-btn" onclick="adjustOffer(0.5)">+</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="trip-actions">
-                    <button class="btn-request" id="request-trip-btn" disabled>Solicitar Viaje</button>
+                <div id="trip-actions" style="margin-top: 20px;">
+                    <button class="btn-request" id="request-trip-btn" disabled>Selecciona destino</button>
                 </div>
             </div>
         </div>
@@ -253,54 +199,53 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // Configuración Supabase
+        // Supabase Init
         const SUPABASE_URL = 'https://ajmxtbafpcwjbhtkswuu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbXh0YmFmcGN3amJodGtzd3V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzQyMTEsImV4cCI6MjA4ODc1MDIxMX0.NNNOTr05ef6umCGhKH5GId_j9uoVBzJJfGk6e4rsmQ0';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Estado global
+        // Global State
         let currentUser = null; let userProfile = null; let map = null;
         let originMarker = null; let destinationMarker = null; let driverMarker = null;
         let routeLine = null; let searchRadiusCircle = null; let currentTrip = null;
         let subscriptions = []; let driverLocationChannel = null; let permissionStatus = 'prompt';
         let originCoords = null; let destinationCoords = null; let passengerWatchId = null; 
         let nearbyDriversInterval = null; let nearbyDriverMarkers = {}; let fullRouteCoords = null; 
-
-        // DOM
-        const loadingScreen = document.getElementById('loading-screen');
-        const permissionModal = document.getElementById('permission-modal');
-        const permissionDeniedModal = document.getElementById('permission-denied-modal');
-        const loginModal = document.getElementById('login-modal');
-        const registerModal = document.getElementById('register-modal');
-        const mainPanel = document.getElementById('main-panel');
-        const userNameSpan = document.getElementById('user-name');
-        const logoutBtn = document.getElementById('logout-btn');
-        const locateBtn = document.getElementById('locate-btn');
-        const pickupText = document.getElementById('pickup-text');
         
-        const dropoffInput = document.getElementById('dropoff-input');
-        const searchResults = document.getElementById('search-results');
-        let searchTimeout = null;
+        // Negociación
+        let currentOfferPrice = 0;
+        let incomingOffers = {}; // Almacena las ofertas de los conductores { driverId: offerData }
+        let offersChannel = null;
 
-        const setupSection = document.getElementById('setup-section');
-        const tripActions = document.getElementById('trip-actions');
-        const tripPanel = document.getElementById('trip-panel');
-        const panelHandle = document.getElementById('panel-handle');
-        const mapInstructions = document.getElementById('map-instructions');
-        const networkStatus = document.getElementById('network-status');
-
-        window.addEventListener('offline', () => networkStatus.style.display = 'block');
-        window.addEventListener('online', async () => { networkStatus.style.display = 'none'; if(currentUser) await checkSession(); });
+        const loadingScreen = document.getElementById('loading-screen');
+        const loginModal = document.getElementById('login-modal'); const registerModal = document.getElementById('register-modal');
+        const permissionModal = document.getElementById('permission-modal'); const permissionDeniedModal = document.getElementById('permission-denied-modal');
+        const mainPanel = document.getElementById('main-panel'); const userNameSpan = document.getElementById('user-name');
+        const logoutBtn = document.getElementById('logout-btn'); const locateBtn = document.getElementById('locate-btn');
+        const pickupText = document.getElementById('pickup-text'); const dropoffInput = document.getElementById('dropoff-input');
+        const searchResults = document.getElementById('search-results'); let searchTimeout = null;
+        const setupSection = document.getElementById('setup-section'); const tripActions = document.getElementById('trip-actions');
+        const tripPanel = document.getElementById('trip-panel'); const mapInstructions = document.getElementById('map-instructions');
+        
+        // Elementos del Cotizador
+        const priceNegotiator = document.getElementById('price-negotiator');
+        const currentOfferDisplay = document.getElementById('current-offer-display');
+        const requestTripBtn = document.getElementById('request-trip-btn');
 
         // ============================================
-        // RUTAS OSRM (Línea Azul)
+        // MOTOR DE RUTAS Y COTIZADOR
         // ============================================
         async function getRealRoute(lat1, lng1, lat2, lng2) {
             try {
                 const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
                 const response = await fetch(url);
                 const data = await response.json();
-                if (data.code === 'Ok' && data.routes.length > 0) return data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    return {
+                        coordinates: data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]),
+                        distance: data.routes[0].distance / 1000 // KM
+                    };
+                }
             } catch (error) { } return null;
         }
 
@@ -317,112 +262,39 @@
                 searchRadiusCircle = L.circle([startCoords.lat, startCoords.lng], { color: 'var(--brand-yellow)', fillColor: 'var(--brand-yellow)', fillOpacity: 0.05, weight: 2, dashArray: '8, 8', radius: 50000 }).addTo(map);
             } else if (currentTrip.status === 'accepted') {
                 if (!driverMarker) return;
-                startCoords = driverMarker.getLatLng();
-                endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
+                startCoords = driverMarker.getLatLng(); endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
             } else if (currentTrip.status === 'started') {
                 if (!driverMarker) return;
-                startCoords = driverMarker.getLatLng();
-                endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
+                startCoords = driverMarker.getLatLng(); endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
             } else return;
 
-            const coords = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
-            if (coords) {
-                fullRouteCoords = coords; 
-                routeLine = L.polyline(coords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map);
-                map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            const routeData = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+            if (routeData) {
+                fullRouteCoords = routeData.coordinates; 
+                routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map);
+                map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
             }
         }
 
-        // ============================================
-        // MANEJO DE PERMISOS DE UBICACIÓN
-        // ============================================
-        async function checkLocationPermission() {
-            if (navigator.permissions) {
-                try {
-                    const result = await navigator.permissions.query({ name: 'geolocation' });
-                    permissionStatus = result.state;
-                    result.addEventListener('change', () => { permissionStatus = result.state; if (permissionStatus === 'granted') permissionDeniedModal.classList.remove('active'); });
-                    return result.state;
-                } catch (e) { return 'prompt'; }
-            } return 'prompt';
+        function calculateSuggestedPrice(distanceKm) {
+            // FÓRMULA: $1 Base + $0.40 por KM. Mínimo $1.50
+            let price = 1.00 + (distanceKm * 0.40);
+            return Math.max(1.50, price);
         }
 
-        function showPermissionModal() { permissionModal.classList.add('active'); }
-        function showPermissionDeniedModal() { permissionDeniedModal.classList.add('active'); }
-        function requestLocation() { permissionModal.classList.remove('active'); getLocation(); }
-
-        document.getElementById('allow-permission-btn').addEventListener('click', requestLocation);
-        document.getElementById('later-permission-btn').addEventListener('click', () => { permissionModal.classList.remove('active'); mapInstructions.innerHTML = '<i class="fas fa-location-arrow"></i> Activa tu ubicación'; });
-        document.getElementById('understand-btn').addEventListener('click', () => permissionDeniedModal.classList.remove('active'));
-
-        // ============================================
-        // AUTENTICACIÓN
-        // ============================================
-        function showModal(modal) { modal.classList.add('active'); }
-        function hideModals() { loginModal.classList.remove('active'); registerModal.classList.remove('active'); permissionModal.classList.remove('active'); permissionDeniedModal.classList.remove('active'); }
-        function showError(element, msg) { element.textContent = msg; element.style.display = 'block'; }
-        function showSuccess(element, msg) { element.textContent = msg; element.style.display = 'block'; }
-
-        async function checkSession() {
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) await loadUserProfile(session.user.id); else showLogin();
-            } catch (err) { showLogin(); } finally { loadingScreen.style.display = 'none'; }
+        window.adjustOffer = function(amount) {
+            currentOfferPrice += amount;
+            if(currentOfferPrice < 1.0) currentOfferPrice = 1.0; // Piso mínimo global
+            currentOfferDisplay.textContent = currentOfferPrice.toFixed(2);
         }
 
-        async function loadUserProfile(userId) {
-            const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
-            if (error || !data) { await supabaseClient.auth.signOut(); showLogin(); return; }
-            if (data.role !== 'pasajero') { loadingScreen.style.display = 'none'; alert('Esta cuenta es de CONDUCTOR.'); await supabaseClient.auth.signOut(); showLogin(); return; }
-
-            userProfile = data; currentUser = (await supabaseClient.auth.getUser()).data.user;
-            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
-            mainPanel.style.display = 'flex'; hideModals();
-
-            initMap(); await checkCurrentTrip(); subscribeToTripUpdates();
-            if (!currentTrip) locateBtn.click();
-        }
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); const btn = document.getElementById('login-btn'); const err = document.getElementById('login-error');
-            btn.disabled = true; btn.textContent = 'Iniciando...'; err.style.display = 'none';
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value });
-            if (error) { showError(err, error.message); btn.disabled = false; btn.textContent = 'Entrar'; return; }
-            await loadUserProfile(data.user.id);
-        });
-
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); const btn = document.getElementById('register-btn'); const err = document.getElementById('register-error'); const succ = document.getElementById('register-success');
-            btn.disabled = true; btn.textContent = 'Registrando...'; err.style.display = 'none'; succ.style.display = 'none';
-            const code = document.getElementById('register-code').value;
-            if (!/^\d{8}$/.test(code)) { showError(err, 'El código debe tener 8 dígitos'); btn.disabled = false; btn.textContent = 'Registrarse'; return; }
-            const { data, error } = await supabaseClient.auth.signUp({ email: document.getElementById('register-email').value, password: document.getElementById('register-password').value, options: { data: { full_name: document.getElementById('register-fullname').value, numeric_code: code, role: 'pasajero' } } });
-            if (error) { showError(err, error.message); btn.disabled = false; btn.textContent = 'Registrarse'; return; }
-            showSuccess(succ, '¡Registro exitoso! Redirigiendo...'); setTimeout(() => { registerModal.classList.remove('active'); loginModal.classList.add('active'); document.getElementById('register-form').reset(); btn.disabled = false; btn.textContent = 'Registrarse'; succ.style.display = 'none'; }, 2000);
-        });
-
-        document.getElementById('show-register').addEventListener('click', () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); });
-        document.getElementById('show-login').addEventListener('click', () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); });
-        document.getElementById('close-login').addEventListener('click', () => loginModal.classList.remove('active'));
-        document.getElementById('close-register').addEventListener('click', () => registerModal.classList.remove('active'));
-
-        logoutBtn.addEventListener('click', async () => { subscriptions.forEach(sub => sub.unsubscribe()); subscriptions = []; stopDriverLocationTracking(); await supabaseClient.auth.signOut(); mainPanel.style.display = 'none'; originCoords = null; destinationCoords = null; showLogin(); });
-        function showLogin() { hideModals(); showModal(loginModal); }
-
         // ============================================
-        // MAPA
+        // UBICACIÓN Y DESTINO
         // ============================================
         function initMap() {
             if (map !== null) return; 
             map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-            map.on('click', onMapClick);
-        }
-
-        function onMapClick(e) {
-            if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) return;
-            if (!originCoords) { mapInstructions.innerHTML = '<i class="fas fa-search-location"></i> Buscando tu ubicación...'; locateBtn.click(); return; }
-            setDestination(e.latlng.lat, e.latlng.lng);
         }
 
         async function setDestination(lat, lng) {
@@ -430,18 +302,22 @@
             if (destinationMarker) map.removeLayer(destinationMarker);
             const destIcon = L.divIcon({ className: 'dest-marker', html: `<div style="width:16px;height:16px;background:var(--ios-red);border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>`, iconSize: [22, 22] });
             destinationMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
-            if (originCoords) map.fitBounds(L.latLngBounds([[originCoords.lat, originCoords.lng], [lat, lng]]), { padding: [50, 50] });
-            await updateDestinationAddress(); updateTripUI();
+            
+            if (originCoords) {
+                // Dibujar ruta simulada para calcular precio antes de pedir
+                const routeData = await getRealRoute(originCoords.lat, originCoords.lng, lat, lng);
+                if(routeData) {
+                    map.fitBounds(L.latLngBounds(routeData.coordinates), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
+                    currentOfferPrice = calculateSuggestedPrice(routeData.distance);
+                    currentOfferDisplay.textContent = currentOfferPrice.toFixed(2);
+                    priceNegotiator.style.display = 'flex'; // Mostrar cotizador
+                    requestTripBtn.textContent = 'Solicitar Viaje';
+                    requestTripBtn.disabled = false;
+                }
+            }
+            try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) {}
         }
 
-        async function updateDestinationAddress() {
-            if (!destinationCoords) return; dropoffInput.value = 'Buscando...';
-            try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${destinationCoords.lat}&lon=${destinationCoords.lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) { dropoffInput.value = 'Destino seleccionado'; }
-        }
-
-        // ============================================
-        // BUSCADOR DE DIRECCIONES (Nominatim Gratuito)
-        // ============================================
         dropoffInput.addEventListener('input', (e) => {
             const query = e.target.value; if (query.length < 3) { searchResults.style.display = 'none'; return; }
             clearTimeout(searchTimeout);
@@ -449,26 +325,20 @@
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ve&limit=5`); const data = await res.json();
                     if (data.length > 0) {
-                        searchResults.innerHTML = data.map(place => `<div class="search-result-item" onclick="selectSearchResult(${place.lat}, ${place.lon}, '${place.display_name.split(',').slice(0, 2).join(',').replace(/'/g, "\\'")}')"><i class="fas fa-search"></i><div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${place.display_name.split(',').slice(0, 2).join(',')}</div></div>`).join('');
+                        searchResults.innerHTML = data.map(place => `<div class="search-result-item" onclick="selectSearchResult(${place.lat}, ${place.lon}, '${place.display_name.split(',').slice(0, 2).join(',').replace(/'/g, "\\'")}')"><i class="fas fa-search"></i><div>${place.display_name.split(',').slice(0, 2).join(',')}</div></div>`).join('');
                         searchResults.style.display = 'block';
                     } else { searchResults.innerHTML = '<div class="search-result-item">No hay resultados</div>'; searchResults.style.display = 'block'; }
                 } catch (error) {}
             }, 500);
         });
 
-        window.selectSearchResult = function(lat, lng, name) { dropoffInput.value = name; searchResults.style.display = 'none'; map.setView([lat, lng], 16); setDestination(lat, lng); };
+        window.selectSearchResult = function(lat, lng, name) { dropoffInput.value = name; searchResults.style.display = 'none'; setDestination(lat, lng); };
         document.addEventListener('click', (e) => { if (!dropoffInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.style.display = 'none'; });
 
-        // ============================================
-        // OBTENER UBICACIÓN FRESCA
-        // ============================================
-        locateBtn.addEventListener('click', async () => { const status = await checkLocationPermission(); if (status === 'prompt') showPermissionModal(); else if (status === 'granted') getLocation(); else if (status === 'denied') showPermissionDeniedModal(); else getLocation(); });
-
-        async function getLocation() {
-            if (!navigator.geolocation) { alert('Tu dispositivo no soporta geolocalización'); return; }
-            locateBtn.classList.remove('pulse-initial'); locateBtn.classList.add('loading'); mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo ubicación...';
+        locateBtn.addEventListener('click', async () => { 
+            if (!navigator.geolocation) return alert('No GPS');
+            locateBtn.classList.add('loading'); mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo ubicación...';
             if (passengerWatchId) navigator.geolocation.clearWatch(passengerWatchId);
-
             passengerWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords; originCoords = { lat: latitude, lng: longitude };
@@ -477,68 +347,125 @@
                         map.setView([latitude, longitude], 16);
                         const originIcon = L.divIcon({ className: 'passenger-marker-animated', html: `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;box-shadow:0 0 0 4px rgba(255,195,0,0.2);"></div>`, iconSize: [24, 24] });
                         originMarker = L.marker([latitude, longitude], { icon: originIcon }).addTo(map);
-                        await updatePickupAddress(); locateBtn.classList.remove('loading'); updateTripUI();
+                        try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`); const data = await res.json(); pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual'; pickupText.classList.remove('placeholder'); } catch (e) {}
+                        locateBtn.classList.remove('loading'); updateTripUI();
                     }
                 },
-                (error) => { locateBtn.classList.remove('loading'); if (error.code === error.PERMISSION_DENIED) { permissionStatus = 'denied'; showPermissionDeniedModal(); mapInstructions.innerHTML = '<i class="fas fa-exclamation-circle"></i> Permiso denegado'; } else mapInstructions.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error de GPS'; },
+                (error) => { locateBtn.classList.remove('loading'); mapInstructions.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error GPS'; },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
-        }
-
-        async function updatePickupAddress() {
-            if (!originCoords) return; pickupText.textContent = 'Buscando...'; pickupText.classList.remove('placeholder');
-            try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${originCoords.lat}&lon=${originCoords.lng}&format=json`); const data = await res.json(); pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual'; } catch (e) { pickupText.textContent = 'Ubicación actual'; }
-        }
+        });
 
         // ============================================
-        // TRACKING DEL CONDUCTOR VÍA BROADCAST
-        // ============================================
-        function updateDriverVisuals(lat, lng, bearing) {
-            if (driverMarker) {
-                driverMarker.setLatLng([lat, lng]); const iconEl = document.getElementById('motorcycle-inner-icon-passenger'); if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
-                // Efecto Comecocos
-                if (fullRouteCoords && routeLine) {
-                    let closestIndex = 0; let minDist = Infinity; const currentPos = L.latLng(lat, lng);
-                    for (let i = 0; i < fullRouteCoords.length; i++) { const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1])); if (dist < minDist) { minDist = dist; closestIndex = i; } }
-                    const remainingRoute = fullRouteCoords.slice(closestIndex); if (remainingRoute.length > 1) routeLine.setLatLngs(remainingRoute);
-                }
-            } else {
-                const icon = L.divIcon({ className: 'driver-marker-animated', html: `<div style="width:36px;height:36px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);"><i id="motorcycle-inner-icon-passenger" class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:14px;transform:rotate(${bearing}deg);"></i></div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
-                driverMarker = L.marker([lat, lng], { icon }).addTo(map); drawRoute();
-            }
-        }
-
-        function startDriverLocationTracking() {
-            if (!currentTrip) return; if (driverLocationChannel) driverLocationChannel.unsubscribe();
-            driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`).on('broadcast', { event: 'location' }, (payload) => { updateDriverVisuals(payload.payload.lat, payload.payload.lng, payload.payload.bearing || 0); }).subscribe();
-            if(driverMarker) drawRoute();
-        }
-
-        function stopDriverLocationTracking() { if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; } if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } if (routeLine) { map.removeLayer(routeLine); routeLine = null; } if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } }
-
-        // ============================================
-        // LÓGICA DE VIAJES (ESTADOS UI)
+        // LÓGICA DE VIAJES Y SUBASTA
         // ============================================
         async function checkCurrentTrip() {
             const { data } = await supabaseClient.from('trips').select('*, driver:driver_id(full_name, numeric_code)').eq('passenger_id', currentUser.id).in('status', ['pending', 'accepted', 'started']).maybeSingle();
             if (data) {
                 currentTrip = data;
                 if (data.pickup_lat) originCoords = { lat: data.pickup_lat, lng: data.pickup_lng };
-                if (data.dropoff_lat) { destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng }; setDestination(destinationCoords.lat, destinationCoords.lng); }
-                if (['accepted', 'started'].includes(data.status)) startDriverLocationTracking(); else if (data.status === 'pending') drawRoute(); 
+                if (data.dropoff_lat) { destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng }; }
+                
+                if (currentTrip.status === 'pending') {
+                    startOffersListener(); // Si recarga buscando, reconectar a ofertas
+                    drawRoute();
+                } else {
+                    startDriverLocationTracking();
+                }
             }
             updateTripUI();
         }
 
+        async function requestTrip() {
+            requestTripBtn.disabled = true; requestTripBtn.textContent = 'Procesando...';
+            
+            // Insertar con el offered_price
+            const { data, error } = await supabaseClient.from('trips').insert({ 
+                passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffInput.value, 
+                pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, 
+                status: 'pending',
+                offered_price: currentOfferPrice 
+            }).select().single();
+            
+            if (error) { alert('Error: ' + error.message); requestTripBtn.disabled = false; requestTripBtn.textContent = 'Solicitar Viaje'; return; }
+            currentTrip = data; incomingOffers = {}; // Reset ofertas
+            startOffersListener();
+            updateTripUI(); drawRoute(); 
+        }
+
+        // --- SISTEMA DE SUBASTA ---
+        function startOffersListener() {
+            if(offersChannel) offersChannel.unsubscribe();
+            // Escuchamos ofertas directas de los conductores para ESTE viaje
+            offersChannel = supabaseClient.channel(`trip-offers-${currentTrip.id}`)
+                .on('broadcast', { event: 'new_offer' }, (payload) => {
+                    const offer = payload.payload;
+                    incomingOffers[offer.driver_id] = offer;
+                    renderOffersUI();
+                }).subscribe();
+        }
+
+        function renderOffersUI() {
+            if(!currentTrip || currentTrip.status !== 'pending') return;
+            const offersArr = Object.values(incomingOffers).sort((a,b) => a.price - b.price); // Ordenar por precio
+            
+            if(offersArr.length === 0) {
+                tripActions.innerHTML = `
+                    <div class="auction-container">
+                        <div class="auction-title"><i class="fas fa-radar fa-spin"></i> Enviando oferta de $${currentTrip.offered_price.toFixed(2)} a conductores...</div>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>
+                `;
+            } else {
+                let html = `
+                    <div class="auction-container">
+                        <div class="auction-title"><i class="fas fa-bullhorn"></i> Han llegado ${offersArr.length} ofertas:</div>
+                        <div class="offers-list">
+                `;
+                offersArr.forEach(off => {
+                    html += `
+                        <div class="offer-card">
+                            <div class="offer-header">
+                                <div class="offer-driver">
+                                    <div class="offer-avatar"><i class="fas fa-user-tie"></i></div>
+                                    <div><div class="offer-name">${off.driver_name}</div><div class="offer-dist">A ${off.distance.toFixed(1)} km de ti</div></div>
+                                </div>
+                                <div class="offer-price">$${off.price.toFixed(2)}</div>
+                            </div>
+                            <button class="btn-accept-offer" onclick="acceptDriverOffer('${off.driver_id}', ${off.price})">Aceptar a ${off.driver_name}</button>
+                        </div>
+                    `;
+                });
+                html += `</div></div><button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>`;
+                tripActions.innerHTML = html;
+            }
+        }
+
+        window.acceptDriverOffer = async function(driverId, agreedPrice) {
+            // El pasajero elige a un conductor y cierra el precio
+            const btn = event.target; btn.disabled = true; btn.textContent = 'Cerrando trato...';
+            
+            const { error } = await supabaseClient.from('trips').update({ 
+                driver_id: driverId, 
+                status: 'accepted',
+                final_price: agreedPrice
+            }).eq('id', currentTrip.id);
+            
+            if(error) { alert('Hubo un error al confirmar.'); btn.disabled=false; return; }
+            if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
+            // Supabase Realtime disparará la actualización a currentTrip automáticamente
+        }
+
+        // ============================================
+        // ACTUALIZACIÓN DE INTERFAZ GENERAL
+        // ============================================
         function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
-                // ESTADO 1: PREPARACIÓN
+                setupSection.style.display = 'block'; priceNegotiator.style.display = (originCoords && destinationCoords) ? 'flex' : 'none';
                 startNearbyDriversTracking(); 
-                setupSection.style.display = 'block';
                 
-                const canRequest = originCoords && destinationCoords;
-                tripActions.innerHTML = `<button class="btn-request" id="request-trip-btn" ${!canRequest ? 'disabled' : ''}>Solicitar Viaje</button>`;
-                if (canRequest) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
+                tripActions.innerHTML = `<button class="btn-request" id="request-trip-btn" ${!(originCoords && destinationCoords) ? 'disabled' : ''}>Solicitar Viaje</button>`;
+                if (originCoords && destinationCoords) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
 
                 mapInstructions.style.display = 'flex';
                 if (!originCoords) mapInstructions.innerHTML = '<i class="fas fa-location-arrow"></i> Buscando tu ubicación...';
@@ -546,44 +473,31 @@
                 else mapInstructions.style.display = 'none'; 
 
             } else {
-                // OCULTAMOS CAJAS DE ORIGEN/DESTINO PARA LIMPIAR EL PANEL
-                setupSection.style.display = 'none';
-                let html = '';
+                setupSection.style.display = 'none'; // Ocultar cotizador al buscar
                 
                 if (currentTrip.status === 'pending') {
-                    // ESTADO 2: BUSCANDO
                     startNearbyDriversTracking();
-                    html = `
-                        <div class="radar-state">
-                            <div class="radar-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
-                            <h4>Contactando conductores cercanos...</h4>
-                        </div>
-                        <button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>
-                    `;
-                    mapInstructions.style.display = 'flex';
-                    mapInstructions.innerHTML = '<i class="fas fa-radar"></i> Rastreando...';
+                    renderOffersUI(); // Dibuja la subasta o el radar
+                    mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-comment-dollar"></i> Negociando tarifa...';
                 } 
                 else if (currentTrip.status === 'accepted') {
-                    // ESTADO 3: ACEPTADO
                     stopNearbyDriversTracking();
-                    html = `
+                    tripActions.innerHTML = `
                         <div class="driver-card">
                             <div class="driver-avatar"><i class="fas fa-motorcycle"></i></div>
                             <div class="driver-details">
                                 <h4>${currentTrip.driver?.full_name || 'Conductor'}</h4>
                                 <p>Código: ${currentTrip.driver?.numeric_code || '...'}</p>
-                                <p class="eta-text">En camino a recogerte</p>
+                                <p class="eta-text">Trato cerrado por $${currentTrip.final_price?.toFixed(2) || '0.00'}</p>
                             </div>
                         </div>
                         <button class="btn-cancel" onclick="cancelTrip()">Cancelar Viaje</button>
                     `;
-                    mapInstructions.style.display = 'flex';
-                    mapInstructions.innerHTML = '<i class="fas fa-check-circle" style="color:var(--brand-yellow);"></i> Conductor en camino';
+                    mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-check-circle" style="color:var(--brand-yellow);"></i> Conductor en camino';
                 } 
                 else if (currentTrip.status === 'started') {
-                    // ESTADO 4: EN VIAJE (Con botón de compartir ruta)
                     stopNearbyDriversTracking();
-                    html = `
+                    tripActions.innerHTML = `
                         <div class="driver-card">
                             <div class="driver-avatar" style="color:white; background:var(--brand-yellow); border-color:var(--brand-yellow);"><i class="fas fa-route"></i></div>
                             <div class="driver-details">
@@ -593,52 +507,17 @@
                         </div>
                         <button class="btn-share" onclick="shareRoute()"><i class="fas fa-shield-alt"></i> Compartir mi viaje</button>
                     `;
-                    mapInstructions.style.display = 'flex';
-                    mapInstructions.innerHTML = '<i class="fas fa-shield-alt" style="color:var(--brand-yellow);"></i> Viaje seguro iniciado';
+                    mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-shield-alt" style="color:var(--brand-yellow);"></i> Viaje seguro iniciado';
                 }
-                
-                tripActions.innerHTML = html;
             }
-        }
-
-        // NUEVO: Función de seguridad para compartir ruta
-       // NUEVO: Función de seguridad para compartir ruta con Link de Seguimiento
-        window.shareRoute = async function() {
-            const dest = dropoffInput.value || 'mi destino';
-            const driverName = currentTrip.driver?.full_name || 'un conductor';
-            const driverCode = currentTrip.driver?.numeric_code || 'desconocido';
-            
-            // Construimos la URL mágica (detecta automáticamente tu dominio web)
-            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            const trackingUrl = `${baseUrl}/invitado.html?viaje=${currentTrip.id}`;
-            
-            const textToShare = `📍 Sigue mi viaje en Mi Uber en tiempo real.\nVoy hacia: ${dest}\nConductor: ${driverName} (Cód: ${driverCode}).\n\nSigue mi ruta aquí: ${trackingUrl}`;
-
-            if (navigator.share) {
-                try { 
-                    await navigator.share({ 
-                        title: 'Mi viaje seguro', 
-                        text: textToShare
-                    }); 
-                } catch (err) { console.error('Error compartiendo:', err); }
-            } else {
-                navigator.clipboard.writeText(textToShare);
-                alert("Link de rastreo copiado al portapapeles. Pégalo en WhatsApp.");
-            }
-        }
-
-        async function requestTrip() {
-            const btn = document.getElementById('request-trip-btn'); btn.disabled = true; btn.textContent = 'Procesando...';
-            const { data, error } = await supabaseClient.from('trips').insert({ passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffInput.value, pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, status: 'pending' }).select().single();
-            if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Solicitar Viaje'; return; }
-            currentTrip = data; updateTripUI(); drawRoute(); 
         }
 
         async function cancelTrip() {
             if (!confirm('¿Cancelar viaje?')) return;
             await supabaseClient.from('trips').update({ status: 'cancelled' }).eq('id', currentTrip.id);
+            if(offersChannel) offersChannel.unsubscribe();
             stopDriverLocationTracking(); currentTrip = null; 
-            if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = '';
+            if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = ''; priceNegotiator.style.display = 'none';
             updateTripUI(); if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16);
         }
 
@@ -648,7 +527,7 @@
                 if (currentTrip && payload.new.id === currentTrip.id) {
                     const oldStatus = currentTrip.status; currentTrip = { ...currentTrip, ...payload.new };
                     if (payload.new.status === 'accepted' && payload.new.driver_id) {
-                        updateTripUI(); 
+                        if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
                         const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single();
                         if (data) { currentTrip.driver = data; updateTripUI(); startDriverLocationTracking(); }
                     }
@@ -662,10 +541,25 @@
         }
 
         // ============================================
-        // RADAR DE CONDUCTORES LIBRES (GHOST CARS)
+        // TRACKING Y EXTRAS
         // ============================================
-        function calculateDistance(lat1, lon1, lat2, lon2) { const p = 0.017453292519943295, c = Math.cos; return 12742 * Math.asin(Math.sqrt(0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2)); }
+        function updateDriverVisuals(lat, lng, bearing) {
+            if (driverMarker) {
+                driverMarker.setLatLng([lat, lng]); const iconEl = document.getElementById('motorcycle-inner-icon-passenger'); if (iconEl) iconEl.style.transform = `rotate(${bearing}deg)`;
+                if (fullRouteCoords && routeLine) {
+                    let closestIndex = 0; let minDist = Infinity; const currentPos = L.latLng(lat, lng);
+                    for (let i = 0; i < fullRouteCoords.length; i++) { const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1])); if (dist < minDist) { minDist = dist; closestIndex = i; } }
+                    const remainingRoute = fullRouteCoords.slice(closestIndex); if (remainingRoute.length > 1) routeLine.setLatLngs(remainingRoute);
+                }
+            } else {
+                const icon = L.divIcon({ className: 'driver-marker-animated', html: `<div style="width:36px;height:36px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);"><i id="motorcycle-inner-icon-passenger" class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:14px;transform:rotate(${bearing}deg);"></i></div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+                driverMarker = L.marker([lat, lng], { icon }).addTo(map); drawRoute();
+            }
+        }
+        function startDriverLocationTracking() { if (!currentTrip) return; if (driverLocationChannel) driverLocationChannel.unsubscribe(); driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`).on('broadcast', { event: 'location' }, (payload) => { updateDriverVisuals(payload.payload.lat, payload.payload.lng, payload.payload.bearing || 0); }).subscribe(); if(driverMarker) drawRoute(); }
+        function stopDriverLocationTracking() { if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; } if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } if (routeLine) { map.removeLayer(routeLine); routeLine = null; } if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } }
 
+        function calculateDistance(lat1, lon1, lat2, lon2) { const p = 0.017453292519943295, c = Math.cos; return 12742 * Math.asin(Math.sqrt(0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2)); }
         function startNearbyDriversTracking() { if (nearbyDriversInterval) return; fetchNearbyDrivers(); nearbyDriversInterval = setInterval(fetchNearbyDrivers, 10000); }
         function stopNearbyDriversTracking() { if (nearbyDriversInterval) { clearInterval(nearbyDriversInterval); nearbyDriversInterval = null; } Object.values(nearbyDriverMarkers).forEach(marker => map.removeLayer(marker)); nearbyDriverMarkers = {}; }
 
@@ -685,9 +579,29 @@
             });
         }
 
-        // UX Interactions
+        // AUTH & INIT (Reducido)
+        document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const btn = document.getElementById('login-btn'); btn.disabled=true; const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); if (!error) loadUserProfile(data.user.id); else { btn.disabled=false; alert(error.message); } });
+        document.getElementById('show-register').addEventListener('click', () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); });
+        document.getElementById('show-login').addEventListener('click', () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); });
+        document.getElementById('close-login').addEventListener('click', () => loginModal.classList.remove('active'));
+        document.getElementById('close-register').addEventListener('click', () => registerModal.classList.remove('active'));
+        logoutBtn.addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.reload(); });
+        
+        async function loadUserProfile(userId) {
+            const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
+            if (data.role !== 'pasajero') { alert('Cuenta de Conductor.'); await supabaseClient.auth.signOut(); return location.reload(); }
+            userProfile = data; currentUser = (await supabaseClient.auth.getUser()).data.user;
+            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
+            mainPanel.style.display = 'flex'; loginModal.classList.remove('active'); registerModal.classList.remove('active');
+            initMap(); await checkCurrentTrip(); subscribeToTripUpdates();
+            if (!currentTrip) locateBtn.click();
+        }
+
+        async function checkSession() { const { data } = await supabaseClient.auth.getSession(); if (data.session) loadUserProfile(data.session.user.id); else loginModal.classList.add('active'); loadingScreen.style.display = 'none'; }
+        
         let panelCollapsed = false;
-        panelHandle.addEventListener('click', () => { panelCollapsed = !panelCollapsed; tripPanel.classList.toggle('collapsed', panelCollapsed); });
+        document.getElementById('panel-handle').addEventListener('click', () => { panelCollapsed = !panelCollapsed; tripPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 70px))' : 'translateY(0)'; });
+
         document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
