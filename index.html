@@ -381,6 +381,7 @@
         }
 
         // 3. Guardar Cambios
+        // 3. Guardar Cambios
         document.getElementById('profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-save-profile');
@@ -397,11 +398,23 @@
             try {
                 // Si seleccionó una foto, la comprimimos y la subimos a Supabase Storage
                 if (selectedAvatarFile) {
-                    const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7); // Comprimir a max 800px, 70% calidad
+                    const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7);
                     const fileName = `driver_${currentUser.id}_${Date.now()}.jpg`;
                     
-                    const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, compressedBlob, { upsert: true });
-                    if (error) throw error;
+                    // ¡LA MAGIA!: Convertir el Blob crudo en un File oficial con tipo MIME estricto
+                    const imageFile = new File([compressedBlob], fileName, { type: 'image/jpeg' });
+                    
+                    // Le enviamos a Supabase el archivo indicando explícitamente el contentType
+                    const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, imageFile, { 
+                        cacheControl: '3600',
+                        upsert: true,
+                        contentType: 'image/jpeg' 
+                    });
+                    
+                    if (error) {
+                        console.error("Error detallado de Supabase:", error);
+                        throw error;
+                    }
                     
                     const { data: publicUrlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
                     newAvatarUrl = publicUrlData.publicUrl;
@@ -428,7 +441,8 @@
                 setTimeout(() => closeProfile(), 1500);
 
             } catch (error) {
-                errorDiv.textContent = "Error al guardar: Asegúrate de haber creado el bucket 'avatars' en Supabase.";
+                console.error(error);
+                errorDiv.textContent = "Hubo un error al guardar. Revisa tu conexión.";
                 errorDiv.style.display = 'block';
             } finally {
                 btn.disabled = false; text.style.display = 'inline'; spin.style.display = 'none';
