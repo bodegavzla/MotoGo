@@ -269,6 +269,7 @@
         function showLogin() { hideModals(); showModal(loginModal); }
 
         async function checkSession() { try { const { data: { session } } = await supabaseClient.auth.getSession(); if (session) await loadUserProfile(session.user.id); else showLogin(); } catch(e) { showLogin(); } finally { loadingScreen.style.display = 'none'; } }
+        
         async function loadUserProfile(userId) {
             const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
             if (error || !data || data.role !== 'conductor') { alert('Exclusivo conductores.'); await supabaseClient.auth.signOut(); showLogin(); return; }
@@ -352,26 +353,24 @@
             document.querySelectorAll('.filter-chip').forEach(chip => { chip.addEventListener('click', (e) => { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); currentHistoryFilter = e.target.dataset.filter; loadTripHistory(); }); });
 
             subscriptions.push(supabaseClient.channel('new-trips').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trips', filter: 'status=eq.pending' }, () => { if (userProfile.available) loadPendingTrips(); }).subscribe());
+            
             subscriptions.push(supabaseClient.channel('trip-updates-driver').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips' }, (payload) => {
-                // 1. Borrar la alerta si el viaje ya no está pendiente (Alguien lo tomó)
+                // 1. Borrar alerta si alguien más toma el viaje
                 if (payload.old.status === 'pending' && payload.new.status !== 'pending') { 
                     pendingTrips = pendingTrips.filter(t => t.id !== payload.old.id); 
                     if(sentOffers[payload.old.id]) delete sentOffers[payload.old.id];
                     updateNotifications(); 
                 }
-                // 2. Si ya estamos en este viaje, actualizar datos
+                // 2. Si ya estamos en el viaje y hay actualización (iniciado, cancelado...)
                 if (currentTrip && payload.new.id === currentTrip.id) { 
                     currentTrip = { ...currentTrip, ...payload.new }; 
                     renderCurrentTrip(); updateTripMarkers(); 
                 }
-                // 3. ¡LA MAGIA! Si estábamos libres, pero el pasajero aceptó NUESTRA oferta
-                else if (!currentTrip && payload.new.driver_id === currentUser.id && payload.new.status === 'accepted') {
-                    notificationDropdown.classList.remove('show'); // Ocultar campana
-                    loadCurrentTrip(); // Descargar el viaje y saltar al mapa
+                // 3. ¡LA MAGIA! Si estábamos esperando oferta y el pasajero NOS ELIGE
+                else if (!currentTrip && payload.new.driver_id === currentUser?.id && payload.new.status === 'accepted') {
+                    notificationDropdown.classList.remove('show');
+                    loadCurrentTrip();
                 }
-            }).subscribe());
-                }
-                if (currentTrip && payload.new.id === currentTrip.id) { currentTrip = { ...currentTrip, ...payload.new }; renderCurrentTrip(); updateTripMarkers(); }
             }).subscribe());
             
             notificationBell.addEventListener('click', (e) => { e.stopPropagation(); notificationDropdown.classList.toggle('show'); if (notificationDropdown.classList.contains('show')) markAllAsRead(); });
@@ -397,7 +396,7 @@
             notificationsList.innerHTML = pendingTrips.map(t => {
                 const distToPassenger = (userProfile.driver_lat && t.pickup_lat) ? calculateDistance(userProfile.driver_lat, userProfile.driver_lng, t.pickup_lat, t.pickup_lng).toFixed(1) : '...';
                 
-                // Cálculo de Rentabilidad (Línea recta * 1.4 por desvíos de calles)
+                // Cálculo de Rentabilidad
                 const estTripDist = calculateDistance(t.pickup_lat, t.pickup_lng, t.dropoff_lat, t.dropoff_lng) * 1.4; 
                 const offerPrice = t.offered_price || 1.50; 
                 const ratio = offerPrice / estTripDist;
@@ -408,7 +407,6 @@
 
                 const bsText = tasaBCV ? `(~ Bs. ${(offerPrice * tasaBCV).toFixed(2)})` : '';
 
-                // Si el conductor ya mandó oferta a este viaje, mostramos estado de espera
                 if (sentOffers[t.id]) {
                     return `
                     <div class="notification-item" style="background: rgba(255,255,255,0.02);">
@@ -417,7 +415,6 @@
                     </div>`;
                 }
 
-                // Interfaz de los 3 botones rápidos (Negociador Inteligente)
                 return `
                 <div class="notification-item unread">
                     <div class="trip-info">
@@ -442,25 +439,19 @@
         }
 
         window.sendCounterOffer = function(tripId, myPrice) {
-            sentOffers[tripId] = myPrice; // Guardar en memoria local para cambiar la UI
+            sentOffers[tripId] = myPrice;
             const trip = pendingTrips.find(t => t.id === tripId);
             const dist = calculateDistance(userProfile.driver_lat, userProfile.driver_lng, trip.pickup_lat, trip.pickup_lng);
             
-            // Abrimos canal efímero solo para enviar la contraoferta
             const channel = supabaseClient.channel(`trip-offers-${tripId}`);
             channel.subscribe((status) => {
                 if(status === 'SUBSCRIBED') {
                     channel.send({
                         type: 'broadcast',
                         event: 'new_offer',
-                        payload: {
-                            driver_id: currentUser.id,
-                            driver_name: userProfile.full_name.split(' ')[0],
-                            price: myPrice,
-                            distance: dist
-                        }
+                        payload: { driver_id: currentUser.id, driver_name: userProfile.full_name.split(' ')[0], price: myPrice, distance: dist }
                     });
-                    updateNotifications(); // Refresca la vista y muestra el relojito de "Esperando"
+                    updateNotifications(); 
                 }
             });
         }
