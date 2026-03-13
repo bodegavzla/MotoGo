@@ -353,10 +353,23 @@
 
             subscriptions.push(supabaseClient.channel('new-trips').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trips', filter: 'status=eq.pending' }, () => { if (userProfile.available) loadPendingTrips(); }).subscribe());
             subscriptions.push(supabaseClient.channel('trip-updates-driver').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips' }, (payload) => {
+                // 1. Borrar la alerta si el viaje ya no está pendiente (Alguien lo tomó)
                 if (payload.old.status === 'pending' && payload.new.status !== 'pending') { 
                     pendingTrips = pendingTrips.filter(t => t.id !== payload.old.id); 
                     if(sentOffers[payload.old.id]) delete sentOffers[payload.old.id];
                     updateNotifications(); 
+                }
+                // 2. Si ya estamos en este viaje, actualizar datos
+                if (currentTrip && payload.new.id === currentTrip.id) { 
+                    currentTrip = { ...currentTrip, ...payload.new }; 
+                    renderCurrentTrip(); updateTripMarkers(); 
+                }
+                // 3. ¡LA MAGIA! Si estábamos libres, pero el pasajero aceptó NUESTRA oferta
+                else if (!currentTrip && payload.new.driver_id === currentUser.id && payload.new.status === 'accepted') {
+                    notificationDropdown.classList.remove('show'); // Ocultar campana
+                    loadCurrentTrip(); // Descargar el viaje y saltar al mapa
+                }
+            }).subscribe());
                 }
                 if (currentTrip && payload.new.id === currentTrip.id) { currentTrip = { ...currentTrip, ...payload.new }; renderCurrentTrip(); updateTripMarkers(); }
             }).subscribe());
