@@ -720,7 +720,7 @@
                     } else {
                         map.setView([latitude, longitude], 16);
                         
-                        // MAGIA: El marcador del pasajero al iniciar
+                        // MAGIA: El marcador del pasajero al iniciar (con su foto si tiene)
                         const avHtml = userProfile.avatar_url ? 
                             `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
                             `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
@@ -745,7 +745,7 @@
         // LÓGICA DE VIAJES Y SUBASTA
         // ==========================================
         async function checkCurrentTrip() {
-            // Extraer la info del conductor para el viaje
+            // Extraer la info del conductor para el viaje (incluyendo su foto)
             const { data } = await supabaseClient.from('trips').select('*, driver:driver_id(full_name, numeric_code, avatar_url)').eq('passenger_id', currentUser.id).in('status', ['pending', 'accepted', 'started']).maybeSingle();
             if (data) {
                 currentTrip = data;
@@ -1010,8 +1010,45 @@
         }
 
         // ==========================================
-        // INIT Y LISTENERS DE LOGIN
+        // INIT Y AUTENTICACIÓN
         // ==========================================
+        function showModal(modal) { modal.classList.add('active'); }
+        function hideModals() { loginModal.classList.remove('active'); registerModal.classList.remove('active'); }
+        function unsubscribeAll() { subscriptions.forEach(sub => sub.unsubscribe()); subscriptions = []; }
+        function showLogin() { hideModals(); showModal(loginModal); }
+
+        async function checkSession() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) await loadUserProfile(session.user.id);
+                else showLogin();
+            } catch(e) {
+                showLogin();
+            } finally {
+                loadingScreen.style.display = 'none';
+            }
+        }
+
+        async function loadUserProfile(userId) {
+            const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
+            if (error || !data || data.role !== 'pasajero') {
+                alert('Esta cuenta no es de pasajero.');
+                await supabaseClient.auth.signOut();
+                showLogin();
+                return;
+            }
+            userProfile = data;
+            currentUser = (await supabaseClient.auth.getUser()).data.user;
+
+            updateHeaderUI();
+            mainPanel.style.display = 'flex';
+            hideModals();
+            initMap();
+            await checkCurrentTrip();
+            subscribeToTripUpdates();
+            if (!currentTrip) locateBtn.click();
+        }
+
         let panelCollapsed = false; document.getElementById('panel-handle').addEventListener('click', () => { panelCollapsed = !panelCollapsed; tripPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 70px))' : 'translateY(0)'; });
 
         document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const btn = document.getElementById('login-btn'); btn.disabled=true; const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); if (error) { btn.disabled=false; document.getElementById('login-error').textContent=error.message; document.getElementById('login-error').style.display='block'; } else loadUserProfile(data.user.id); });
