@@ -46,15 +46,20 @@
         input { width: 100%; padding: 14px 16px; background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 16px; color: white; font-family: inherit; transition: border 0.2s; }
         input:focus { border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); }
         input:disabled { background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; }
-        
         button { width: 100%; padding: 16px; background-color: var(--brand-yellow); color: var(--brand-dark); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
         button:active { transform: scale(0.98); opacity: 0.9; }
-        
         .switch-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--ios-gray); }
         .switch-link a { color: var(--brand-yellow); text-decoration: none; font-weight: 500; cursor: pointer; }
         .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 14px; display: none; font-weight: 500; }
         .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); }
         .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--brand-yellow); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; margin: 10px auto 0; display: none; }
+
+        /* Estrellas Calificación */
+        .stars { display: flex; justify-content: center; gap: 15px; font-size: 35px; color: rgba(255,255,255,0.2); margin-bottom: 25px; cursor: pointer; }
+        .stars i { transition: color 0.2s, transform 0.1s; }
+        .stars i:active { transform: scale(0.8); }
+        .stars i.active { color: var(--brand-yellow); }
 
         /* --- HEADER Y PERFIL --- */
         #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
@@ -62,7 +67,7 @@
         header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
         
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white; }
+        .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white;}
         .user-info-btn:active { transform: scale(0.95); background: rgba(255,195,0,0.1); border-color: var(--brand-yellow); color: var(--brand-yellow); }
         .user-info-avatar { width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); color: var(--brand-dark); display: flex; justify-content: center; align-items: center; font-size: 12px; overflow: hidden; }
         .user-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -73,7 +78,6 @@
         .notification-dropdown { position: absolute; top: 60px; right: 10px; width: 350px; max-width: 90vw; background: var(--brand-dark-light); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 2001; display: none; max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
         .notification-dropdown.show { display: block; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .notification-header { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(61, 53, 50, 0.95); backdrop-filter: blur(10px); font-size: 15px; z-index: 10;}
         .notification-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
         .notification-item.unread { background: rgba(255, 195, 0, 0.05); }
@@ -91,15 +95,14 @@
         .btn-offer-counter { background: rgba(255, 195, 0, 0.1); border: 1px solid var(--brand-yellow); color: var(--brand-yellow); flex: 1; padding: 10px 5px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.1s;}
         .btn-offer-counter:active { background: var(--brand-yellow); color: var(--brand-dark); transform: scale(0.95); }
 
-        /* --- MAPA Y MARCADORES --- */
+        /* Mapa y Panel */
         #map-container { flex: 1; position: relative; height: 100%; width: 100%; }
         #map { width: 100%; height: 100%; }
-        
         .navigate-btn { position: absolute; bottom: 200px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 1000; display: none; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); transition: transform 0.2s; border:none; }
         .navigate-btn:active { transform: scale(0.9); }
         .driver-marker-animated { transition: margin 0.5s ease-out; }
 
-        /* --- PANEL INTELIGENTE CONDUCTOR --- */
+        /* Panel Conductor */
         .driver-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--brand-dark); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.6); padding: 20px 24px calc(30px + env(safe-area-inset-bottom)) 24px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); border-top: 1px solid rgba(255,255,255,0.1); }
         .panel-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: pointer; }
 
@@ -118,7 +121,6 @@
         .gps-indicator { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(52, 199, 89, 0.15); border-radius: 12px; font-size: 11px; color: var(--ios-green); margin-top: 6px; font-weight: 600; width: fit-content; border: 1px solid rgba(52, 199, 89, 0.2); }
         .gps-indicator.inactive { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); border-color: rgba(255, 59, 48, 0.2); }
 
-        /* Información de Viaje */
         .current-trip { background: var(--brand-dark-light); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,195,0,0.2); }
         .current-trip h4 { color: var(--brand-yellow); margin-bottom: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .route-info-box { font-size: 14px; margin-bottom: 15px; line-height: 1.5; color: white; }
@@ -134,7 +136,7 @@
         .btn-complete { background: var(--ios-green); color: white; }
         .btn-cancel-trip { background: transparent; border: 1px solid rgba(255, 59, 48, 0.5); color: var(--ios-red); }
 
-        /* Historial y Vistas (Carrusel) */
+        /* Historial y Vistas */
         .history-section { margin-top: 10px; }
         .history-section h4 { color: white; font-size: 15px; margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .history-filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 5px; scrollbar-width: none; }
@@ -164,7 +166,7 @@
         
         .leaflet-control-zoom { display: none; }
 
-        /* --- VISTA DE PERFIL COMPLETA --- */
+        /* VISTA DE PERFIL COMPLETA */
         .profile-view { position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; background: rgba(46, 39, 37, 0.98); backdrop-filter: blur(20px); z-index: 3500; transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; overflow-y: auto; }
         .profile-view.active { left: 0; }
         
@@ -173,7 +175,6 @@
         .btn-logout-profile { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); padding: 8px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; width: auto; border: 1px solid rgba(255, 59, 48, 0.2); cursor: pointer;}
         
         .profile-content { padding: 30px 20px; flex: 1; }
-        
         .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; }
         .avatar-upload { width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); position: relative; border: 3px solid var(--brand-yellow); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .avatar-upload img { width: 100%; height: 100%; object-fit: cover; display: none; }
@@ -184,12 +185,11 @@
         .btn-save-profile { margin-top: 20px; }
         .profile-spinner { font-size: 20px; animation: spin 1s linear infinite; display: none; }
 
-        /* --- NUEVO BOTÓN CHAT EN TARJETA --- */
-        .card-chat-btn { background: var(--brand-yellow); color: var(--brand-dark); border: none; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; transition: transform 0.1s; padding: 0; flex-shrink: 0;}
+        /* CHAT BOTÓN Y PANEL */
+        .card-chat-btn { background: var(--brand-yellow); color: var(--brand-dark); border: none; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; transition: transform 0.1s; padding: 0; flex-shrink: 0; margin-left: auto;}
         .card-chat-btn:active { transform: scale(0.9); }
         .card-chat-btn .badge { position: absolute; top: -2px; right: -2px; background: var(--ios-red); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: none; align-items: center; justify-content: center; border: 2px solid var(--brand-dark); }
         
-        /* --- PANEL DEL CHAT --- */
         .chat-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 75vh; height: 75dvh; background: var(--brand-dark); border-radius: 24px 24px 0 0; z-index: 4000; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0,0,0,0.6); border-top: 1px solid rgba(255,255,255,0.1); }
         .chat-panel.active { transform: translateY(0); }
         .chat-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(46, 39, 37, 0.95); backdrop-filter: blur(10px); border-radius: 24px 24px 0 0;}
@@ -212,6 +212,9 @@
 <body>
     <div id="network-status"><i class="fas fa-wifi-slash"></i> Sin conexión a Internet</div>
     <div id="loading-screen"><div class="spinner-large"></div></div>
+
+    <audio id="sound-msg" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+    <audio id="sound-new-trip" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
 
     <div id="login-modal" class="modal">
         <div class="modal-content">
@@ -246,6 +249,26 @@
         </div>
     </div>
 
+    <div id="rating-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h2>Califica al Pasajero</h2>
+            <div class="driver-avatar" id="rating-avatar" style="margin: 0 auto 15px; width: 80px; height: 80px; border-radius: 40px; background:var(--brand-dark-light); display:flex; align-items:center; justify-content:center; overflow:hidden; border: 3px solid var(--brand-yellow); font-size: 30px;">
+                <i class="fas fa-user" style="color:var(--brand-yellow);"></i>
+            </div>
+            <p id="rating-name" style="margin-bottom: 20px; font-weight: 600; font-size: 18px;">Pasajero</p>
+            
+            <div class="stars" id="star-rating">
+                <i class="fas fa-star active" data-val="1"></i>
+                <i class="fas fa-star active" data-val="2"></i>
+                <i class="fas fa-star active" data-val="3"></i>
+                <i class="fas fa-star active" data-val="4"></i>
+                <i class="fas fa-star active" data-val="5"></i>
+            </div>
+            
+            <button id="btn-submit-rating" style="margin-top: 10px;">Enviar y Finalizar</button>
+        </div>
+    </div>
+
     <div id="profile-view" class="profile-view">
         <div class="profile-header">
             <button class="btn-back" onclick="closeProfile()"><i class="fas fa-arrow-left"></i></button>
@@ -262,21 +285,11 @@
                     </label>
                     <input type="file" id="avatar-input" accept="image/*">
                 </div>
-                <div class="form-group">
-                    <label>Nombre Completo</label>
-                    <input type="text" id="profile-fullname" required>
-                </div>
-                <div class="form-group">
-                    <label>Teléfono de Contacto</label>
-                    <input type="tel" id="profile-phone" placeholder="Ej: 0414 123 4567" required>
-                </div>
-                <div class="form-group">
-                    <label>Placa / Código (Solo Lectura)</label>
-                    <input type="text" id="profile-code" disabled>
-                </div>
+                <div class="form-group"><label>Nombre Completo</label><input type="text" id="profile-fullname" required></div>
+                <div class="form-group"><label>Teléfono de Contacto</label><input type="tel" id="profile-phone" placeholder="Ej: 0414 123 4567" required></div>
+                <div class="form-group"><label>Placa / Código (Solo Lectura)</label><input type="text" id="profile-code" disabled></div>
                 <button type="submit" class="btn-save-profile" id="btn-save-profile">
-                    <span id="save-text">Guardar Cambios</span>
-                    <i class="fas fa-circle-notch profile-spinner" id="save-spinner"></i>
+                    <span id="save-text">Guardar Cambios</span><i class="fas fa-circle-notch profile-spinner" id="save-spinner"></i>
                 </button>
                 <div class="message success-message" id="profile-success"></div>
                 <div class="message error-message" id="profile-error"></div>
@@ -289,8 +302,7 @@
             <h3 id="chat-title"><i class="fas fa-user"></i> Pasajero</h3>
             <button class="chat-close" onclick="closeChat()">×</button>
         </div>
-        <div class="chat-messages" id="chat-messages">
-            </div>
+        <div class="chat-messages" id="chat-messages"></div>
         <form class="chat-input-area" id="chat-form">
             <input type="text" id="chat-input" class="chat-input" placeholder="Escribe un mensaje..." autocomplete="off">
             <button type="submit" class="chat-send-btn" id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
@@ -311,13 +323,8 @@
                 </div>
             </div>
             <div class="notification-dropdown" id="notification-dropdown">
-                <div class="notification-header">
-                    <span>Ofertas Cercanas</span>
-                    <span id="unread-count" style="color:var(--brand-yellow); font-size: 13px;">0 nuevas</span>
-                </div>
-                <div id="notifications-list">
-                    <div class="no-notifications"><i class="fas fa-radar" style="font-size: 24px; display:block; margin-bottom:10px; color:var(--brand-dark-light);"></i>Buscando viajes...</div>
-                </div>
+                <div class="notification-header"><span>Ofertas Cercanas</span><span id="unread-count" style="color:var(--brand-yellow); font-size: 13px;">0 nuevas</span></div>
+                <div id="notifications-list"><div class="no-notifications"><i class="fas fa-radar" style="font-size: 24px; display:block; margin-bottom:10px; color:var(--brand-dark-light);"></i>Buscando viajes...</div></div>
             </div>
         </header>
 
@@ -331,30 +338,17 @@
                 <div id="main-state-view">
                     <div class="availability-toggle">
                         <div class="availability-info">
-                            <div class="main-text">
-                                <i class="fas fa-circle" id="status-indicator" style="color: var(--ios-gray);"></i>
-                                <span id="availability-text">Desconectado</span>
-                            </div>
+                            <div class="main-text"><i class="fas fa-circle" id="status-indicator" style="color: var(--ios-gray);"></i><span id="availability-text">Desconectado</span></div>
                             <div class="sub-text" id="location-status">Activa para recibir viajes</div>
                             <div class="gps-indicator inactive" id="gps-indicator"><i class="fas fa-satellite"></i><span>GPS apagado</span></div>
                         </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="availability-checkbox">
-                            <span class="slider"></span>
-                        </label>
+                        <label class="toggle-switch"><input type="checkbox" id="availability-checkbox"><span class="slider"></span></label>
                     </div>
 
                     <div class="history-section" id="history-section">
                         <h4><i class="fas fa-history"></i> Tus Viajes</h4>
-                        <div class="history-filters">
-                            <button class="filter-chip active" data-filter="hoy">Hoy</button>
-                            <button class="filter-chip" data-filter="semana">Semana</button>
-                            <button class="filter-chip" data-filter="mes">Mes</button>
-                            <button class="filter-chip" data-filter="ano">Año</button>
-                        </div>
-                        <div class="history-carousel" id="trips-history-carousel">
-                            <div style="color:var(--ios-gray); font-size:13px; width:100%; text-align:center; padding: 20px 0;"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
-                        </div>
+                        <div class="history-filters"><button class="filter-chip active" data-filter="hoy">Hoy</button><button class="filter-chip" data-filter="semana">Semana</button><button class="filter-chip" data-filter="mes">Mes</button><button class="filter-chip" data-filter="ano">Año</button></div>
+                        <div class="history-carousel" id="trips-history-carousel"><div style="color:var(--ios-gray); font-size:13px; width:100%; text-align:center; padding: 20px 0;"><i class="fas fa-spinner fa-spin"></i> Cargando...</div></div>
                     </div>
                 </div>
 
@@ -374,111 +368,108 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // ==========================================
-        // CONFIGURACIÓN SUPABASE
-        // ==========================================
         const SUPABASE_URL = 'https://ajmxtbafpcwjbhtkswuu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbXh0YmFmcGN3amJodGtzd3V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzQyMTEsImV4cCI6MjA4ODc1MDIxMX0.NNNOTr05ef6umCGhKH5GId_j9uoVBzJJfGk6e4rsmQ0';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==========================================
-        // ESTADO GLOBAL
-        // ==========================================
-        let currentUser = null; 
-        let userProfile = null; 
-        let subscriptions = [];
-        let pendingTrips = []; 
-        let unreadCount = 0; 
-        let currentTrip = null;
-        let map = null; 
-        let driverMarker = null; 
-        let originMarker = null; 
-        let destinationMarker = null; 
-        let routeLine = null;
-        let locationWatchId = null; 
-        let isLocationTracking = false; 
-        let fullRouteCoords = null; 
-        let driverBroadcastChannel = null;
-        let lastKnownLat = null; 
-        let lastKnownLng = null; 
-        let currentBearing = 0;
-        let loadedHistoryTrips = []; 
-        let currentHistoryFilter = 'hoy'; 
-        let sentOffers = {}; 
-        let tasaBCV = null;
+        let currentUser = null; let userProfile = null; let subscriptions = [];
+        let pendingTrips = []; let unreadCount = 0; let currentTrip = null;
+        let map = null; let driverMarker = null; let originMarker = null; let destinationMarker = null; let routeLine = null;
+        let locationWatchId = null; let isLocationTracking = false; let fullRouteCoords = null; let driverBroadcastChannel = null;
+        let lastKnownLat = null; let lastKnownLng = null; let currentBearing = 0;
+        let loadedHistoryTrips = []; let currentHistoryFilter = 'hoy'; let sentOffers = {}; let tasaBCV = null;
 
-        // Variables del Chat
-        let chatChannel = null;
-        let unreadMessages = 0;
-        let isChatOpen = false;
+        // Variables del Chat y Estrellas
+        let chatChannel = null; let unreadMessages = 0; let isChatOpen = false;
+        let currentRating = 5;
 
-        // ==========================================
-        // ELEMENTOS DEL DOM
-        // ==========================================
+        // Elementos DOM
         const loadingScreen = document.getElementById('loading-screen');
-        const loginModal = document.getElementById('login-modal'); 
-        const registerModal = document.getElementById('register-modal');
-        const mainPanel = document.getElementById('main-panel'); 
-        const userNameSpan = document.getElementById('user-name');
-        const notificationBell = document.getElementById('notification-bell'); 
-        const notificationDropdown = document.getElementById('notification-dropdown'); 
-        const notificationBadge = document.getElementById('notification-badge'); 
-        const notificationsList = document.getElementById('notifications-list'); 
-        const unreadCountSpan = document.getElementById('unread-count'); 
-        const availabilityCheckbox = document.getElementById('availability-checkbox'); 
-        const statusIndicator = document.getElementById('status-indicator'); 
-        const availabilityText = document.getElementById('availability-text'); 
-        const locationStatus = document.getElementById('location-status'); 
-        const gpsIndicator = document.getElementById('gps-indicator'); 
-        const navigateBtn = document.getElementById('navigate-btn'); 
-        const driverPanel = document.getElementById('driver-panel'); 
-        const panelHandle = document.getElementById('panel-handle'); 
-        const mainStateView = document.getElementById('main-state-view'); 
-        const currentTripContainer = document.getElementById('current-trip-container'); 
-        const tripDetailsView = document.getElementById('trip-details-view');
-        const miniAvatar = document.getElementById('mini-avatar');
+        const loginModal = document.getElementById('login-modal'); const registerModal = document.getElementById('register-modal');
+        const mainPanel = document.getElementById('main-panel'); const userNameSpan = document.getElementById('user-name');
+        const notificationBell = document.getElementById('notification-bell'); const notificationDropdown = document.getElementById('notification-dropdown'); 
+        const notificationBadge = document.getElementById('notification-badge'); const notificationsList = document.getElementById('notifications-list'); 
+        const unreadCountSpan = document.getElementById('unread-count'); const availabilityCheckbox = document.getElementById('availability-checkbox'); 
+        const statusIndicator = document.getElementById('status-indicator'); const availabilityText = document.getElementById('availability-text'); 
+        const locationStatus = document.getElementById('location-status'); const gpsIndicator = document.getElementById('gps-indicator'); 
+        const navigateBtn = document.getElementById('navigate-btn'); const driverPanel = document.getElementById('driver-panel'); 
+        const panelHandle = document.getElementById('panel-handle'); const mainStateView = document.getElementById('main-state-view'); 
+        const currentTripContainer = document.getElementById('current-trip-container'); const tripDetailsView = document.getElementById('trip-details-view');
+        const miniAvatar = document.getElementById('mini-avatar'); const profileView = document.getElementById('profile-view'); 
+        const avatarInput = document.getElementById('avatar-input'); const avatarImage = document.getElementById('avatar-image'); 
+        const avatarPlaceholder = document.getElementById('avatar-placeholder'); let selectedAvatarFile = null;
 
-        // Elementos del Perfil
-        const profileView = document.getElementById('profile-view');
-        const avatarInput = document.getElementById('avatar-input');
-        const avatarImage = document.getElementById('avatar-image');
-        const avatarPlaceholder = document.getElementById('avatar-placeholder');
-        let selectedAvatarFile = null;
+        // Objetos de Audio
+        const soundNewTrip = document.getElementById('sound-new-trip');
+        const soundMsg = document.getElementById('sound-msg');
 
-        // ==========================================
-        // LISTENERS DE RED
-        // ==========================================
         window.addEventListener('offline', () => document.getElementById('network-status').style.display = 'block');
-        window.addEventListener('online', async () => { 
-            document.getElementById('network-status').style.display = 'none'; 
-            if(currentUser) { await checkSession(); await loadPendingTrips(); } 
+        window.addEventListener('online', async () => { document.getElementById('network-status').style.display = 'none'; if(currentUser) { await checkSession(); await loadPendingTrips(); } });
+
+        // ==========================================
+        // SISTEMA DE CALIFICACIÓN (5 ESTRELLAS)
+        // ==========================================
+        document.querySelectorAll('#star-rating i').forEach(star => {
+            star.addEventListener('click', (e) => {
+                currentRating = parseInt(e.target.getAttribute('data-val'));
+                document.querySelectorAll('#star-rating i').forEach(s => {
+                    if(parseInt(s.getAttribute('data-val')) <= currentRating) s.classList.add('active');
+                    else s.classList.remove('active');
+                });
+            });
         });
+
+        window.openRatingModal = function() {
+            document.getElementById('rating-name').textContent = currentTrip.passenger?.full_name || 'Pasajero';
+            
+            const avHtml = currentTrip.passenger?.avatar_url ? 
+                `<img src="${currentTrip.passenger.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                `<i class="fas fa-user" style="color:var(--brand-yellow);"></i>`;
+            document.getElementById('rating-avatar').innerHTML = avHtml;
+            
+            currentRating = 5;
+            document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('active'));
+            showModal(document.getElementById('rating-modal'));
+        }
+
+        document.getElementById('btn-submit-rating').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-submit-rating');
+            btn.disabled = true; btn.textContent = 'Guardando...';
+            
+            await supabaseClient.from('trips').update({ 
+                status: 'completed',
+                passenger_rating: currentRating 
+            }).eq('id', currentTrip.id);
+            
+            document.getElementById('rating-modal').classList.remove('active');
+            btn.disabled = false; btn.textContent = 'Enviar y Finalizar';
+            
+            currentTrip = null; 
+            if (driverBroadcastChannel) { driverBroadcastChannel.unsubscribe(); driverBroadcastChannel = null; }
+            await loadCurrentTrip(); await loadTripHistory();
+        });
+
 
         // ==========================================
         // CHAT EN TIEMPO REAL
         // ==========================================
         async function initChat() {
-            document.getElementById('chat-messages').innerHTML = '';
-            unreadMessages = 0; 
-            const badge = document.getElementById('chat-badge');
-            if(badge) badge.style.display = 'none';
+            document.getElementById('chat-messages').innerHTML = ''; unreadMessages = 0; 
+            const badge = document.getElementById('chat-badge'); if(badge) badge.style.display = 'none';
 
-            // Descargar historial de mensajes de este viaje
             const { data } = await supabaseClient.from('messages').select('*').eq('trip_id', currentTrip.id).order('created_at', { ascending: true });
             if (data) data.forEach(msg => renderMessage(msg));
 
-            // Conectar el radar de mensajes en vivo
             chatChannel = supabaseClient.channel(`chat-${currentTrip.id}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `trip_id=eq.${currentTrip.id}` }, (payload) => {
                     renderMessage(payload.new);
-                    // Notificación roja en el botón dentro de la tarjeta
                     if (!isChatOpen && payload.new.sender_id !== currentUser.id) {
+                        // SONIDO DE NUEVO MENSAJE
+                        soundMsg.play().catch(e => console.log('Audio no interactuado aún'));
+                        
                         unreadMessages++;
                         const badgeEl = document.getElementById('chat-badge');
-                        if (badgeEl) {
-                            badgeEl.style.display = 'flex';
-                            badgeEl.textContent = unreadMessages;
-                        }
+                        if (badgeEl) { badgeEl.style.display = 'flex'; badgeEl.textContent = unreadMessages; }
                     }
                 }).subscribe();
         }
@@ -489,293 +480,68 @@
             const msgEl = document.createElement('div');
             msgEl.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
             msgEl.innerHTML = `${msg.text} <div class="msg-time">${time}</div>`;
-            
             const container = document.getElementById('chat-messages');
-            container.appendChild(msgEl);
-            container.scrollTop = container.scrollHeight; // Auto-scroll
+            container.appendChild(msgEl); container.scrollTop = container.scrollHeight;
         }
 
         window.openChat = function() {
-            isChatOpen = true;
-            document.getElementById('chat-panel').classList.add('active');
-            unreadMessages = 0;
-            const badge = document.getElementById('chat-badge');
-            if(badge) badge.style.display = 'none';
+            isChatOpen = true; document.getElementById('chat-panel').classList.add('active'); unreadMessages = 0;
+            const badge = document.getElementById('chat-badge'); if(badge) badge.style.display = 'none';
         }
 
-        window.closeChat = function() {
-            isChatOpen = false;
-            document.getElementById('chat-panel').classList.remove('active');
-        }
+        window.closeChat = function() { isChatOpen = false; document.getElementById('chat-panel').classList.remove('active'); }
 
-        // Enviar mensaje
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text || !currentTrip) return;
-            
-            input.value = '';
-            document.getElementById('chat-send-btn').disabled = true;
-            
-            await supabaseClient.from('messages').insert({
-                trip_id: currentTrip.id,
-                sender_id: currentUser.id,
-                text: text
-            });
-            
-            document.getElementById('chat-send-btn').disabled = false;
-            input.focus();
+            e.preventDefault(); const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text || !currentTrip) return;
+            input.value = ''; document.getElementById('chat-send-btn').disabled = true;
+            await supabaseClient.from('messages').insert({ trip_id: currentTrip.id, sender_id: currentUser.id, text: text });
+            document.getElementById('chat-send-btn').disabled = false; input.focus();
         });
 
         // ==========================================
-        // API BCV
+        // GESTIÓN DE PERFIL Y OTRAS FUNCIONES
         // ==========================================
-        async function fetchBCV() {
-            try { 
-                const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial'); 
-                const data = await res.json(); 
-                tasaBCV = data.promedio; 
-            } catch(e) { console.error("Error BCV", e); }
-        }
+        async function fetchBCV() { try { const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial'); const data = await res.json(); tasaBCV = data.promedio; } catch(e) { console.error("Error BCV"); } }
 
-        // ==========================================
-        // GESTIÓN DE PERFIL Y OPTIMIZACIÓN DE IMAGEN
-        // ==========================================
-        function openProfile() {
-            document.getElementById('profile-fullname').value = userProfile.full_name;
-            document.getElementById('profile-phone').value = userProfile.phone || '';
-            document.getElementById('profile-code').value = userProfile.numeric_code;
-            
-            if (userProfile.avatar_url) {
-                avatarImage.src = userProfile.avatar_url;
-                avatarImage.style.display = 'block';
-                avatarPlaceholder.style.display = 'none';
-            }
-            profileView.classList.add('active');
-        }
+        function openProfile() { document.getElementById('profile-fullname').value = userProfile.full_name; document.getElementById('profile-phone').value = userProfile.phone || ''; document.getElementById('profile-code').value = userProfile.numeric_code; if (userProfile.avatar_url) { avatarImage.src = userProfile.avatar_url; avatarImage.style.display = 'block'; avatarPlaceholder.style.display = 'none'; } profileView.classList.add('active'); }
+        function closeProfile() { profileView.classList.remove('active'); selectedAvatarFile = null; }
 
-        function closeProfile() {
-            profileView.classList.remove('active');
-            selectedAvatarFile = null; 
-        }
+        avatarInput.addEventListener('change', function(e) { if (e.target.files && e.target.files[0]) { selectedAvatarFile = e.target.files[0]; const reader = new FileReader(); reader.onload = function(e) { avatarImage.src = e.target.result; avatarImage.style.display = 'block'; avatarPlaceholder.style.display = 'none'; }; reader.readAsDataURL(selectedAvatarFile); } });
 
-        // Preview local
-        avatarInput.addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                selectedAvatarFile = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    avatarImage.src = e.target.result;
-                    avatarImage.style.display = 'block';
-                    avatarPlaceholder.style.display = 'none';
-                }
-                reader.readAsDataURL(selectedAvatarFile);
-            }
-        });
+        function compressImage(file, maxWidth, maxHeight, quality) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = event => { const img = new Image(); img.src = event.target.result; img.onload = () => { let width = img.width; let height = img.height; if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } } else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', quality); } } }); }
 
-        // Compresor
-        function compressImage(file, maxWidth, maxHeight, quality) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = event => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        let width = img.width; let height = img.height;
-                        if (width > height) { 
-                            if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } 
-                        } else { 
-                            if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } 
-                        }
-                        
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', quality);
-                    }
-                }
-            });
-        }
-
-        // Guardar Perfil
         document.getElementById('profile-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-save-profile');
-            const text = document.getElementById('save-text');
-            const spin = document.getElementById('save-spinner');
-            const errorDiv = document.getElementById('profile-error');
-            const successDiv = document.getElementById('profile-success');
-            
-            btn.disabled = true; text.style.display = 'none'; spin.style.display = 'inline-block';
-            errorDiv.style.display = 'none'; successDiv.style.display = 'none';
-
-            let newAvatarUrl = userProfile.avatar_url;
-
+            e.preventDefault(); const btn = document.getElementById('btn-save-profile'); const text = document.getElementById('save-text'); const spin = document.getElementById('save-spinner'); const errorDiv = document.getElementById('profile-error'); const successDiv = document.getElementById('profile-success');
+            btn.disabled = true; text.style.display = 'none'; spin.style.display = 'inline-block'; errorDiv.style.display = 'none'; successDiv.style.display = 'none'; let newAvatarUrl = userProfile.avatar_url;
             try {
-                if (selectedAvatarFile) {
-                    const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7);
-                    const fileName = `driver_${currentUser.id}_${Date.now()}.jpg`;
-                    const imageFile = new File([compressedBlob], fileName, { type: 'image/jpeg' });
-                    
-                    const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, imageFile, { 
-                        cacheControl: '3600',
-                        upsert: true,
-                        contentType: 'image/jpeg' 
-                    });
-                    if (error) throw error;
-                    
-                    const { data: publicUrlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-                    newAvatarUrl = publicUrlData.publicUrl;
-                }
-
-                const newName = document.getElementById('profile-fullname').value;
-                const newPhone = document.getElementById('profile-phone').value;
-
-                const { error: dbError } = await supabaseClient.from('user_profiles')
-                    .update({ full_name: newName, phone: newPhone, avatar_url: newAvatarUrl })
-                    .eq('id', currentUser.id);
-
-                if (dbError) throw dbError;
-
-                userProfile.full_name = newName;
-                userProfile.phone = newPhone;
-                userProfile.avatar_url = newAvatarUrl;
-                
-                updateHeaderUI();
-                if(lastKnownLat && lastKnownLng) updateDriverMarker(lastKnownLat, lastKnownLng, currentBearing);
-
-                successDiv.textContent = "¡Perfil actualizado con éxito!";
-                successDiv.style.display = 'block';
-                setTimeout(() => closeProfile(), 1500);
-
-            } catch (error) {
-                console.error(error);
-                errorDiv.textContent = "Hubo un error al guardar. Revisa tu conexión.";
-                errorDiv.style.display = 'block';
-            } finally {
-                btn.disabled = false; text.style.display = 'inline'; spin.style.display = 'none';
-            }
+                if (selectedAvatarFile) { const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7); const fileName = `driver_${currentUser.id}_${Date.now()}.jpg`; const imageFile = new File([compressedBlob], fileName, { type: 'image/jpeg' }); const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, imageFile, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' }); if (error) throw error; const { data: publicUrlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName); newAvatarUrl = publicUrlData.publicUrl; }
+                const newName = document.getElementById('profile-fullname').value; const newPhone = document.getElementById('profile-phone').value;
+                const { error: dbError } = await supabaseClient.from('user_profiles').update({ full_name: newName, phone: newPhone, avatar_url: newAvatarUrl }).eq('id', currentUser.id); if (dbError) throw dbError;
+                userProfile.full_name = newName; userProfile.phone = newPhone; userProfile.avatar_url = newAvatarUrl; updateHeaderUI(); if(lastKnownLat && lastKnownLng) updateDriverMarker(lastKnownLat, lastKnownLng, currentBearing);
+                successDiv.textContent = "¡Perfil actualizado con éxito!"; successDiv.style.display = 'block'; setTimeout(() => closeProfile(), 1500);
+            } catch (error) { errorDiv.textContent = "Hubo un error al guardar. Revisa tu conexión."; errorDiv.style.display = 'block'; } finally { btn.disabled = false; text.style.display = 'inline'; spin.style.display = 'none'; }
         });
 
-        function updateHeaderUI() {
-            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
-            if(userProfile.avatar_url) {
-                miniAvatar.innerHTML = `<img src="${userProfile.avatar_url}" alt="user">`;
-            }
-        }
+        function updateHeaderUI() { userNameSpan.textContent = userProfile.full_name.split(' ')[0]; if(userProfile.avatar_url) { miniAvatar.innerHTML = `<img src="${userProfile.avatar_url}" alt="user">`; } }
 
-        // ==========================================
-        // MATEMÁTICAS / RUTAS OSRM
-        // ==========================================
-        function calculateBearing(lat1, lng1, lat2, lng2) { 
-            const toRad = Math.PI/180; const toDeg = 180/Math.PI; const dLng = (lng2-lng1)*toRad; 
-            lat1 = lat1*toRad; lat2 = lat2*toRad; 
-            const y = Math.sin(dLng)*Math.cos(lat2); 
-            const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLng); 
-            return (Math.atan2(y, x)*toDeg + 360)%360; 
-        }
-        
-        function calculateDistance(lat1, lon1, lat2, lon2) { 
-            const p = 0.017453292519943295, c = Math.cos; 
-            return 12742 * Math.asin(Math.sqrt(0.5 - c((lat2-lat1)*p)/2 + c(lat1*p)*c(lat2*p)*(1 - c((lon2-lon1)*p))/2)); 
-        }
+        function calculateBearing(lat1, lng1, lat2, lng2) { const toRad = Math.PI/180; const toDeg = 180/Math.PI; const dLng = (lng2-lng1)*toRad; lat1 = lat1*toRad; lat2 = lat2*toRad; const y = Math.sin(dLng)*Math.cos(lat2); const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLng); return (Math.atan2(y, x)*toDeg + 360)%360; }
+        function calculateDistance(lat1, lon1, lat2, lon2) { const p = 0.017453292519943295, c = Math.cos; return 12742 * Math.asin(Math.sqrt(0.5 - c((lat2-lat1)*p)/2 + c(lat1*p)*c(lat2*p)*(1 - c((lon2-lon1)*p))/2)); }
+        async function getRealRoute(lat1, lng1, lat2, lng2) { try { const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`); const data = await res.json(); if (data.code === 'Ok' && data.routes.length > 0) return { coordinates: data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]), distance: data.routes[0].distance / 1000, duration: data.routes[0].duration / 60 }; } catch(e) {} return null; }
 
-        async function getRealRoute(lat1, lng1, lat2, lng2) {
-            try { 
-                const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`); 
-                const data = await res.json(); 
-                if (data.code === 'Ok' && data.routes.length > 0) 
-                    return { coordinates: data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]), distance: data.routes[0].distance / 1000, duration: data.routes[0].duration / 60 }; 
-            } catch(e) {} return null;
-        }
+        function showModal(modal) { modal.classList.add('active'); } function hideModals() { loginModal.classList.remove('active'); registerModal.classList.remove('active'); } function unsubscribeAll() { subscriptions.forEach(sub => sub.unsubscribe()); subscriptions = []; } function showLogin() { hideModals(); showModal(loginModal); }
 
-        // ==========================================
-        // AUTENTICACIÓN
-        // ==========================================
-        function showModal(modal) { modal.classList.add('active'); }
-        function hideModals() { loginModal.classList.remove('active'); registerModal.classList.remove('active'); }
-        function unsubscribeAll() { subscriptions.forEach(sub => sub.unsubscribe()); subscriptions = []; }
-        function showLogin() { hideModals(); showModal(loginModal); }
+        async function checkSession() { try { const { data: { session } } = await supabaseClient.auth.getSession(); if (session) await loadUserProfile(session.user.id); else showLogin(); } catch(e) { showLogin(); } finally { loadingScreen.style.display = 'none'; } }
+        async function loadUserProfile(userId) { const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single(); if (error || !data || data.role !== 'conductor') { alert('Exclusivo conductores.'); await supabaseClient.auth.signOut(); showLogin(); return; } userProfile = data; currentUser = (await supabaseClient.auth.getUser()).data.user; updateHeaderUI(); mainPanel.style.display = 'flex'; hideModals(); initMap(); initDriverUI(); fetchBCV(); }
 
-        async function checkSession() { 
-            try { 
-                const { data: { session } } = await supabaseClient.auth.getSession(); 
-                if (session) await loadUserProfile(session.user.id); 
-                else showLogin(); 
-            } catch(e) { showLogin(); } 
-            finally { loadingScreen.style.display = 'none'; } 
-        }
-        
-        async function loadUserProfile(userId) {
-            const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
-            if (error || !data || data.role !== 'conductor') { 
-                alert('Exclusivo conductores.'); await supabaseClient.auth.signOut(); showLogin(); return; 
-            }
-            userProfile = data; currentUser = (await supabaseClient.auth.getUser()).data.user;
-            
-            updateHeaderUI();
-            mainPanel.style.display = 'flex'; 
-            hideModals(); initMap(); initDriverUI(); fetchBCV();
-        }
-
-        // ==========================================
-        // MAPA Y MARCADORES
-        // ==========================================
-        function initMap() { 
-            if(map) return; 
-            map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false }); 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map); 
-        }
-
-        function updateDriverMarker(lat, lng, bearing = 0) {
-            if(!lat || !lng) return;
-            const avatarHtml = userProfile.avatar_url ? 
-                `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
-                `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:16px;"></i>`;
-                
-            const iconHtml = `
-                <div style="width:40px;height:40px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);position:relative;">
-                    ${avatarHtml}
-                    <div id="motorcycle-inner-icon" style="position:absolute; bottom:-4px; right:-4px; background:var(--brand-dark); width:18px; height:18px; border-radius:50%; border:1px solid var(--brand-yellow); display:flex; align-items:center; justify-content:center; transform:rotate(${bearing}deg); transition: transform 0.5s ease-out;">
-                        <i class="fas fa-location-arrow" style="color:var(--brand-yellow); font-size:8px; transform:rotate(-45deg);"></i>
-                    </div>
-                </div>`;
-            
-            if (driverMarker) { 
-                driverMarker.setLatLng([lat, lng]); 
-                driverMarker.setIcon(L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] })); 
-            } else { 
-                driverMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] }) }).addTo(map); 
-                map.setView([lat, lng], 16); 
-            }
-            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) map.panTo([lat, lng], { animate: true, duration: 1 });
-        }
+        function initMap() { if(map) return; map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false }); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map); }
+        function updateDriverMarker(lat, lng, bearing = 0) { if(!lat || !lng) return; const avatarHtml = userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:16px;"></i>`; const iconHtml = `<div style="width:40px;height:40px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);position:relative;">${avatarHtml}<div id="motorcycle-inner-icon" style="position:absolute; bottom:-4px; right:-4px; background:var(--brand-dark); width:18px; height:18px; border-radius:50%; border:1px solid var(--brand-yellow); display:flex; align-items:center; justify-content:center; transform:rotate(${bearing}deg); transition: transform 0.5s ease-out;"><i class="fas fa-location-arrow" style="color:var(--brand-yellow); font-size:8px; transform:rotate(-45deg);"></i></div></div>`; if (driverMarker) { driverMarker.setLatLng([lat, lng]); driverMarker.setIcon(L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] })); } else { driverMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] }) }).addTo(map); map.setView([lat, lng], 16); } if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) map.panTo([lat, lng], { animate: true, duration: 1 }); }
 
         async function processDriverLocation(rawLat, rawLng, updateDB = true) {
             if (!currentUser) return null; let finalLat = rawLat; let finalLng = rawLng;
-            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status) && fullRouteCoords && routeLine) {
-                let closestIndex = 0; let minDist = Infinity; const currentPos = L.latLng(rawLat, rawLng);
-                for (let i = 0; i < fullRouteCoords.length; i++) { 
-                    const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1])); 
-                    if (dist < minDist) { minDist = dist; closestIndex = i; } 
-                }
-                if (minDist < 50) { finalLat = fullRouteCoords[closestIndex][0]; finalLng = fullRouteCoords[closestIndex][1]; }
-                const remainingRoute = fullRouteCoords.slice(closestIndex); 
-                if (remainingRoute.length > 1) routeLine.setLatLngs(remainingRoute);
-            }
-            if (lastKnownLat !== null && lastKnownLng !== null) { 
-                const distMovedMeters = calculateDistance(lastKnownLat, lastKnownLng, finalLat, finalLng) * 1000; 
-                if (distMovedMeters > 2) currentBearing = calculateBearing(lastKnownLat, lastKnownLng, finalLat, finalLng); 
-            }
-            lastKnownLat = finalLat; lastKnownLng = finalLng; 
-            if (userProfile) { userProfile.driver_lat = finalLat; userProfile.driver_lng = finalLng; }
-            
-            updateDriverMarker(finalLat, finalLng, currentBearing);
-            if (updateDB) await supabaseClient.from('user_profiles').update({ driver_lat: finalLat, driver_lng: finalLng, driver_location_updated_at: new Date() }).eq('id', currentUser.id);
-            return { lat: finalLat, lng: finalLng, bearing: currentBearing };
+            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status) && fullRouteCoords && routeLine) { let closestIndex = 0; let minDist = Infinity; const currentPos = L.latLng(rawLat, rawLng); for (let i = 0; i < fullRouteCoords.length; i++) { const dist = currentPos.distanceTo(L.latLng(fullRouteCoords[i][0], fullRouteCoords[i][1])); if (dist < minDist) { minDist = dist; closestIndex = i; } } if (minDist < 50) { finalLat = fullRouteCoords[closestIndex][0]; finalLng = fullRouteCoords[closestIndex][1]; } const remainingRoute = fullRouteCoords.slice(closestIndex); if (remainingRoute.length > 1) routeLine.setLatLngs(remainingRoute); }
+            if (lastKnownLat !== null && lastKnownLng !== null) { const distMovedMeters = calculateDistance(lastKnownLat, lastKnownLng, finalLat, finalLng) * 1000; if (distMovedMeters > 2) currentBearing = calculateBearing(lastKnownLat, lastKnownLng, finalLat, finalLng); }
+            lastKnownLat = finalLat; lastKnownLng = finalLng; if (userProfile) { userProfile.driver_lat = finalLat; userProfile.driver_lng = finalLng; }
+            updateDriverMarker(finalLat, finalLng, currentBearing); if (updateDB) await supabaseClient.from('user_profiles').update({ driver_lat: finalLat, driver_lng: finalLng, driver_location_updated_at: new Date() }).eq('id', currentUser.id); return { lat: finalLat, lng: finalLng, bearing: currentBearing };
         }
 
         function startLocationTracking() {
@@ -783,66 +549,26 @@
             updateGPSIndicator(true, 'Ubicando...');
             navigator.geolocation.getCurrentPosition(
                 async (p) => { await processDriverLocation(p.coords.latitude, p.coords.longitude, true); updateGPSIndicator(true, 'Conectado'); }, 
-                (e) => { updateGPSIndicator(false, 'Error GPS'); availabilityCheckbox.checked = false; }, 
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                (e) => { updateGPSIndicator(false, 'Error GPS'); availabilityCheckbox.checked = false; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
             locationWatchId = navigator.geolocation.watchPosition(
-                async (p) => {
-                    const isTripActive = currentTrip && ['accepted', 'started'].includes(currentTrip.status);
-                    const coords = await processDriverLocation(p.coords.latitude, p.coords.longitude, !isTripActive);
-                    if (isTripActive && driverBroadcastChannel && coords) {
-                        driverBroadcastChannel.send({ type: 'broadcast', event: 'location', payload: { lat: coords.lat, lng: coords.lng, bearing: coords.bearing } });
-                    }
-                    if (isLocationTracking) updateGPSIndicator(true, 'Conectado');
-                }, 
-                (e) => updateGPSIndicator(false, 'Señal perdida'), 
-                { enableHighAccuracy: true, timeout: 30000, maximumAge: 2000 }
-            );
-            isLocationTracking = true; return true;
+                async (p) => { const isTripActive = currentTrip && ['accepted', 'started'].includes(currentTrip.status); const coords = await processDriverLocation(p.coords.latitude, p.coords.longitude, !isTripActive); if (isTripActive && driverBroadcastChannel && coords) { driverBroadcastChannel.send({ type: 'broadcast', event: 'location', payload: { lat: coords.lat, lng: coords.lng, bearing: coords.bearing } }); } if (isLocationTracking) updateGPSIndicator(true, 'Conectado'); }, 
+                (e) => updateGPSIndicator(false, 'Señal perdida'), { enableHighAccuracy: true, timeout: 30000, maximumAge: 2000 }
+            ); isLocationTracking = true; return true;
         }
 
-        function stopLocationTracking() { 
-            if (locationWatchId !== null) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } 
-            isLocationTracking = false; updateGPSIndicator(false, 'Apagado'); 
-            if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } 
-        }
+        function stopLocationTracking() { if (locationWatchId !== null) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } isLocationTracking = false; updateGPSIndicator(false, 'Apagado'); if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } }
 
         async function updateTripMarkers() {
             if (originMarker) map.removeLayer(originMarker); if (destinationMarker) map.removeLayer(destinationMarker); if (routeLine) map.removeLayer(routeLine);
-            fullRouteCoords = null; if (!currentTrip) return; 
-            let startLat, startLng, endLat, endLng;
-            
-            const passAvatar = currentTrip.passenger?.avatar_url ? 
-                `<img src="${currentTrip.passenger.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
-                `<div style="width:16px;height:16px;background:var(--ios-green);border:3px solid white;border-radius:50%;"></div>`;
-            const originHtml = currentTrip.passenger?.avatar_url ? 
-                `<div style="width:36px;height:36px;border-radius:50%;border:3px solid var(--ios-green);box-shadow:0 2px 4px rgba(0,0,0,0.5);background:var(--brand-dark);">${passAvatar}</div>` : 
-                passAvatar;
-
-            if (currentTrip.status === 'accepted') {
-                startLat = userProfile?.driver_lat || currentTrip.pickup_lat; startLng = userProfile?.driver_lng || currentTrip.pickup_lng; endLat = currentTrip.pickup_lat; endLng = currentTrip.pickup_lng;
-                originMarker = L.marker([endLat, endLng], { icon: L.divIcon({ className: '', html: originHtml, iconSize: currentTrip.passenger?.avatar_url ? [36,36] : [22,22] }) }).addTo(map);
-            } else if (currentTrip.status === 'started') {
-                startLat = userProfile?.driver_lat || currentTrip.pickup_lat; startLng = userProfile?.driver_lng || currentTrip.pickup_lng; endLat = currentTrip.dropoff_lat; endLng = currentTrip.dropoff_lng;
-                destinationMarker = L.marker([endLat, endLng], { icon: L.divIcon({ className: '', html: `<div style="width:16px;height:16px;background:var(--ios-red);border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>`, iconSize: [22, 22] }) }).addTo(map);
-            }
-
-            if (startLat && startLng && endLat && endLng) {
-                const r = await getRealRoute(startLat, startLng, endLat, endLng);
-                if (r) { fullRouteCoords = r.coordinates; routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map); } 
-                else routeLine = L.polyline([[startLat, startLng], [endLat, endLng]], { color: 'var(--brand-yellow)', weight: 4, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
-                setTimeout(() => map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] }), 500);
-            }
+            fullRouteCoords = null; if (!currentTrip) return; let startLat, startLng, endLat, endLng;
+            const passAvatar = currentTrip.passenger?.avatar_url ? `<img src="${currentTrip.passenger.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<div style="width:16px;height:16px;background:var(--ios-green);border:3px solid white;border-radius:50%;"></div>`; const originHtml = currentTrip.passenger?.avatar_url ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid var(--ios-green);box-shadow:0 2px 4px rgba(0,0,0,0.5);background:var(--brand-dark);">${passAvatar}</div>` : passAvatar;
+            if (currentTrip.status === 'accepted') { startLat = userProfile?.driver_lat || currentTrip.pickup_lat; startLng = userProfile?.driver_lng || currentTrip.pickup_lng; endLat = currentTrip.pickup_lat; endLng = currentTrip.pickup_lng; originMarker = L.marker([endLat, endLng], { icon: L.divIcon({ className: '', html: originHtml, iconSize: currentTrip.passenger?.avatar_url ? [36,36] : [22,22] }) }).addTo(map); } else if (currentTrip.status === 'started') { startLat = userProfile?.driver_lat || currentTrip.pickup_lat; startLng = userProfile?.driver_lng || currentTrip.pickup_lng; endLat = currentTrip.dropoff_lat; endLng = currentTrip.dropoff_lng; destinationMarker = L.marker([endLat, endLng], { icon: L.divIcon({ className: '', html: `<div style="width:16px;height:16px;background:var(--ios-red);border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>`, iconSize: [22, 22] }) }).addTo(map); }
+            if (startLat && startLng && endLat && endLng) { const r = await getRealRoute(startLat, startLng, endLat, endLng); if (r) { fullRouteCoords = r.coordinates; routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map); setTimeout(() => map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] }), 500); } else routeLine = L.polyline([[startLat, startLng], [endLat, endLng]], { color: 'var(--brand-yellow)', weight: 4, opacity: 0.8, dashArray: '10, 10' }).addTo(map); }
         }
 
-        function updateGPSIndicator(active, text) { 
-            gpsIndicator.className = active ? 'gps-indicator' : 'gps-indicator inactive'; 
-            gpsIndicator.innerHTML = `<i class="fas fa-satellite ${active?'pulse':''}"></i><span>${text}</span>`; 
-        }
+        function updateGPSIndicator(active, text) { gpsIndicator.className = active ? 'gps-indicator' : 'gps-indicator inactive'; gpsIndicator.innerHTML = `<i class="fas fa-satellite ${active?'pulse':''}"></i><span>${text}</span>`; }
 
-        // ==========================================
-        // LÓGICA PRINCIPAL (UI / Negociación)
-        // ==========================================
         async function initDriverUI() {
             availabilityCheckbox.checked = userProfile.available || false; updateAvailabilityIndicator(userProfile.available);
             if (userProfile.available) { startLocationTracking(); locationStatus.textContent = 'Buscando viajes cercanos'; }
@@ -857,164 +583,62 @@
 
             await loadPendingTrips(); await loadCurrentTrip(); await loadTripHistory();
             
-            document.querySelectorAll('.filter-chip').forEach(chip => { 
-                chip.addEventListener('click', (e) => { 
-                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); 
-                    e.target.classList.add('active'); currentHistoryFilter = e.target.dataset.filter; loadTripHistory(); 
-                }); 
-            });
+            document.querySelectorAll('.filter-chip').forEach(chip => { chip.addEventListener('click', (e) => { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); currentHistoryFilter = e.target.dataset.filter; loadTripHistory(); }); });
 
-            subscriptions.push(supabaseClient.channel('new-trips').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trips', filter: 'status=eq.pending' }, () => { if (userProfile.available) loadPendingTrips(); }).subscribe());
+            subscriptions.push(supabaseClient.channel('new-trips').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trips', filter: 'status=eq.pending' }, () => { 
+                if (userProfile.available) {
+                    // SONIDO DE NUEVO VIAJE
+                    soundNewTrip.play().catch(e => console.log('Audio no interactuado aún'));
+                    loadPendingTrips(); 
+                }
+            }).subscribe());
             
             subscriptions.push(supabaseClient.channel('trip-updates-driver').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips' }, (payload) => {
-                if (payload.old.status === 'pending' && payload.new.status !== 'pending') { 
-                    pendingTrips = pendingTrips.filter(t => t.id !== payload.old.id); 
-                    if(sentOffers[payload.old.id]) delete sentOffers[payload.old.id];
-                    updateNotifications(); 
-                }
-                if (currentTrip && payload.new.id === currentTrip.id) { 
-                    currentTrip = { ...currentTrip, ...payload.new }; 
-                    renderCurrentTrip(); updateTripMarkers(); 
-                }
-                else if (!currentTrip && payload.new.driver_id === currentUser?.id && payload.new.status === 'accepted') {
-                    notificationDropdown.classList.remove('show');
-                    loadCurrentTrip();
-                }
+                if (payload.old.status === 'pending' && payload.new.status !== 'pending') { pendingTrips = pendingTrips.filter(t => t.id !== payload.old.id); if(sentOffers[payload.old.id]) delete sentOffers[payload.old.id]; updateNotifications(); }
+                if (currentTrip && payload.new.id === currentTrip.id) { currentTrip = { ...currentTrip, ...payload.new }; renderCurrentTrip(); updateTripMarkers(); }
+                else if (!currentTrip && payload.new.driver_id === currentUser?.id && payload.new.status === 'accepted') { notificationDropdown.classList.remove('show'); loadCurrentTrip(); }
             }).subscribe());
             
             notificationBell.addEventListener('click', (e) => { e.stopPropagation(); notificationDropdown.classList.toggle('show'); if (notificationDropdown.classList.contains('show')) markAllAsRead(); });
             document.addEventListener('click', (e) => { if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) notificationDropdown.classList.remove('show'); });
         }
 
-        function updateAvailabilityIndicator(av) { 
-            statusIndicator.style.color = av ? 'var(--ios-green)' : 'var(--ios-gray)'; 
-            availabilityText.textContent = av ? 'Conectado' : 'Desconectado'; 
-        }
+        function updateAvailabilityIndicator(av) { statusIndicator.style.color = av ? 'var(--ios-green)' : 'var(--ios-gray)'; availabilityText.textContent = av ? 'Conectado' : 'Desconectado'; }
 
-        async function loadPendingTrips() {
-            const { data } = await supabaseClient.from('trips').select('*, passenger:passenger_id(full_name, numeric_code, avatar_url)').eq('status', 'pending').is('driver_id', null).order('created_at', { ascending: false });
-            if (userProfile.driver_lat && userProfile.driver_lng) {
-                pendingTrips = (data || []).filter(t => t.pickup_lat ? calculateDistance(userProfile.driver_lat, userProfile.driver_lng, t.pickup_lat, t.pickup_lng) <= 50 : false); 
-            } else pendingTrips = [];
-            unreadCount = pendingTrips.length; updateNotifications();
-        }
+        async function loadPendingTrips() { const { data } = await supabaseClient.from('trips').select('*, passenger:passenger_id(full_name, numeric_code, avatar_url)').eq('status', 'pending').is('driver_id', null).order('created_at', { ascending: false }); if (userProfile.driver_lat && userProfile.driver_lng) { pendingTrips = (data || []).filter(t => t.pickup_lat ? calculateDistance(userProfile.driver_lat, userProfile.driver_lng, t.pickup_lat, t.pickup_lng) <= 50 : false); } else pendingTrips = []; unreadCount = pendingTrips.length; updateNotifications(); }
 
         function updateNotifications() {
             notificationBadge.style.display = unreadCount > 0 ? 'block' : 'none'; notificationBadge.textContent = unreadCount;
-            if (pendingTrips.length === 0) { 
-                notificationsList.innerHTML = '<div class="no-notifications"><i class="fas fa-satellite-dish" style="font-size: 24px; display:block; margin-bottom:10px; color:var(--brand-dark-light);"></i>No hay solicitudes a menos de 50km</div>'; 
-                unreadCountSpan.textContent = '0 nuevas'; return; 
-            }
+            if (pendingTrips.length === 0) { notificationsList.innerHTML = '<div class="no-notifications"><i class="fas fa-satellite-dish" style="font-size: 24px; display:block; margin-bottom:10px; color:var(--brand-dark-light);"></i>No hay solicitudes a menos de 50km</div>'; unreadCountSpan.textContent = '0 nuevas'; return; }
             unreadCountSpan.textContent = `${unreadCount} nuevas`;
             
             notificationsList.innerHTML = pendingTrips.map(t => {
                 const distToPassenger = (userProfile.driver_lat && t.pickup_lat) ? calculateDistance(userProfile.driver_lat, userProfile.driver_lng, t.pickup_lat, t.pickup_lng).toFixed(1) : '...';
-                
-                const estTripDist = calculateDistance(t.pickup_lat, t.pickup_lng, t.dropoff_lat, t.dropoff_lng) * 1.4; 
-                const offerPrice = t.offered_price || 1.50; const ratio = offerPrice / estTripDist;
-                let profitClass = 'profit-low'; let profitText = '🔴 Baja'; 
-                if(ratio > 0.40) { profitClass = 'profit-high'; profitText = '🟢 Excelente'; } 
-                else if(ratio >= 0.30) { profitClass = 'profit-mid'; profitText = '🟡 Justa'; }
-                
+                const estTripDist = calculateDistance(t.pickup_lat, t.pickup_lng, t.dropoff_lat, t.dropoff_lng) * 1.4; const offerPrice = t.offered_price || 1.50; const ratio = offerPrice / estTripDist;
+                let profitClass = 'profit-low'; let profitText = '🔴 Baja'; if(ratio > 0.40) { profitClass = 'profit-high'; profitText = '🟢 Excelente'; } else if(ratio >= 0.30) { profitClass = 'profit-mid'; profitText = '🟡 Justa'; }
                 const bsText = tasaBCV ? `(~ Bs. ${(offerPrice * tasaBCV).toFixed(2)})` : '';
-                
-                const pAvatar = t.passenger?.avatar_url ? 
-                    `<img src="${t.passenger.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
-                    `<i class="fas fa-user" style="color:var(--brand-yellow);"></i>`;
+                const pAvatar = t.passenger?.avatar_url ? `<img src="${t.passenger.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user" style="color:var(--brand-yellow);"></i>`;
 
-                if (sentOffers[t.id]) { 
-                    return `
-                    <div class="notification-item" style="background: rgba(255,255,255,0.02);">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                            <div style="width:30px;height:30px;border-radius:50%;background:var(--brand-dark);border:1px solid var(--brand-yellow);display:flex;align-items:center;justify-content:center;">${pAvatar}</div>
-                            <div style="flex:1;"><div class="trip-info" style="margin-bottom:0;">${t.passenger?.full_name}</div></div>
-                            <span class="profit-badge" style="background:transparent; color:var(--ios-gray);">Oferta enviada</span>
-                        </div>
-                        <div style="color:var(--brand-yellow); font-size:13px; font-weight:500;"><i class="fas fa-clock fa-spin"></i> Solicitaste $${sentOffers[t.id].toFixed(2)}. Esperando...</div>
-                    </div>`; 
-                }
-
-                return `
-                <div class="notification-item unread">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                        <div style="width:40px;height:40px;border-radius:50%;background:var(--brand-dark);border:1px solid var(--brand-yellow);display:flex;align-items:center;justify-content:center;">${pAvatar}</div>
-                        <div style="flex:1;">
-                            <div class="trip-info" style="margin-bottom:0;">${t.passenger?.full_name}</div>
-                            <div style="font-size:11px;color:var(--ios-gray);"><i class="fas fa-location-arrow" style="color:var(--brand-yellow);"></i> A ${distToPassenger} km</div>
-                        </div>
-                        <span class="profit-badge ${profitClass}">${profitText}</span>
-                    </div>
-                    <div class="trip-details">
-                        <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📍 ${t.pickup_location}</div>
-                        <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🏁 ${t.dropoff_location}</div>
-                    </div>
-                    <div style="margin-top:10px; font-size: 20px; font-weight: 800; color: var(--brand-yellow);">
-                        $${offerPrice.toFixed(2)} <span style="font-size:11px; color:var(--ios-gray); font-weight:600;">${bsText}</span>
-                    </div>
-                    <div class="offer-actions">
-                        <button class="btn-offer-accept" onclick="acceptTrip('${t.id}', ${offerPrice})">Aceptar</button>
-                        <button class="btn-offer-counter" onclick="sendCounterOffer('${t.id}', ${offerPrice + 0.5})">Pedir $${(offerPrice + 0.5).toFixed(2)}</button>
-                        <button class="btn-offer-counter" onclick="sendCounterOffer('${t.id}', ${offerPrice + 1.0})">Pedir $${(offerPrice + 1.0).toFixed(2)}</button>
-                    </div>
-                </div>`;
+                if (sentOffers[t.id]) { return `<div class="notification-item" style="background: rgba(255,255,255,0.02);"><div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><div style="width:30px;height:30px;border-radius:50%;background:var(--brand-dark);border:1px solid var(--brand-yellow);display:flex;align-items:center;justify-content:center;">${pAvatar}</div><div style="flex:1;"><div class="trip-info" style="margin-bottom:0;">${t.passenger?.full_name}</div></div><span class="profit-badge" style="background:transparent; color:var(--ios-gray);">Oferta enviada</span></div><div style="color:var(--brand-yellow); font-size:13px; font-weight:500;"><i class="fas fa-clock fa-spin"></i> Solicitaste $${sentOffers[t.id].toFixed(2)}. Esperando...</div></div>`; }
+                return `<div class="notification-item unread"><div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><div style="width:40px;height:40px;border-radius:50%;background:var(--brand-dark);border:1px solid var(--brand-yellow);display:flex;align-items:center;justify-content:center;">${pAvatar}</div><div style="flex:1;"><div class="trip-info" style="margin-bottom:0;">${t.passenger?.full_name}</div><div style="font-size:11px;color:var(--ios-gray);"><i class="fas fa-location-arrow" style="color:var(--brand-yellow);"></i> A ${distToPassenger} km</div></div><span class="profit-badge ${profitClass}">${profitText}</span></div><div class="trip-details"><div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📍 ${t.pickup_location}</div><div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🏁 ${t.dropoff_location}</div></div><div style="margin-top:10px; font-size: 20px; font-weight: 800; color: var(--brand-yellow);">$${offerPrice.toFixed(2)} <span style="font-size:11px; color:var(--ios-gray); font-weight:600;">${bsText}</span></div><div class="offer-actions"><button class="btn-offer-accept" onclick="acceptTrip('${t.id}', ${offerPrice})">Aceptar</button><button class="btn-offer-counter" onclick="sendCounterOffer('${t.id}', ${offerPrice + 0.5})">Pedir $${(offerPrice + 0.5).toFixed(2)}</button><button class="btn-offer-counter" onclick="sendCounterOffer('${t.id}', ${offerPrice + 1.0})">Pedir $${(offerPrice + 1.0).toFixed(2)}</button></div></div>`;
             }).join('');
         }
 
-        window.sendCounterOffer = function(tripId, myPrice) {
-            sentOffers[tripId] = myPrice; 
-            const trip = pendingTrips.find(t => t.id === tripId); 
-            const dist = calculateDistance(userProfile.driver_lat, userProfile.driver_lng, trip.pickup_lat, trip.pickup_lng);
-            
-            const channel = supabaseClient.channel(`trip-offers-${tripId}`);
-            channel.subscribe((status) => {
-                if(status === 'SUBSCRIBED') {
-                    channel.send({ 
-                        type: 'broadcast', 
-                        event: 'new_offer', 
-                        payload: { 
-                            driver_id: currentUser.id, 
-                            driver_name: userProfile.full_name.split(' ')[0], 
-                            price: myPrice, 
-                            distance: dist, 
-                            avatar_url: userProfile.avatar_url 
-                        } 
-                    });
-                    updateNotifications(); 
-                }
-            });
-        }
-
-        window.acceptTrip = async function(tripId, agreedPrice) {
-            if (!userProfile.available) { alert('Debes conectarte primero'); return; }
-            const { data, error } = await supabaseClient.from('trips').update({ driver_id: currentUser.id, status: 'accepted', final_price: agreedPrice, updated_at: new Date() }).eq('id', tripId).is('driver_id', null).eq('status', 'pending').select();
-            if (error || !data || data.length === 0) { alert('Viaje cerrado por otro conductor.'); await loadPendingTrips(); return; }
-            
-            pendingTrips = pendingTrips.filter(t => t.id !== tripId); 
-            if(sentOffers[tripId]) delete sentOffers[tripId];
-            updateNotifications(); notificationDropdown.classList.remove('show');
-            if (lastKnownLat && lastKnownLng && map) map.panTo([lastKnownLat, lastKnownLng], { animate: true, duration: 1 });
-            await loadCurrentTrip();
-        }
-
+        window.sendCounterOffer = function(tripId, myPrice) { sentOffers[tripId] = myPrice; const trip = pendingTrips.find(t => t.id === tripId); const dist = calculateDistance(userProfile.driver_lat, userProfile.driver_lng, trip.pickup_lat, trip.pickup_lng); const channel = supabaseClient.channel(`trip-offers-${tripId}`); channel.subscribe((status) => { if(status === 'SUBSCRIBED') { channel.send({ type: 'broadcast', event: 'new_offer', payload: { driver_id: currentUser.id, driver_name: userProfile.full_name.split(' ')[0], price: myPrice, distance: dist, avatar_url: userProfile.avatar_url } }); updateNotifications(); } }); }
+        window.acceptTrip = async function(tripId, agreedPrice) { if (!userProfile.available) { alert('Debes conectarte primero'); return; } const { data, error } = await supabaseClient.from('trips').update({ driver_id: currentUser.id, status: 'accepted', final_price: agreedPrice, updated_at: new Date() }).eq('id', tripId).is('driver_id', null).eq('status', 'pending').select(); if (error || !data || data.length === 0) { alert('Viaje cerrado por otro conductor.'); await loadPendingTrips(); return; } pendingTrips = pendingTrips.filter(t => t.id !== tripId); if(sentOffers[tripId]) delete sentOffers[tripId]; updateNotifications(); notificationDropdown.classList.remove('show'); if (lastKnownLat && lastKnownLng && map) map.panTo([lastKnownLat, lastKnownLng], { animate: true, duration: 1 }); await loadCurrentTrip(); }
         function markAllAsRead() { unreadCount = 0; notificationBadge.style.display = 'none'; document.querySelectorAll('.notification-item').forEach(i => i.classList.remove('unread')); unreadCountSpan.textContent = '0 nuevas'; }
 
         async function loadCurrentTrip() {
             const { data } = await supabaseClient.from('trips').select('*, passenger:passenger_id(full_name, numeric_code, avatar_url)').eq('driver_id', currentUser.id).in('status', ['accepted', 'started']).maybeSingle();
             currentTrip = data;
-            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) {
-                if (driverBroadcastChannel) driverBroadcastChannel.unsubscribe();
-                driverBroadcastChannel = supabaseClient.channel(`trip-${currentTrip.id}`); driverBroadcastChannel.subscribe();
-            } else { if (driverBroadcastChannel) { driverBroadcastChannel.unsubscribe(); driverBroadcastChannel = null; } }
+            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) { if (driverBroadcastChannel) driverBroadcastChannel.unsubscribe(); driverBroadcastChannel = supabaseClient.channel(`trip-${currentTrip.id}`); driverBroadcastChannel.subscribe(); } else { if (driverBroadcastChannel) { driverBroadcastChannel.unsubscribe(); driverBroadcastChannel = null; } }
             renderCurrentTrip(); updateTripMarkers(); 
         }
 
         function renderCurrentTrip() {
             if (!currentTrip) { 
                 currentTripContainer.style.display = 'none'; mainStateView.style.display = 'block'; tripDetailsView.style.display = 'none'; navigateBtn.style.display = 'none'; driverPanel.style.transform = 'translateY(0)'; 
-                
-                // Ocultar Chat
-                closeChat();
-                if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+                closeChat(); if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
                 return; 
             }
             
@@ -1022,16 +646,15 @@
             
             const isAccepted = currentTrip.status === 'accepted'; 
             const iconTop = isAccepted ? '<i class="fas fa-motorcycle"></i> Buscar al pasajero' : '<i class="fas fa-route"></i> En viaje al destino';
-            const b = isAccepted ? `<button class="btn-start" onclick="updateTripStatus('${currentTrip.id}', 'started')">Iniciar viaje</button><button class="btn-cancel-trip" onclick="if(confirm('¿Cancelar?')) updateTripStatus('${currentTrip.id}', 'cancelled')">Cancelar</button>` : `<button class="btn-complete" onclick="updateTripStatus('${currentTrip.id}', 'completed')"><i class="fas fa-check"></i> Completar viaje</button>`;
+            
+            // EL BOTÓN HA CAMBIADO DE COMPLETAR A -> ABRIR MODAL DE CALIFICACIÓN
+            const b = isAccepted ? `<button class="btn-start" onclick="updateTripStatus('${currentTrip.id}', 'started')">Iniciar viaje</button><button class="btn-cancel-trip" onclick="if(confirm('¿Cancelar?')) window.updateTripStatus('${currentTrip.id}', 'cancelled')">Cancelar</button>` : `<button class="btn-complete" onclick="openRatingModal()"><i class="fas fa-check"></i> Completar viaje</button>`;
             
             const bsText = tasaBCV && currentTrip.final_price ? `(~ Bs. ${(currentTrip.final_price * tasaBCV).toFixed(2)})` : '';
             const dealPrice = currentTrip.final_price ? `$${currentTrip.final_price.toFixed(2)}` : '...';
             
-            const pAvatar = currentTrip.passenger?.avatar_url ? 
-                `<img src="${currentTrip.passenger.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--brand-yellow);">` : 
-                `<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,195,0,0.1);display:flex;align-items:center;justify-content:center;color:var(--brand-yellow);border:1px solid var(--brand-yellow);"><i class="fas fa-user"></i></div>`;
+            const pAvatar = currentTrip.passenger?.avatar_url ? `<img src="${currentTrip.passenger.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--brand-yellow);">` : `<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,195,0,0.1);display:flex;align-items:center;justify-content:center;color:var(--brand-yellow);border:1px solid var(--brand-yellow);"><i class="fas fa-user"></i></div>`;
 
-            // MAGIA: El botón de chat inyectado dentro de la tarjeta
             document.getElementById('current-trip-info').innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                     <h4>${iconTop}</h4>
@@ -1056,9 +679,7 @@
                 </div>
                 <div class="action-buttons">${b}</div>`;
 
-            const miniAv = currentTrip.passenger?.avatar_url ? 
-                `<img src="${currentTrip.passenger.avatar_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : 
-                `<i class="fas fa-user"></i>`;
+            const miniAv = currentTrip.passenger?.avatar_url ? `<img src="${currentTrip.passenger.avatar_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user"></i>`;
             document.getElementById('chat-title').innerHTML = `${miniAv} ${currentTrip.passenger?.full_name.split(' ')[0] || 'Pasajero'}`;
             
             if(!chatChannel) initChat();
@@ -1070,9 +691,6 @@
             await loadCurrentTrip(); await loadTripHistory(); 
         }
 
-        // ==========================================
-        // HISTORIAL DE VIAJES
-        // ==========================================
         async function loadTripHistory() {
             let startDate = new Date(); startDate.setHours(0,0,0,0);
             if (currentHistoryFilter === 'semana') { const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1); startDate.setDate(diff); } 
@@ -1102,7 +720,6 @@
         window.openTripDetails = function(tripId) {
             const trip = loadedHistoryTrips.find(t => t.id === tripId); if(!trip) return;
             mainStateView.style.display = 'none'; tripDetailsView.style.display = 'block';
-            
             const statusText = trip.status === 'completed' ? '<span style="color:var(--ios-green);">Completado</span>' : '<span style="color:var(--ios-red);">Cancelado</span>';
             const bsT = tasaBCV ? `(~ Bs. ${(trip.final_price * tasaBCV).toFixed(2)})` : '';
             
