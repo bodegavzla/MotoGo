@@ -289,7 +289,7 @@
         .leaflet-control-zoom { display: none; }
 
         /* ========================================= */
-        /* PANEL DE PERFIL COMPLETO                  */
+        /* VISTA DE PERFIL COMPLETA                  */
         /* ========================================= */
         .profile-view { 
             position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; 
@@ -311,6 +311,7 @@
         }
         
         .profile-content { padding: 30px 20px; flex: 1; }
+        
         .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; }
         .avatar-upload { 
             width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); 
@@ -1000,8 +1001,14 @@
         function stopLocationTracking() { if (locationWatchId !== null) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } isLocationTracking = false; updateGPSIndicator(false, 'Apagado'); if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } }
 
         async function updateTripMarkers() {
-            if (originMarker) map.removeLayer(originMarker); if (destinationMarker) map.removeLayer(destinationMarker); if (routeLine) map.removeLayer(routeLine);
-            fullRouteCoords = null; if (!currentTrip) return; let startLat, startLng, endLat, endLng;
+            if (originMarker) { map.removeLayer(originMarker); originMarker = null; } 
+            if (destinationMarker) { map.removeLayer(destinationMarker); destinationMarker = null; } 
+            if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+            
+            fullRouteCoords = null; 
+            if (!currentTrip) return; 
+            
+            let startLat, startLng, endLat, endLng;
             const passAvatar = currentTrip.passenger?.avatar_url ? `<img src="${currentTrip.passenger.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<div style="width:16px;height:16px;background:var(--ios-green);border:3px solid white;border-radius:50%;"></div>`;
             const originHtml = currentTrip.passenger?.avatar_url ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid var(--ios-green);box-shadow:0 2px 4px rgba(0,0,0,0.5);background:var(--brand-dark);">${passAvatar}</div>` : passAvatar;
 
@@ -1015,9 +1022,18 @@
 
             if (startLat && startLng && endLat && endLng) {
                 const r = await getRealRoute(startLat, startLng, endLat, endLng);
-                if (r) { fullRouteCoords = r.coordinates; routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map); } 
-                else routeLine = L.polyline([[startLat, startLng], [endLat, endLng]], { color: 'var(--brand-yellow)', weight: 4, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
-                setTimeout(() => map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] }), 500);
+                
+                // --- MAGIA ANTI-LÍNEAS FANTASMAS ---
+                if (!currentTrip) return; // Si el viaje se canceló mientras calculaba la ruta, no dibujar nada.
+                if (routeLine) { map.removeLayer(routeLine); routeLine = null; } // Si se dibujó otra línea mientras esperábamos, borrarla.
+
+                if (r) { 
+                    fullRouteCoords = r.coordinates; 
+                    routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map); 
+                } else { 
+                    routeLine = L.polyline([[startLat, startLng], [endLat, endLng]], { color: 'var(--brand-yellow)', weight: 4, opacity: 0.8, dashArray: '10, 10' }).addTo(map); 
+                }
+                setTimeout(() => { if(routeLine) map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] }); }, 500);
             }
         }
 
@@ -1251,7 +1267,13 @@
 
         window.updateTripStatus = async function(id, status) { 
             await supabaseClient.from('trips').update({ status }).eq('id', id); 
-            if (['completed', 'cancelled'].includes(status)) { currentTrip = null; if (driverBroadcastChannel) { driverBroadcastChannel.unsubscribe(); driverBroadcastChannel = null; } } 
+            if (['completed', 'cancelled'].includes(status)) { 
+                currentTrip = null; 
+                if (driverBroadcastChannel) { driverBroadcastChannel.unsubscribe(); driverBroadcastChannel = null; } 
+                if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+                if (originMarker) { map.removeLayer(originMarker); originMarker = null; }
+                if (destinationMarker) { map.removeLayer(destinationMarker); destinationMarker = null; }
+            } 
             await loadCurrentTrip(); await loadTripHistory(); 
         }
 
