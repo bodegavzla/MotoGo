@@ -11,17 +11,29 @@
             --brand-yellow: #FFC300;
             --brand-dark: #2E2725;
             --brand-dark-light: #3D3532;
+            --ios-bg: #F2F2F7;
+            --ios-surface: #FFFFFF;
             --ios-gray: #A0A0A0;
             --ios-red: #FF3B30;
             --ios-green: #34C759;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--brand-dark); color: white; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--brand-dark); 
+            color: white; 
+            min-height: 100vh; 
+            min-height: 100dvh; 
+            overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased; 
+        }
 
         /* --- ESTILOS GENERALES Y MODALES --- */
         #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 5000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-dark); display: flex; justify-content: center; align-items: center; z-index: 4000; }
+        
         .spinner-large { border: 4px solid rgba(255, 195, 0, 0.2); border-left-color: var(--brand-yellow); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -35,59 +47,144 @@
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--ios-gray); font-weight: 500; }
         input { width: 100%; padding: 14px 16px; background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 16px; color: white; font-family: inherit; transition: border 0.2s; }
-        input:focus { border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); } input:disabled { background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; }
+        input:focus { border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); }
+        input:disabled { background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; }
         
-        button { width: 100%; padding: 16px; background-color: var(--brand-yellow); color: var(--brand-dark); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s; } button:active { transform: scale(0.98); opacity: 0.9; } button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .switch-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--ios-gray); } .switch-link a { color: var(--brand-yellow); text-decoration: none; font-weight: 500; cursor: pointer; }
-        .permission-icon { width: 80px; height: 80px; background: rgba(255, 195, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; } .permission-icon i { font-size: 32px; color: var(--brand-yellow); } .permission-icon.denied { background: rgba(255, 59, 48, 0.1); } .permission-icon.denied i { color: var(--ios-red); } .permission-text { color: var(--ios-gray); font-size: 15px; text-align: center; margin-bottom: 24px; } .btn-secondary { background: rgba(255,255,255,0.1); color: white; margin-top: 12px; }
-        .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 14px; display: none; font-weight: 500; } .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); } .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); } .profile-spinner { font-size: 20px; animation: spin 1s linear infinite; display: none; }
+        button { width: 100%; padding: 16px; background-color: var(--brand-yellow); color: var(--brand-dark); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .switch-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--ios-gray); }
+        .switch-link a { color: var(--brand-yellow); text-decoration: none; font-weight: 500; cursor: pointer; }
+
+        .permission-icon { width: 80px; height: 80px; background: rgba(255, 195, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .permission-icon i { font-size: 32px; color: var(--brand-yellow); }
+        .permission-icon.denied { background: rgba(255, 59, 48, 0.1); }
+        .permission-icon.denied i { color: var(--ios-red); }
+        .permission-text { color: var(--ios-gray); font-size: 15px; text-align: center; margin-bottom: 24px; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; margin-top: 12px; }
+
+        .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 14px; display: none; font-weight: 500; }
+        .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); }
+        .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); }
+        .profile-spinner { font-size: 20px; animation: spin 1s linear infinite; display: none; }
 
         /* --- HEADER Y PERFIL --- */
         #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
         header { display: flex; justify-content: space-between; align-items: center; background: rgba(46, 39, 37, 0.85); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 2000; position: absolute; top: 0; width: 100%; }
         header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
-        .header-actions { display: flex; align-items: center; gap: 15px; } .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white;} .user-info-btn:active { transform: scale(0.95); background: rgba(255,195,0,0.1); border-color: var(--brand-yellow); color: var(--brand-yellow); } .user-info-avatar { width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); color: var(--brand-dark); display: flex; justify-content: center; align-items: center; font-size: 12px; overflow: hidden; } .user-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
         
-        .profile-view { position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; background: rgba(46, 39, 37, 0.98); backdrop-filter: blur(20px); z-index: 3500; transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; overflow-y: auto; } .profile-view.active { left: 0; }
-        .profile-header { padding: 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; background: var(--brand-dark); z-index: 10;} .profile-header h2 { margin: 0; flex: 1; text-align: left; font-size: 18px; margin-left: 15px; color: white; } .btn-back-profile { background: transparent; border: none; color: var(--brand-yellow); font-size: 20px; padding: 0; width: auto; cursor: pointer; } .btn-logout-profile { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); padding: 8px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; width: auto; border: 1px solid rgba(255, 59, 48, 0.2); cursor: pointer; }
-        .profile-content { padding: 30px 20px; flex: 1; } .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; } .avatar-upload { width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); position: relative; border: 3px solid var(--brand-yellow); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5); } .avatar-upload img { width: 100%; height: 100%; object-fit: cover; display: none; } .avatar-upload .placeholder-icon { font-size: 40px; color: var(--brand-yellow); } .avatar-upload .overlay { position: absolute; bottom: 0; background: rgba(0,0,0,0.7); width: 100%; text-align: center; padding: 8px 0; color: white; font-size: 12px; font-weight: 600; } input[type="file"] { display: none; } .btn-save-profile { margin-top: 20px; }
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white;}
+        .user-info-btn:active { transform: scale(0.95); background: rgba(255,195,0,0.1); border-color: var(--brand-yellow); color: var(--brand-yellow); }
+        .user-info-avatar { width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); color: var(--brand-dark); display: flex; justify-content: center; align-items: center; font-size: 12px; overflow: hidden; }
+        .user-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Vista de Perfil Deslizable */
+        .profile-view { position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; background: rgba(46, 39, 37, 0.98); backdrop-filter: blur(20px); z-index: 3500; transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; overflow-y: auto; }
+        .profile-view.active { left: 0; }
+        
+        .profile-header { padding: 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; background: var(--brand-dark); z-index: 10;}
+        .profile-header h2 { margin: 0; flex: 1; text-align: left; font-size: 18px; margin-left: 15px; color: white; }
+        .btn-back-profile { background: transparent; border: none; color: var(--brand-yellow); font-size: 20px; padding: 0; width: auto; cursor: pointer; }
+        .btn-logout-profile { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); padding: 8px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; width: auto; border: 1px solid rgba(255, 59, 48, 0.2); cursor: pointer; }
+        
+        .profile-content { padding: 30px 20px; flex: 1; }
+        .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; }
+        .avatar-upload { width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); position: relative; border: 3px solid var(--brand-yellow); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .avatar-upload img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .avatar-upload .placeholder-icon { font-size: 40px; color: var(--brand-yellow); }
+        .avatar-upload .overlay { position: absolute; bottom: 0; background: rgba(0,0,0,0.7); width: 100%; text-align: center; padding: 8px 0; color: white; font-size: 12px; font-weight: 600; }
+        input[type="file"] { display: none; }
+        .btn-save-profile { margin-top: 20px; }
 
         /* --- MAPA Y MARCADORES --- */
-        #map-container { flex: 1; position: relative; margin-top: 0; } #map { width: 100%; height: 100%; }
-        .map-instructions { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 500; z-index: 1000; text-align: center; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; } .map-instructions i { color: var(--brand-yellow); }
+        #map-container { flex: 1; position: relative; margin-top: 0; }
+        #map { width: 100%; height: 100%; }
+        
+        .map-instructions { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 500; z-index: 1000; text-align: center; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; }
+        .map-instructions i { color: var(--brand-yellow); }
+
         .locate-btn { position: absolute; bottom: 230px; right: 20px; width: 48px; height: 48px; border-radius: 24px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); transition: all 0.2s ease; }
-        .driver-marker-animated { transition: margin 0.5s linear !important; } .passenger-marker-animated { transition: transform 1s linear !important; } .nearby-driver-marker { transition: transform 2s linear !important; z-index: 500 !important; }
+        
+        .driver-marker-animated { transition: margin 0.5s linear !important; }
+        .passenger-marker-animated { transition: transform 1s linear !important; }
+        .nearby-driver-marker { transition: transform 2s linear !important; z-index: 500 !important; }
 
         /* --- PANEL INTELIGENTE --- */
         .trip-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--brand-dark); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding: 20px 24px calc(30px + env(safe-area-inset-bottom)) 24px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); border-top: 1px solid rgba(255,255,255,0.1); }
         .panel-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: pointer; }
 
+        /* Cotizador y Destino */
         #setup-section { transition: opacity 0.3s; }
-        .location-section { margin-bottom: 16px; } .location-section h3 { font-size: 12px; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
-        .location-box { background: var(--brand-dark-light); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.05); } .location-icon { width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; } .location-box.pickup .location-icon { background: rgba(52, 199, 89, 0.15); color: var(--ios-green); } .location-box.dropoff .location-icon { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); }
-        .location-content { flex: 1; } .location-text { font-size: 15px; color: white; font-weight: 500; } .location-text.placeholder { color: var(--ios-gray); font-weight: 400; } .location-text-input { width: 100%; border: none; background: transparent; font-size: 15px; color: white; font-weight: 500; outline: none; padding: 0; } .location-text-input::placeholder { color: var(--ios-gray); font-weight: 400; }
-        .search-results-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--brand-dark-light); border-radius: 12px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); margin-bottom: 8px; z-index: 2000; max-height: 200px; overflow-y: auto; display: none; border: 1px solid rgba(255,255,255,0.1); } .search-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: white; }
+        .location-section { margin-bottom: 16px; }
+        .location-section h3 { font-size: 12px; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
+        .location-box { background: var(--brand-dark-light); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .location-icon { width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .location-box.pickup .location-icon { background: rgba(52, 199, 89, 0.15); color: var(--ios-green); }
+        .location-box.dropoff .location-icon { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); }
+        
+        .location-content { flex: 1; }
+        .location-text { font-size: 15px; color: white; font-weight: 500; }
+        .location-text.placeholder { color: var(--ios-gray); font-weight: 400; }
+        .location-text-input { width: 100%; border: none; background: transparent; font-size: 15px; color: white; font-weight: 500; outline: none; padding: 0; }
+        .location-text-input::placeholder { color: var(--ios-gray); font-weight: 400; }
+        
+        .search-results-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--brand-dark-light); border-radius: 12px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); margin-bottom: 8px; z-index: 2000; max-height: 200px; overflow-y: auto; display: none; border: 1px solid rgba(255,255,255,0.1); }
+        .search-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: white; }
 
-        .price-negotiator { background: rgba(255, 195, 0, 0.05); border: 1px solid rgba(255, 195, 0, 0.2); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; } .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; } .price-controls { display: flex; align-items: center; gap: 15px; } .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s;} .price-btn:active { transform: scale(0.9); }
-        .price-center { display: flex; flex-direction: column; align-items: center; } .price-display-wrapper { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; min-width: 80px; } .currency-symbol { margin-right: 2px; } .price-input { background: transparent; border: none; color: white; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; -moz-appearance: textfield; padding: 0; } .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .bs-conversion { font-size: 11px; color: var(--ios-gray); margin-top: 2px; cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); } .bs-conversion:active { background: rgba(255, 195, 0, 0.1); transform: scale(0.95); }
+        /* Controles de Precio */
+        .price-negotiator { background: rgba(255, 195, 0, 0.05); border: 1px solid rgba(255, 195, 0, 0.2); border-radius: 16px; padding: 15px; margin-top: 20px; display: none; align-items: center; justify-content: space-between; }
+        .price-negotiator h4 { font-size: 14px; color: var(--ios-gray); font-weight: 500; }
+        .price-controls { display: flex; align-items: center; gap: 15px; }
+        .price-btn { width: 40px; height: 40px; border-radius: 20px; background: var(--brand-dark-light); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s;}
+        .price-btn:active { transform: scale(0.9); }
+        
+        .price-center { display: flex; flex-direction: column; align-items: center; }
+        .price-display-wrapper { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; min-width: 80px; }
+        .currency-symbol { margin-right: 2px; }
+        .price-input { background: transparent; border: none; color: white; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; -moz-appearance: textfield; padding: 0; }
+        .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .bs-conversion { font-size: 11px; color: var(--ios-gray); margin-top: 2px; cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .bs-conversion:active { background: rgba(255, 195, 0, 0.1); transform: scale(0.95); }
 
-        .auction-container { margin-top: 15px; } .auction-title { color: var(--brand-yellow); font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; } .offers-list { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; scrollbar-width: none; } .offers-list::-webkit-scrollbar { display: none; }
-        .offer-card { flex: 0 0 85%; scroll-snap-align: center; background: var(--brand-dark-light); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,195,0,0.3); display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease; } @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .offer-header { display: flex; justify-content: space-between; align-items: center; } .offer-driver { display: flex; align-items: center; gap: 10px; } .offer-avatar { width: 40px; height: 40px; background: var(--brand-dark); border-radius: 20px; color: var(--brand-yellow); border: 1px solid var(--brand-yellow); display: flex; justify-content: center; align-items: center; font-size: 18px; overflow: hidden; } .offer-name { font-weight: 600; font-size: 15px; color: white; } .offer-dist { font-size: 12px; color: var(--ios-gray); } .offer-price { font-size: 22px; font-weight: 700; color: var(--brand-yellow); } .btn-accept-offer { background: var(--brand-yellow); color: var(--brand-dark); width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; }
+        /* Lista de Subasta Magnética */
+        .auction-container { margin-top: 15px; }
+        .auction-title { color: var(--brand-yellow); font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .offers-list { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; scrollbar-width: none; }
+        .offers-list::-webkit-scrollbar { display: none; }
+        
+        .offer-card { flex: 0 0 85%; scroll-snap-align: center; background: var(--brand-dark-light); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,195,0,0.3); display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        .offer-header { display: flex; justify-content: space-between; align-items: center; }
+        .offer-driver { display: flex; align-items: center; gap: 10px; }
+        .offer-avatar { width: 40px; height: 40px; background: var(--brand-dark); border-radius: 20px; color: var(--brand-yellow); border: 1px solid var(--brand-yellow); display: flex; justify-content: center; align-items: center; font-size: 18px; overflow: hidden; }
+        .offer-name { font-weight: 600; font-size: 15px; color: white; }
+        .offer-dist { font-size: 12px; color: var(--ios-gray); }
+        .offer-price { font-size: 22px; font-weight: 700; color: var(--brand-yellow); }
+        .btn-accept-offer { background: var(--brand-yellow); color: var(--brand-dark); width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; }
 
-        .driver-card { background: var(--brand-dark-light); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; } .driver-avatar { width: 50px; height: 50px; background: var(--brand-dark); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); border: 2px solid var(--brand-yellow); overflow: hidden; } .driver-details { flex: 1; } .driver-details h4 { font-size: 16px; color: white; margin-bottom: 2px; } .driver-details p { font-size: 13px; color: var(--ios-gray); margin-bottom: 2px; } .driver-details .eta-text { color: var(--brand-yellow); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-cancel { background: rgba(255, 255, 255, 0.1); color: white; margin-top: 10px; } .btn-share { background: transparent; border: 2px solid var(--brand-yellow); color: var(--brand-yellow); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        /* Conductor Seleccionado (Match) */
+        .driver-card { background: var(--brand-dark-light); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; position: relative;}
+        .driver-avatar { width: 50px; height: 50px; background: var(--brand-dark); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); border: 2px solid var(--brand-yellow); overflow: hidden; }
+        .driver-details { flex: 1; }
+        .driver-details h4 { font-size: 16px; color: white; margin-bottom: 2px; }
+        .driver-details p { font-size: 13px; color: var(--ios-gray); margin-bottom: 2px; }
+        .driver-details .eta-text { color: var(--brand-yellow); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .btn-cancel { background: rgba(255, 255, 255, 0.1); color: white; margin-top: 10px; }
+        .btn-share { background: transparent; border: 2px solid var(--brand-yellow); color: var(--brand-yellow); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
 
         .leaflet-control-zoom { display: none; }
 
-        /* ========================================= */
-        /* CHAT UI                                   */
-        /* ========================================= */
-        .chat-fab { position: fixed; bottom: 200px; right: 20px; width: 56px; height: 56px; border-radius: 28px; background: var(--brand-yellow); color: var(--brand-dark); display: none; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 1500; cursor: pointer; transition: transform 0.2s; }
-        .chat-fab:active { transform: scale(0.9); }
-        .chat-fab .badge { position: absolute; top: -2px; right: -2px; background: var(--ios-red); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: bold; display: none; align-items: center; justify-content: center; border: 2px solid var(--brand-dark); }
+        /* --- NUEVO BOTÓN CHAT EN TARJETA --- */
+        .card-chat-btn { background: var(--brand-yellow); color: var(--brand-dark); border: none; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; transition: transform 0.1s; padding: 0; flex-shrink: 0; margin-left: auto;}
+        .card-chat-btn:active { transform: scale(0.9); }
+        .card-chat-btn .badge { position: absolute; top: -2px; right: -2px; background: var(--ios-red); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: none; align-items: center; justify-content: center; border: 2px solid var(--brand-dark); }
         
+        /* --- PANEL DEL CHAT --- */
         .chat-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 75vh; height: 75dvh; background: var(--brand-dark); border-radius: 24px 24px 0 0; z-index: 4000; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0,0,0,0.6); border-top: 1px solid rgba(255,255,255,0.1); }
         .chat-panel.active { transform: translateY(0); }
         
@@ -107,6 +204,7 @@
         .chat-send-btn { width: 48px; height: 48px; border-radius: 24px; background: var(--brand-yellow); color: var(--brand-dark); border: none; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; padding:0; flex-shrink: 0; transition: transform 0.1s;}
         .chat-send-btn:active { transform: scale(0.9); }
         .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
     </style>
 </head>
 <body>
@@ -201,15 +299,10 @@
         </div>
     </div>
 
-    <div id="chat-fab" class="chat-fab" onclick="openChat()">
-        <i class="fas fa-comment-dots"></i>
-        <span class="badge" id="chat-badge">0</span>
-    </div>
-
     <div id="chat-panel" class="chat-panel">
         <div class="chat-header">
             <h3 id="chat-title"><i class="fas fa-user-tie"></i> Conductor</h3>
-            <button class="chat-close" onclick="closeChat()">&times;</button>
+            <button class="chat-close" onclick="closeChat()">×</button>
         </div>
         <div class="chat-messages" id="chat-messages">
             </div>
@@ -360,7 +453,7 @@
         let selectedAvatarFile = null;
 
         // ==========================================
-        // LA FÓRMULA MATEMÁTICA RESTAURADA (Distancia)
+        // MATEMÁTICAS (Distancia)
         // ==========================================
         function calculateDistance(lat1, lon1, lat2, lon2) { 
             const p = 0.017453292519943295; const c = Math.cos; 
@@ -372,7 +465,9 @@
         // ==========================================
         async function initChat() {
             document.getElementById('chat-messages').innerHTML = '';
-            unreadMessages = 0; document.getElementById('chat-badge').style.display = 'none';
+            unreadMessages = 0; 
+            const badge = document.getElementById('chat-badge');
+            if(badge) badge.style.display = 'none';
 
             // Descargar historial de mensajes de este viaje
             const { data } = await supabaseClient.from('messages').select('*').eq('trip_id', currentTrip.id).order('created_at', { ascending: true });
@@ -385,8 +480,11 @@
                     // Si el chat está cerrado y el mensaje es del conductor, sumamos la bolita roja
                     if (!isChatOpen && payload.new.sender_id !== currentUser.id) {
                         unreadMessages++;
-                        document.getElementById('chat-badge').style.display = 'flex';
-                        document.getElementById('chat-badge').textContent = unreadMessages;
+                        const badgeEl = document.getElementById('chat-badge');
+                        if (badgeEl) {
+                            badgeEl.style.display = 'flex';
+                            badgeEl.textContent = unreadMessages;
+                        }
                     }
                 }).subscribe();
         }
@@ -407,7 +505,8 @@
             isChatOpen = true;
             document.getElementById('chat-panel').classList.add('active');
             unreadMessages = 0;
-            document.getElementById('chat-badge').style.display = 'none';
+            const badge = document.getElementById('chat-badge');
+            if(badge) badge.style.display = 'none';
         }
 
         window.closeChat = function() {
@@ -485,6 +584,7 @@
             selectedAvatarFile = null; 
         }
 
+        // Preview Local
         avatarInput.addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
                 selectedAvatarFile = e.target.files[0];
@@ -498,6 +598,7 @@
             }
         });
 
+        // Compresor en vivo
         function compressImage(file, maxWidth, maxHeight, quality) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -523,6 +624,7 @@
             });
         }
 
+        // Guardar Perfil
         document.getElementById('profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-save-profile');
@@ -537,6 +639,7 @@
             let newAvatarUrl = userProfile.avatar_url;
 
             try {
+                // Subir foto empaquetada
                 if (selectedAvatarFile) {
                     const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7); 
                     const fileName = `passenger_${currentUser.id}_${Date.now()}.jpg`; 
@@ -553,6 +656,7 @@
                     newAvatarUrl = publicUrlData.publicUrl;
                 }
                 
+                // Guardar info
                 const newName = document.getElementById('profile-fullname').value; 
                 const newPhone = document.getElementById('profile-phone').value;
                 
@@ -567,6 +671,7 @@
                 
                 updateHeaderUI(); 
                 
+                // Actualizar mi propia foto en el mapa (El Marcador de Origen)
                 if(originCoords && originMarker) { 
                     const avHtml = userProfile.avatar_url ? 
                         `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
@@ -588,6 +693,7 @@
                 setTimeout(() => closeProfile(), 1500);
 
             } catch (error) {
+                console.error(error);
                 errorDiv.textContent = "Hubo un error al guardar. Revisa tu conexión."; 
                 errorDiv.style.display = 'block'; 
             } finally {
@@ -613,7 +719,7 @@
                 if (data.code === 'Ok' && data.routes.length > 0) {
                     return {
                         coordinates: data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]),
-                        distance: data.routes[0].distance / 1000
+                        distance: data.routes[0].distance / 1000 // KM
                     };
                 }
             } catch (error) { } return null;
@@ -741,6 +847,7 @@
                     } else {
                         map.setView([latitude, longitude], 16);
                         
+                        // MAGIA: El marcador del pasajero al iniciar
                         const avHtml = userProfile.avatar_url ? 
                             `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
                             `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
@@ -871,8 +978,6 @@
                 else if (!destinationCoords) mapInstructions.innerHTML = '<i class="fas fa-hand-pointer"></i> Toca el mapa o busca tu destino';
                 else mapInstructions.style.display = 'none'; 
                 
-                // Ocultar botón del Chat
-                document.getElementById('chat-fab').style.display = 'none';
                 closeChat();
                 if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
 
@@ -891,7 +996,6 @@
                         `<i class="fas fa-motorcycle"></i>`;
                     
                     let titleText = currentTrip.status === 'accepted' ? 'Conductor en camino' : 'En viaje hacia tu destino';
-                    let iconColor = currentTrip.status === 'accepted' ? 'var(--brand-yellow)' : 'var(--brand-yellow)';
                     
                     tripActions.innerHTML = `
                         <div class="driver-card">
@@ -901,13 +1005,14 @@
                                 <p>Código: ${currentTrip.driver?.numeric_code || '...'}</p>
                                 <p class="eta-text">Trato cerrado por $${currentTrip.final_price?.toFixed(2) || '0.00'}</p>
                             </div>
+                            <button onclick="openChat()" class="card-chat-btn">
+                                <i class="fas fa-comment-dots"></i>
+                                <span class="badge" id="chat-badge" style="display: ${unreadMessages > 0 ? 'flex' : 'none'}">${unreadMessages}</span>
+                            </button>
                         </div>
                         ${currentTrip.status === 'accepted' ? `<button class="btn-cancel" onclick="cancelTrip()">Cancelar Viaje</button>` : `<button class="btn-share" onclick="shareRoute()"><i class="fas fa-shield-alt"></i> Compartir mi viaje</button>`}
                     `;
-                    mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = `<i class="fas fa-check-circle" style="color:${iconColor};"></i> ${titleText}`;
-                    
-                    // CHAT UI VISIBLE: 
-                    document.getElementById('chat-fab').style.display = 'flex';
+                    mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = `<i class="fas fa-check-circle" style="color:var(--brand-yellow);"></i> ${titleText}`;
                     
                     // Poner foto y nombre en el título del chat
                     document.getElementById('chat-title').innerHTML = currentTrip.driver?.avatar_url ? 
@@ -991,9 +1096,6 @@
         function startDriverLocationTracking() { if (!currentTrip) return; if (driverLocationChannel) driverLocationChannel.unsubscribe(); driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`).on('broadcast', { event: 'location' }, (payload) => { updateDriverVisuals(payload.payload.lat, payload.payload.lng, payload.payload.bearing || 0); }).subscribe(); if(driverMarker) drawRoute(); }
         function stopDriverLocationTracking() { if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; } if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } if (routeLine) { map.removeLayer(routeLine); routeLine = null; } if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } }
 
-        // ==========================================
-        // RADAR GHOST CARS (Conductores cercanos)
-        // ==========================================
         function startNearbyDriversTracking() { if (nearbyDriversInterval) return; fetchNearbyDrivers(); nearbyDriversInterval = setInterval(fetchNearbyDrivers, 10000); }
         function stopNearbyDriversTracking() { if (nearbyDriversInterval) { clearInterval(nearbyDriversInterval); nearbyDriversInterval = null; } Object.values(nearbyDriverMarkers).forEach(marker => map.removeLayer(marker)); nearbyDriverMarkers = {}; }
 
