@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Uber - Conductor</title>
+    <title>Conductor</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -62,19 +62,13 @@
             to { transform: rotate(360deg); } 
         }
 
-        /* ========================================= */
-        /* MODALES BASE                              */
-        /* ========================================= */
+        /* Modales Base (Para el resto de la app) */
         .modal { 
             display: none; position: fixed; z-index: 4000; left: 0; top: 0; width: 100%; height: 100%; 
             background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); 
             justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; 
         }
-        
-        .modal.active { 
-            display: flex; opacity: 1; 
-        }
-        
+        .modal.active { display: flex; opacity: 1; }
         .modal-content { 
             background-color: var(--brand-dark-light); border-radius: 24px; width: 90%; max-width: 400px; 
             padding: 30px 25px; position: relative; transform: scale(0.95); 
@@ -82,135 +76,89 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); 
             max-height: 90vh; overflow-y: auto; 
         }
-        
-        .modal.active .modal-content { 
-            transform: scale(1); 
-        }
-        
-        .close-modal { 
-            position: absolute; top: 15px; right: 20px; font-size: 28px; 
-            font-weight: 300; cursor: pointer; color: var(--ios-gray); 
-        }
-        
+        .modal.active .modal-content { transform: scale(1); }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: 300; cursor: pointer; color: var(--ios-gray); }
         h2 { text-align: center; font-weight: 600; font-size: 22px; margin-bottom: 25px; color: white; }
         
         .form-group { margin-bottom: 16px; }
-        
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--ios-gray); font-weight: 500; }
-        
         input { 
             width: 100%; padding: 14px 16px; background-color: rgba(255,255,255,0.05); 
             border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 16px; 
             color: white; font-family: inherit; transition: border 0.2s; 
         }
-        
-        input:focus { 
-            border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); 
-        }
-        
-        input:disabled { 
-            background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; 
-        }
+        input:focus { border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); }
+        input:disabled { background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; }
         
         button { 
             width: 100%; padding: 16px; background-color: var(--brand-yellow); color: var(--brand-dark); 
             border: none; border-radius: 14px; font-size: 17px; font-weight: 700; 
             cursor: pointer; transition: transform 0.1s, opacity 0.2s; 
         }
+        button:active { transform: scale(0.98); opacity: 0.9; }
         
-        button:active { 
-            transform: scale(0.98); opacity: 0.9; 
-        }
-        
-        .message { 
-            padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; 
-            font-size: 14px; display: none; font-weight: 500; 
-        }
-        
-        .error-message { 
-            background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); 
-        }
-        
-        .success-message { 
-            background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); 
-        }
-        
-        .spinner { 
-            border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--brand-yellow); 
-            border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; 
-            margin: 10px auto 0; display: none; 
-        }
+        .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 14px; display: none; font-weight: 500; }
+        .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); }
+        .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--brand-yellow); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; margin: 10px auto 0; display: none; }
 
         /* ========================================= */
-        /* 🚀 PANTALLA INMERSIVA (ONBOARDING)        */
+        /* 🚀 PANTALLA INMERSIVA (ONBOARDING MEJORADO)*/
         /* ========================================= */
         #auth-screen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000;
             background-image: url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1000&auto=format&fit=crop');
             background-size: cover; background-position: center;
-            flex-direction: column; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.5s ease;
         }
         
-        #auth-screen.active { 
-            display: flex; opacity: 1; 
-        }
+        #auth-screen.active { display: block; opacity: 1; }
         
         .auth-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(to bottom, rgba(46,39,37,0.3) 0%, rgba(46,39,37,0.95) 100%); z-index: 1; 
+            background: linear-gradient(to bottom, rgba(46,39,37,0.2) 0%, rgba(46,39,37,0.95) 100%); z-index: 1; 
         }
-        
-        .auth-header { 
-            position: relative; z-index: 2; text-align: center; margin-bottom: 30px; 
-        }
-        
-        .auth-header i { 
-            font-size: 50px; color: var(--brand-yellow); margin-bottom: 10px; 
-            filter: drop-shadow(0 4px 10px rgba(255,195,0,0.4));
-        }
-        
-        .auth-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
-        .auth-header p { color: var(--ios-gray); font-size: 15px; margin-top: 5px; }
 
+        /* Textos iniciales y botones sueltos */
+        .auth-welcome {
+            position: relative; z-index: 2; display: flex; flex-direction: column;
+            justify-content: space-between; height: 100%; width: 100%;
+            padding: 80px 30px 50px 30px;
+        }
+        .welcome-text h1 { font-size: 46px; font-weight: 800; color: white; line-height: 1.1; margin-bottom: 15px; letter-spacing: -1px;}
+        .welcome-text p { font-size: 18px; color: rgba(255,255,255,0.9); font-weight: 400; line-height: 1.4;}
+        
+        .welcome-buttons { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .btn-outline { background: transparent; border: 2px solid white; color: white; }
+        .btn-outline:active { background: rgba(255,255,255,0.1); }
+
+        /* Contenedor del Formulario (Glassmorphism - Oculto al inicio) */
         .auth-container {
-            position: relative; z-index: 2; width: 90%; max-width: 400px;
+            display: none; /* Se activa por JS */
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 3; width: 90%; max-width: 400px;
             background: rgba(61, 53, 50, 0.45);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 30px 25px;
+            border-radius: 24px; padding: 40px 25px 30px 25px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
+        .auth-container.active { display: block; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); }
+        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 
-        .auth-form { display: none; flex-direction: column; animation: fadeIn 0.4s ease; }
+        .btn-back-auth { position: absolute; top: 15px; left: 20px; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; padding: 5px; width: auto; opacity: 0.7;}
+        .btn-back-auth:active { transform: scale(0.9); opacity: 1;}
+
+        .auth-form { display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
         .auth-form.active { display: flex; }
-        
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .auth-container h2 { text-align: left; font-weight: 700; font-size: 20px; margin-bottom: 20px; color: white; }
-        
-        .auth-container .form-group label { 
-            display: block; margin-bottom: 6px; font-size: 13px; color: rgba(255,255,255,0.7); 
-            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        
-        .auth-container input { 
-            width: 100%; padding: 14px 16px; background-color: rgba(0,0,0,0.3); 
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; 
-            font-size: 16px; color: white; transition: all 0.3s; 
-        }
-        
-        .auth-container input:focus { 
-            border: 1px solid var(--brand-yellow); background-color: rgba(0,0,0,0.5); 
-            box-shadow: 0 0 0 4px rgba(255,195,0,0.1); 
-        }
-        
+        .auth-container h2 { text-align: left; font-weight: 700; font-size: 24px; margin-bottom: 25px; color: white; margin-top: 10px;}
+        .auth-container .form-group label { display: block; margin-bottom: 6px; font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+        .auth-container input { width: 100%; padding: 16px; background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; font-size: 16px; color: white; transition: all 0.3s; }
+        .auth-container input:focus { border: 1px solid var(--brand-yellow); background-color: rgba(0,0,0,0.5); box-shadow: 0 0 0 4px rgba(255,195,0,0.1); }
         .switch-link { text-align: center; margin-top: 20px; font-size: 14px; color: rgba(255,255,255,0.7); }
         .switch-link a { color: var(--brand-yellow); text-decoration: none; font-weight: 600; cursor: pointer; transition: opacity 0.2s;}
-        .switch-link a:active { opacity: 0.7; }
 
         /* ========================================= */
         /* MODAL 5 ESTRELLAS                         */
@@ -221,7 +169,7 @@
         .stars i.active { color: var(--brand-yellow); }
 
         /* ========================================= */
-        /* HEADER PRINCIPAL                          */
+        /* HEADER PRINCIPAL Y MAPA                   */
         /* ========================================= */
         #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
         header { 
@@ -238,39 +186,17 @@
             background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; 
             cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white;
         }
-        .user-info-btn:active { 
-            transform: scale(0.95); background: rgba(255,195,0,0.1); 
-            border-color: var(--brand-yellow); color: var(--brand-yellow); 
-        }
-        .user-info-avatar { 
-            width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); 
-            color: var(--brand-dark); display: flex; justify-content: center; align-items: center; 
-            font-size: 12px; overflow: hidden; 
-        }
+        .user-info-btn:active { transform: scale(0.95); background: rgba(255,195,0,0.1); border-color: var(--brand-yellow); color: var(--brand-yellow); }
+        .user-info-avatar { width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); color: var(--brand-dark); display: flex; justify-content: center; align-items: center; font-size: 12px; overflow: hidden; }
         .user-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Notificaciones */
         .notification-bell { position: relative; cursor: pointer; font-size: 22px; color: white; }
-        .notification-bell .badge { 
-            position: absolute; top: -6px; right: -6px; background-color: var(--ios-red); 
-            color: white; border-radius: 50%; padding: 3px 6px; font-size: 10px; 
-            font-weight: bold; min-width: 16px; text-align: center; display: none; 
-            border: 2px solid var(--brand-dark); 
-        }
-        .notification-dropdown { 
-            position: absolute; top: 60px; right: 10px; width: 350px; max-width: 90vw; 
-            background: var(--brand-dark-light); border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 2001; display: none; 
-            max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); 
-        }
+        .notification-bell .badge { position: absolute; top: -6px; right: -6px; background-color: var(--ios-red); color: white; border-radius: 50%; padding: 3px 6px; font-size: 10px; font-weight: bold; min-width: 16px; text-align: center; display: none; border: 2px solid var(--brand-dark); }
+        .notification-dropdown { position: absolute; top: 60px; right: 10px; width: 350px; max-width: 90vw; background: var(--brand-dark-light); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 2001; display: none; max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
         .notification-dropdown.show { display: block; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .notification-header { 
-            padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; 
-            display: flex; justify-content: space-between; align-items: center; position: sticky; 
-            top: 0; background: rgba(61, 53, 50, 0.95); backdrop-filter: blur(10px); font-size: 15px; z-index: 10;
-        }
+        .notification-header { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(61, 53, 50, 0.95); backdrop-filter: blur(10px); font-size: 15px; z-index: 10;}
         .notification-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
         .notification-item.unread { background: rgba(255, 195, 0, 0.05); }
         .notification-item .trip-info { font-weight: 600; margin-bottom: 5px; font-size: 15px; display: flex; justify-content: space-between; align-items: center;}
@@ -288,19 +214,9 @@
         .btn-offer-counter { background: rgba(255, 195, 0, 0.1); border: 1px solid var(--brand-yellow); color: var(--brand-yellow); flex: 1; padding: 10px 5px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.1s;}
         .btn-offer-counter:active { background: var(--brand-yellow); color: var(--brand-dark); transform: scale(0.95); }
 
-        /* ========================================= */
-        /* MAPA Y MARCADORES                         */
-        /* ========================================= */
         #map-container { flex: 1; position: relative; height: 100%; width: 100%; }
         #map { width: 100%; height: 100%; }
-        
-        .navigate-btn { 
-            position: absolute; bottom: 200px; right: 20px; width: 50px; height: 50px; 
-            border-radius: 25px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 1000; display: none; 
-            align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); 
-            transition: transform 0.2s; border:none; 
-        }
+        .navigate-btn { position: absolute; bottom: 200px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 1000; display: none; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); transition: transform 0.2s; border:none; }
         .navigate-btn:active { transform: scale(0.9); }
         .driver-marker-animated { transition: margin 0.5s ease-out; }
 
@@ -315,7 +231,6 @@
         }
         .panel-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: pointer; }
 
-        /* Switch de Disponibilidad */
         .availability-toggle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 16px; background: var(--brand-dark-light); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
         .availability-info { display: flex; flex-direction: column; gap: 4px; }
         .availability-info .main-text { font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; font-size: 16px; }
@@ -331,15 +246,12 @@
         .gps-indicator { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(52, 199, 89, 0.15); border-radius: 12px; font-size: 11px; color: var(--ios-green); margin-top: 6px; font-weight: 600; width: fit-content; border: 1px solid rgba(52, 199, 89, 0.2); }
         .gps-indicator.inactive { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); border-color: rgba(255, 59, 48, 0.2); }
 
-        /* Tarjeta de Viaje Actual */
         .current-trip { background: var(--brand-dark-light); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,195,0,0.2); }
         .current-trip h4 { color: var(--brand-yellow); margin-bottom: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .route-info-box { font-size: 14px; margin-bottom: 15px; line-height: 1.5; color: white; }
-        
         .trip-price-badge { display: inline-flex; flex-direction: column; align-items: flex-end; }
         .trip-price-badge .usd { color: var(--brand-yellow); font-size: 20px; font-weight: 800; }
         .trip-price-badge .bs { color: var(--ios-gray); font-size: 11px; font-weight: 600; }
-        
         .passenger-info { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); position: relative;}
         
         .action-buttons { display: flex; gap: 12px; margin-top: 15px; }
@@ -347,7 +259,6 @@
         .btn-complete { background: var(--ios-green); color: white; }
         .btn-cancel-trip { background: transparent; border: 1px solid rgba(255, 59, 48, 0.5); color: var(--ios-red); }
 
-        /* Historial de Viajes (Filtros y Carrusel) */
         .history-section { margin-top: 10px; }
         .history-section h4 { color: white; font-size: 15px; margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .history-filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 5px; scrollbar-width: none; }
@@ -367,7 +278,6 @@
         .status-completed { background-color: rgba(52, 199, 89, 0.15); color: var(--ios-green); }
         .status-cancelled { background-color: rgba(255, 59, 48, 0.15); color: var(--ios-red); }
 
-        /* Detalles de un viaje en el historial */
         .trip-details-view { display: none; }
         .btn-back { background: transparent; border: none; color: var(--brand-yellow); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding: 0; width: fit-content;}
         .details-card-inner { background: var(--brand-dark-light); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
@@ -401,7 +311,6 @@
         }
         
         .profile-content { padding: 30px 20px; flex: 1; }
-        
         .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; }
         .avatar-upload { 
             width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); 
@@ -475,13 +384,21 @@
 
     <div id="auth-screen">
         <div class="auth-overlay"></div>
-        <div class="auth-header">
-            <i class="fas fa-motorcycle"></i>
-            <h1>Mi Uber</h1>
-            <p>Conductor App</p>
+        
+        <div id="auth-welcome" class="auth-welcome">
+            <div class="welcome-text">
+                <h1>Empezar<br>a trabajar</h1>
+                <p>Genera ingresos manejando tu propio tiempo.</p>
+            </div>
+            <div class="welcome-buttons">
+                <button onclick="openAuth('login')">Iniciar Sesión</button>
+                <button class="btn-outline" onclick="openAuth('register')">Crear Cuenta</button>
+            </div>
         </div>
 
-        <div class="auth-container">
+        <div id="auth-wrapper" class="auth-container">
+            <button class="btn-back-auth" onclick="closeAuth()"><i class="fas fa-arrow-left"></i></button>
+            
             <form id="login-form" class="auth-form active">
                 <h2>Iniciar Sesión</h2>
                 <div class="form-group">
@@ -757,6 +674,17 @@
         function showAuthScreen() {
             loadingScreen.style.display = 'none';
             document.getElementById('auth-screen').classList.add('active');
+        }
+
+        window.openAuth = function(type) {
+            document.getElementById('auth-welcome').style.display = 'none';
+            document.getElementById('auth-wrapper').style.display = 'block';
+            toggleAuthForm(type);
+        }
+
+        window.closeAuth = function() {
+            document.getElementById('auth-wrapper').style.display = 'none';
+            document.getElementById('auth-welcome').style.display = 'flex';
         }
 
         window.toggleAuthForm = function(target) {
@@ -1277,7 +1205,6 @@
             const isAccepted = currentTrip.status === 'accepted'; 
             const iconTop = isAccepted ? '<i class="fas fa-motorcycle"></i> Buscar al pasajero' : '<i class="fas fa-route"></i> En viaje al destino';
             
-            // EL BOTÓN VUELVE A LA NORMALIDAD COMO PEDISTE (MVP)
             const b = isAccepted ? 
                 `<button class="btn-start" onclick="updateTripStatus('${currentTrip.id}', 'started')">Iniciar viaje</button>
                  <button class="btn-cancel-trip" onclick="if(confirm('¿Cancelar?')) updateTripStatus('${currentTrip.id}', 'cancelled')">Cancelar</button>` : 
