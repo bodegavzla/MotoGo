@@ -108,13 +108,13 @@
         .permission-text { color: var(--ios-gray); font-size: 15px; text-align: center; margin-bottom: 24px; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: white; margin-top: 12px; }
 
-        .message { padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; font-size: 13px; display: none; font-weight: 600; }
+        .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 13px; display: none; font-weight: 600; }
         .error-message { background-color: rgba(255, 59, 48, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 59, 48, 0.3); }
         .success-message { background-color: rgba(52, 199, 89, 0.15); color: #73e68c; border: 1px solid rgba(52, 199, 89, 0.3); }
         .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--brand-dark); border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; margin: 0 auto; display: none; }
 
         /* ========================================= */
-        /* 🚀 PANTALLA INMERSIVA (ONBOARDING MEJORADO)*/
+        /* 🚀 PANTALLA INMERSIVA (ONBOARDING)        */
         /* ========================================= */
         #auth-screen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000;
@@ -434,7 +434,7 @@
                     <input type="text" id="register-fullname" placeholder="Ej. Carlos Pérez" required>
                 </div>
                 <div class="form-group">
-                    <label>PIN de Seguridad</label>
+                    <label>Teléfono o PIN (4 dígitos)</label>
                     <input type="text" id="register-code" maxlength="8" pattern="\d{4,8}" placeholder="4 a 8 dígitos numéricos" required>
                 </div>
                 <div class="form-group">
@@ -653,7 +653,7 @@
         let isChatOpen = false;
         let currentRating = 5;
 
-        // Elementos DOM
+        // Elementos DOM Principales
         const loadingScreen = document.getElementById('loading-screen');
         const mainPanel = document.getElementById('main-panel'); 
         const userNameSpan = document.getElementById('user-name');
@@ -672,6 +672,7 @@
         const currentOfferInput = document.getElementById('current-offer-input');
         const requestTripBtn = document.getElementById('request-trip-btn');
         
+        // Elementos Perfil
         const miniAvatar = document.getElementById('mini-avatar');
         const profileView = document.getElementById('profile-view');
         const avatarInput = document.getElementById('avatar-input');
@@ -679,9 +680,27 @@
         const avatarPlaceholder = document.getElementById('avatar-placeholder');
         let selectedAvatarFile = null;
 
-        // Objetos de Audio
+        // ==========================================
+        // 🔓 DESBLOQUEADOR MÁGICO DE AUDIO
+        // ==========================================
         const soundOffer = document.getElementById('sound-offer');
         const soundMsg = document.getElementById('sound-msg');
+        let audioUnlocked = false;
+
+        function unlockAudio() {
+            if(audioUnlocked) return;
+            // Truco: reproducimos en silencio para desbloquear el permiso del navegador
+            soundMsg.volume = 0; soundMsg.play().then(()=>{ soundMsg.pause(); soundMsg.currentTime = 0; soundMsg.volume = 1; }).catch(()=>{});
+            soundOffer.volume = 0; soundOffer.play().then(()=>{ soundOffer.pause(); soundOffer.currentTime = 0; soundOffer.volume = 1; }).catch(()=>{});
+            audioUnlocked = true;
+            // Nos quitamos a nosotros mismos para no consumir recursos
+            document.body.removeEventListener('click', unlockAudio);
+            document.body.removeEventListener('touchstart', unlockAudio);
+        }
+        
+        // Atamos la función al primer click o toque en toda la pantalla
+        document.body.addEventListener('click', unlockAudio);
+        document.body.addEventListener('touchstart', unlockAudio);
 
         // Manejo de red
         window.addEventListener('offline', () => document.getElementById('network-status').style.display = 'block');
@@ -745,6 +764,7 @@
             const btn = document.getElementById('btn-submit-rating');
             btn.disabled = true; btn.textContent = 'Enviando...';
             
+            // El pasajero solo actualiza driver_rating
             await supabaseClient.from('trips').update({ 
                 driver_rating: currentRating 
             }).eq('id', currentTrip.id);
@@ -773,7 +793,9 @@
         // ==========================================
         async function initChat() {
             document.getElementById('chat-messages').innerHTML = '';
-            unreadMessages = 0; const badge = document.getElementById('chat-badge'); if(badge) badge.style.display = 'none';
+            unreadMessages = 0; 
+            const badge = document.getElementById('chat-badge');
+            if(badge) badge.style.display = 'none';
 
             const { data } = await supabaseClient.from('messages').select('*').eq('trip_id', currentTrip.id).order('created_at', { ascending: true });
             if (data) data.forEach(msg => renderMessage(msg));
@@ -781,11 +803,18 @@
             chatChannel = supabaseClient.channel(`chat-${currentTrip.id}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `trip_id=eq.${currentTrip.id}` }, (payload) => {
                     renderMessage(payload.new);
+                    // Si el mensaje NO es mío y el chat está cerrado
                     if (!isChatOpen && payload.new.sender_id !== currentUser.id) {
-                        soundMsg.play().catch(e => console.log('Audio bloqueado'));
+                        // REPRODUCIR SONIDO FUERTE
+                        soundMsg.currentTime = 0;
+                        soundMsg.play().catch(e => console.log('Audio bloqueado:', e));
+
                         unreadMessages++;
                         const badgeEl = document.getElementById('chat-badge');
-                        if (badgeEl) { badgeEl.style.display = 'flex'; badgeEl.textContent = unreadMessages; }
+                        if (badgeEl) {
+                            badgeEl.style.display = 'flex';
+                            badgeEl.textContent = unreadMessages;
+                        }
                     }
                 }).subscribe();
         }
@@ -796,22 +825,43 @@
             const msgEl = document.createElement('div');
             msgEl.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
             msgEl.innerHTML = `${msg.text} <div class="msg-time">${time}</div>`;
+            
             const container = document.getElementById('chat-messages');
-            container.appendChild(msgEl); container.scrollTop = container.scrollHeight;
+            container.appendChild(msgEl);
+            container.scrollTop = container.scrollHeight; 
         }
 
         window.openChat = function() {
-            isChatOpen = true; document.getElementById('chat-panel').classList.add('active');
-            unreadMessages = 0; const badge = document.getElementById('chat-badge'); if(badge) badge.style.display = 'none';
+            isChatOpen = true;
+            document.getElementById('chat-panel').classList.add('active');
+            unreadMessages = 0;
+            const badge = document.getElementById('chat-badge');
+            if(badge) badge.style.display = 'none';
         }
 
-        window.closeChat = function() { isChatOpen = false; document.getElementById('chat-panel').classList.remove('active'); }
+        window.closeChat = function() {
+            isChatOpen = false;
+            document.getElementById('chat-panel').classList.remove('active');
+        }
 
+        // Enviar un mensaje
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text || !currentTrip) return;
-            input.value = ''; document.getElementById('chat-send-btn').disabled = true;
-            await supabaseClient.from('messages').insert({ trip_id: currentTrip.id, sender_id: currentUser.id, text: text });
-            document.getElementById('chat-send-btn').disabled = false; input.focus(); 
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !currentTrip) return;
+            
+            input.value = '';
+            document.getElementById('chat-send-btn').disabled = true;
+            
+            await supabaseClient.from('messages').insert({
+                trip_id: currentTrip.id,
+                sender_id: currentUser.id,
+                text: text
+            });
+            
+            document.getElementById('chat-send-btn').disabled = false;
+            input.focus();
         });
 
         // ==========================================
@@ -821,8 +871,14 @@
             const bsLabel = document.getElementById('bs-conversion');
             if (!tasaBCV) {
                 bsLabel.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> BCV...';
-                try { const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial'); const data = await res.json(); tasaBCV = data.promedio; } 
-                catch (e) { bsLabel.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error BCV'; return; }
+                try {
+                    const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+                    const data = await res.json();
+                    tasaBCV = data.promedio;
+                } catch (e) {
+                    bsLabel.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error BCV';
+                    return;
+                }
             }
             actualizarTextoBs();
         }
@@ -832,7 +888,8 @@
                 const bsLabel = document.getElementById('bs-conversion');
                 const total = (currentOfferPrice * tasaBCV).toFixed(2);
                 bsLabel.innerHTML = `Bs. ${total} <span style="font-size:9px; font-weight:normal; opacity:0.7;">(BCV)</span>`;
-                bsLabel.style.color = 'var(--brand-yellow)'; bsLabel.style.borderColor = 'rgba(255,195,0,0.3)';
+                bsLabel.style.color = 'var(--brand-yellow)';
+                bsLabel.style.borderColor = 'rgba(255,195,0,0.3)';
             }
         }
 
@@ -843,31 +900,52 @@
             document.getElementById('profile-fullname').value = userProfile.full_name;
             document.getElementById('profile-phone').value = userProfile.phone || '';
             document.getElementById('profile-code').value = userProfile.numeric_code;
-            if (userProfile.avatar_url) { avatarImage.src = userProfile.avatar_url; avatarImage.style.display = 'block'; avatarPlaceholder.style.display = 'none'; }
+            
+            if (userProfile.avatar_url) {
+                avatarImage.src = userProfile.avatar_url;
+                avatarImage.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            }
             profileView.classList.add('active');
         }
 
-        function closeProfile() { profileView.classList.remove('active'); selectedAvatarFile = null; }
+        function closeProfile() {
+            profileView.classList.remove('active');
+            selectedAvatarFile = null; 
+        }
 
         avatarInput.addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
-                selectedAvatarFile = e.target.files[0]; const reader = new FileReader();
-                reader.onload = function(e) { avatarImage.src = e.target.result; avatarImage.style.display = 'block'; avatarPlaceholder.style.display = 'none'; };
+                selectedAvatarFile = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarImage.src = e.target.result;
+                    avatarImage.style.display = 'block';
+                    avatarPlaceholder.style.display = 'none';
+                };
                 reader.readAsDataURL(selectedAvatarFile);
             }
         });
 
         function compressImage(file, maxWidth, maxHeight, quality) {
             return new Promise((resolve) => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
                 reader.onload = event => {
-                    const img = new Image(); img.src = event.target.result;
+                    const img = new Image();
+                    img.src = event.target.result;
                     img.onload = () => {
                         let width = img.width; let height = img.height;
-                        if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } } 
-                        else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } }
-                        const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                        if (width > height) { 
+                            if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } 
+                        } else { 
+                            if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } 
+                        }
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
                         canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', quality);
                     }
                 }
@@ -875,9 +953,13 @@
         }
 
         document.getElementById('profile-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); const btn = document.getElementById('btn-save-profile'); const text = document.getElementById('save-text'); const spin = document.getElementById('save-spinner');
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-profile'); const text = document.getElementById('save-text'); const spin = document.getElementById('save-spinner');
             const errorDiv = document.getElementById('profile-error'); const successDiv = document.getElementById('profile-success');
-            btn.disabled = true; text.style.display = 'none'; spin.style.display = 'inline-block'; errorDiv.style.display = 'none'; successDiv.style.display = 'none';
+            
+            btn.disabled = true; text.style.display = 'none'; spin.style.display = 'inline-block';
+            errorDiv.style.display = 'none'; successDiv.style.display = 'none';
+
             let newAvatarUrl = userProfile.avatar_url;
 
             try {
@@ -885,83 +967,224 @@
                     const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7); 
                     const fileName = `passenger_${currentUser.id}_${Date.now()}.jpg`; 
                     const imageFile = new File([compressedBlob], fileName, { type: 'image/jpeg' });
-                    const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, imageFile, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' });
+                    
+                    const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, imageFile, { 
+                        cacheControl: '3600', 
+                        upsert: true, 
+                        contentType: 'image/jpeg' 
+                    });
                     if (error) throw error;
+                    
                     const { data: publicUrlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName); 
                     newAvatarUrl = publicUrlData.publicUrl;
                 }
                 
-                const newName = document.getElementById('profile-fullname').value; const newPhone = document.getElementById('profile-phone').value;
-                const { error: dbError } = await supabaseClient.from('user_profiles').update({ full_name: newName, phone: newPhone, avatar_url: newAvatarUrl }).eq('id', currentUser.id);
+                const newName = document.getElementById('profile-fullname').value; 
+                const newPhone = document.getElementById('profile-phone').value;
+                
+                const { error: dbError } = await supabaseClient.from('user_profiles')
+                    .update({ full_name: newName, phone: newPhone, avatar_url: newAvatarUrl })
+                    .eq('id', currentUser.id);
                 if (dbError) throw dbError;
                 
-                userProfile.full_name = newName; userProfile.phone = newPhone; userProfile.avatar_url = newAvatarUrl; updateHeaderUI(); 
+                userProfile.full_name = newName; 
+                userProfile.phone = newPhone; 
+                userProfile.avatar_url = newAvatarUrl;
+                
+                updateHeaderUI(); 
                 
                 if(originCoords && originMarker) { 
-                    const avHtml = userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
-                    const iconHtml = userProfile.avatar_url ? `<div style="width:40px;height:40px;border-radius:50%;border:3px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.4);background:var(--brand-dark);">${avHtml}</div>` : avHtml;
-                    originMarker.setIcon(L.divIcon({ className: 'passenger-marker-animated', html: iconHtml, iconSize: userProfile.avatar_url ? [40, 40] : [24, 24] }));
+                    const avHtml = userProfile.avatar_url ? 
+                        `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
+                    
+                    const iconHtml = userProfile.avatar_url ? 
+                        `<div style="width:40px;height:40px;border-radius:50%;border:3px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.4);background:var(--brand-dark);">${avHtml}</div>` : 
+                        avHtml;
+
+                    originMarker.setIcon(L.divIcon({ 
+                        className: 'passenger-marker-animated', 
+                        html: iconHtml, 
+                        iconSize: userProfile.avatar_url ? [40, 40] : [24, 24] 
+                    }));
                 }
-                successDiv.textContent = "¡Perfil actualizado con éxito!"; successDiv.style.display = 'block'; setTimeout(() => closeProfile(), 1500);
-            } catch (error) { errorDiv.textContent = "Hubo un error al guardar. Revisa tu conexión."; errorDiv.style.display = 'block'; } finally { btn.disabled = false; text.style.display = 'inline'; spin.style.display = 'none'; }
+                
+                successDiv.textContent = "¡Perfil actualizado con éxito!"; 
+                successDiv.style.display = 'block'; 
+                setTimeout(() => closeProfile(), 1500);
+
+            } catch (error) {
+                console.error(error);
+                errorDiv.textContent = "Hubo un error al guardar."; 
+                errorDiv.style.display = 'block'; 
+            } finally {
+                btn.disabled = false; text.style.display = 'inline'; spin.style.display = 'none'; 
+            }
         });
 
-        function updateHeaderUI() { userNameSpan.textContent = userProfile.full_name.split(' ')[0]; if(userProfile.avatar_url) { miniAvatar.innerHTML = `<img src="${userProfile.avatar_url}" alt="user">`; } }
+        function updateHeaderUI() {
+            userNameSpan.textContent = userProfile.full_name.split(' ')[0];
+            if(userProfile.avatar_url) {
+                miniAvatar.innerHTML = `<img src="${userProfile.avatar_url}" alt="user">`;
+            }
+        }
 
         // ==========================================
         // MOTOR DE RUTAS Y COTIZADOR
         // ==========================================
         async function getRealRoute(lat1, lng1, lat2, lng2) {
-            try { const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`; const response = await fetch(url); const data = await response.json(); if (data.code === 'Ok' && data.routes.length > 0) { return { coordinates: data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]), distance: data.routes[0].distance / 1000 }; } } catch (error) { } return null;
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    return {
+                        coordinates: data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]),
+                        distance: data.routes[0].distance / 1000
+                    };
+                }
+            } catch (error) { } return null;
         }
 
         async function drawRoute() {
-            if (routeLine) map.removeLayer(routeLine); if (searchRadiusCircle) map.removeLayer(searchRadiusCircle); if (!currentTrip) return;
+            if (routeLine) map.removeLayer(routeLine);
+            if (searchRadiusCircle) map.removeLayer(searchRadiusCircle);
+            if (!currentTrip) return;
+
             let startCoords, endCoords;
-            if (currentTrip.status === 'pending') { startCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng }; endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng }; searchRadiusCircle = L.circle([startCoords.lat, startCoords.lng], { color: 'var(--brand-yellow)', fillColor: 'var(--brand-yellow)', fillOpacity: 0.05, weight: 2, dashArray: '8, 8', radius: 50000 }).addTo(map); } 
-            else if (currentTrip.status === 'accepted') { if (!driverMarker) return; startCoords = driverMarker.getLatLng(); endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng }; } 
-            else if (currentTrip.status === 'started') { if (!driverMarker) return; startCoords = driverMarker.getLatLng(); endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng }; } else return;
+
+            if (currentTrip.status === 'pending') {
+                startCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
+                endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
+                searchRadiusCircle = L.circle([startCoords.lat, startCoords.lng], { color: 'var(--brand-yellow)', fillColor: 'var(--brand-yellow)', fillOpacity: 0.05, weight: 2, dashArray: '8, 8', radius: 50000 }).addTo(map);
+            } else if (currentTrip.status === 'accepted') {
+                if (!driverMarker) return;
+                startCoords = driverMarker.getLatLng(); endCoords = { lat: currentTrip.pickup_lat, lng: currentTrip.pickup_lng };
+            } else if (currentTrip.status === 'started') {
+                if (!driverMarker) return;
+                startCoords = driverMarker.getLatLng(); endCoords = { lat: currentTrip.dropoff_lat, lng: currentTrip.dropoff_lng };
+            } else return;
 
             const routeData = await getRealRoute(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
-            if (routeData) { fullRouteCoords = routeData.coordinates; routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map); map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] }); }
+            if (routeData) {
+                fullRouteCoords = routeData.coordinates; 
+                routeLine = L.polyline(fullRouteCoords, { color: 'var(--brand-yellow)', weight: 5, opacity: 0.9 }).addTo(map);
+                map.fitBounds(routeLine.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
+            }
         }
 
-        function calculateSuggestedPrice(distanceKm) { let price = 1.00 + (distanceKm * 0.40); return Math.max(1.50, price); }
-        window.adjustOffer = function(amount) { currentOfferPrice += amount; if(currentOfferPrice < 1.0) currentOfferPrice = 1.0; currentOfferInput.value = currentOfferPrice.toFixed(2); actualizarTextoBs(); }
-        currentOfferInput.addEventListener('input', (e) => { let val = parseFloat(e.target.value); if (!isNaN(val)) { currentOfferPrice = val; actualizarTextoBs(); } });
-        currentOfferInput.addEventListener('blur', (e) => { if (currentOfferPrice < 1.0) currentOfferPrice = 1.0; e.target.value = currentOfferPrice.toFixed(2); actualizarTextoBs(); });
+        function calculateSuggestedPrice(distanceKm) {
+            let price = 1.00 + (distanceKm * 0.40);
+            return Math.max(1.50, price);
+        }
+
+        window.adjustOffer = function(amount) {
+            currentOfferPrice += amount;
+            if(currentOfferPrice < 1.0) currentOfferPrice = 1.0; 
+            currentOfferInput.value = currentOfferPrice.toFixed(2);
+            actualizarTextoBs();
+        }
+
+        currentOfferInput.addEventListener('input', (e) => {
+            let val = parseFloat(e.target.value);
+            if (!isNaN(val)) {
+                currentOfferPrice = val;
+                actualizarTextoBs();
+            }
+        });
+
+        currentOfferInput.addEventListener('blur', (e) => {
+            if (currentOfferPrice < 1.0) currentOfferPrice = 1.0; 
+            e.target.value = currentOfferPrice.toFixed(2);
+            actualizarTextoBs();
+        });
 
         // ==========================================
         // UBICACIÓN Y DESTINO
         // ==========================================
-        function initMap() { if (map !== null) return; map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false }); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map); map.on('click', onMapClick); }
-        function onMapClick(e) { if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) return; if (!originCoords) { mapInstructions.innerHTML = '<i class="fas fa-search-location"></i> Buscando tu ubicación...'; locateBtn.click(); return; } setDestination(e.latlng.lat, e.latlng.lng); }
+        function initMap() {
+            if (map !== null) return; 
+            map = L.map('map', { center: [10.1620, -68.0077], zoom: 15, zoomControl: false });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+            map.on('click', onMapClick); 
+        }
+
+        function onMapClick(e) {
+            if (currentTrip && !['completed', 'cancelled'].includes(currentTrip.status)) return;
+            if (!originCoords) { mapInstructions.innerHTML = '<i class="fas fa-search-location"></i> Buscando tu ubicación...'; locateBtn.click(); return; }
+            setDestination(e.latlng.lat, e.latlng.lng);
+        }
 
         async function setDestination(lat, lng) {
-            destinationCoords = { lat, lng }; if (destinationMarker) map.removeLayer(destinationMarker); const destIcon = L.divIcon({ className: 'dest-marker', html: `<div style="width:16px;height:16px;background:var(--ios-red);border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>`, iconSize: [22, 22] }); destinationMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
-            if (originCoords) { const routeData = await getRealRoute(originCoords.lat, originCoords.lng, lat, lng); if(routeData) { map.fitBounds(L.latLngBounds(routeData.coordinates), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] }); currentOfferPrice = calculateSuggestedPrice(routeData.distance); currentOfferInput.value = currentOfferPrice.toFixed(2); actualizarTextoBs(); priceNegotiator.style.display = 'flex'; requestTripBtn.textContent = 'Solicitar Viaje'; requestTripBtn.disabled = false; } }
-            try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) {} updateTripUI(); 
+            destinationCoords = { lat, lng };
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            const destIcon = L.divIcon({ className: 'dest-marker', html: `<div style="width:16px;height:16px;background:var(--ios-red);border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>`, iconSize: [22, 22] });
+            destinationMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
+            
+            if (originCoords) {
+                const routeData = await getRealRoute(originCoords.lat, originCoords.lng, lat, lng);
+                if(routeData) {
+                    map.fitBounds(L.latLngBounds(routeData.coordinates), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 320] });
+                    currentOfferPrice = calculateSuggestedPrice(routeData.distance);
+                    currentOfferInput.value = currentOfferPrice.toFixed(2);
+                    actualizarTextoBs();
+                    
+                    priceNegotiator.style.display = 'flex';
+                    requestTripBtn.textContent = 'Solicitar Viaje';
+                    requestTripBtn.disabled = false;
+                }
+            }
+            try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`); const data = await res.json(); dropoffInput.value = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Destino seleccionado'; } catch (e) {}
+            
+            updateTripUI(); 
         }
 
         dropoffInput.addEventListener('input', (e) => {
-            const query = e.target.value; if (query.length < 3) { searchResults.style.display = 'none'; return; } clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => { try { const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ve&limit=5`); const data = await res.json(); if (data.length > 0) { searchResults.innerHTML = data.map(place => `<div class="search-result-item" onclick="selectSearchResult(${place.lat}, ${place.lon}, '${place.display_name.split(',').slice(0, 2).join(',').replace(/'/g, "\\'")}')"><i class="fas fa-search"></i><div>${place.display_name.split(',').slice(0, 2).join(',')}</div></div>`).join(''); searchResults.style.display = 'block'; } else { searchResults.innerHTML = '<div class="search-result-item">No hay resultados</div>'; searchResults.style.display = 'block'; } } catch (error) {} }, 500);
+            const query = e.target.value; if (query.length < 3) { searchResults.style.display = 'none'; return; }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ve&limit=5`); const data = await res.json();
+                    if (data.length > 0) {
+                        searchResults.innerHTML = data.map(place => `<div class="search-result-item" onclick="selectSearchResult(${place.lat}, ${place.lon}, '${place.display_name.split(',').slice(0, 2).join(',').replace(/'/g, "\\'")}')"><i class="fas fa-search"></i><div>${place.display_name.split(',').slice(0, 2).join(',')}</div></div>`).join('');
+                        searchResults.style.display = 'block';
+                    } else { searchResults.innerHTML = '<div class="search-result-item">No hay resultados</div>'; searchResults.style.display = 'block'; }
+                } catch (error) {}
+            }, 500);
         });
 
-        window.selectSearchResult = function(lat, lng, name) { dropoffInput.value = name; searchResults.style.display = 'none'; setDestination(lat, lng); }; document.addEventListener('click', (e) => { if (!dropoffInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.style.display = 'none'; });
+        window.selectSearchResult = function(lat, lng, name) { dropoffInput.value = name; searchResults.style.display = 'none'; setDestination(lat, lng); };
+        document.addEventListener('click', (e) => { if (!dropoffInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.style.display = 'none'; });
 
         locateBtn.addEventListener('click', async () => { 
-            if (!navigator.geolocation) return alert('No GPS'); locateBtn.classList.add('loading'); mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo ubicación...'; if (passengerWatchId) navigator.geolocation.clearWatch(passengerWatchId);
+            if (!navigator.geolocation) return alert('No GPS');
+            locateBtn.classList.add('loading'); mapInstructions.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo ubicación...';
+            if (passengerWatchId) navigator.geolocation.clearWatch(passengerWatchId);
             passengerWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords; originCoords = { lat: latitude, lng: longitude };
-                    if (originMarker) { originMarker.setLatLng([latitude, longitude]); } else {
+                    if (originMarker) {
+                        originMarker.setLatLng([latitude, longitude]);
+                    } else {
                         map.setView([latitude, longitude], 16);
-                        const avHtml = userProfile.avatar_url ? `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`; const iconHtml = userProfile.avatar_url ? `<div style="width:40px;height:40px;border-radius:50%;border:3px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.4);background:var(--brand-dark);">${avHtml}</div>` : avHtml;
-                        originMarker = L.marker([latitude, longitude], { icon: L.divIcon({ className: 'passenger-marker-animated', html: iconHtml, iconSize: userProfile.avatar_url ? [40, 40] : [24, 24] }) }).addTo(map);
-                        try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`); const data = await res.json(); pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual'; pickupText.classList.remove('placeholder'); } catch (e) {} locateBtn.classList.remove('loading'); updateTripUI();
+                        
+                        const avHtml = userProfile.avatar_url ? 
+                            `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                            `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
+                            
+                        const iconHtml = userProfile.avatar_url ? 
+                            `<div style="width:40px;height:40px;border-radius:50%;border:3px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.4);background:var(--brand-dark);">${avHtml}</div>` : 
+                            avHtml;
+
+                        const originIcon = L.divIcon({ className: 'passenger-marker-animated', html: iconHtml, iconSize: userProfile.avatar_url ? [40, 40] : [24, 24] });
+                        
+                        originMarker = L.marker([latitude, longitude], { icon: originIcon }).addTo(map);
+                        try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`); const data = await res.json(); pickupText.textContent = data.display_name ? data.display_name.split(',').slice(0,2).join(',') : 'Ubicación actual'; pickupText.classList.remove('placeholder'); } catch (e) {}
+                        locateBtn.classList.remove('loading'); updateTripUI();
                     }
-                }, (error) => { locateBtn.classList.remove('loading'); mapInstructions.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error GPS'; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                },
+                (error) => { locateBtn.classList.remove('loading'); mapInstructions.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error GPS'; },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         });
 
@@ -970,22 +1193,48 @@
         // ==========================================
         async function checkCurrentTrip() {
             const { data } = await supabaseClient.from('trips').select('*, driver:driver_id(full_name, numeric_code, avatar_url)').eq('passenger_id', currentUser.id).in('status', ['pending', 'accepted', 'started']).maybeSingle();
-            if (data) { currentTrip = data; if (data.pickup_lat) originCoords = { lat: data.pickup_lat, lng: data.pickup_lng }; if (data.dropoff_lat) { destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng }; } if (currentTrip.status === 'pending') { startOffersListener(); drawRoute(); } else { startDriverLocationTracking(); } } updateTripUI();
+            if (data) {
+                currentTrip = data;
+                if (data.pickup_lat) originCoords = { lat: data.pickup_lat, lng: data.pickup_lng };
+                if (data.dropoff_lat) { destinationCoords = { lat: data.dropoff_lat, lng: data.dropoff_lng }; }
+                
+                if (currentTrip.status === 'pending') {
+                    startOffersListener(); 
+                    drawRoute();
+                } else {
+                    startDriverLocationTracking();
+                }
+            }
+            updateTripUI();
         }
 
         async function requestTrip() {
             requestTripBtn.disabled = true; requestTripBtn.textContent = 'Procesando...';
-            const { data, error } = await supabaseClient.from('trips').insert({ passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffInput.value, pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, status: 'pending', offered_price: currentOfferPrice }).select().single();
+            
+            const { data, error } = await supabaseClient.from('trips').insert({ 
+                passenger_id: currentUser.id, pickup_location: pickupText.textContent, dropoff_location: dropoffInput.value, 
+                pickup_lat: originCoords.lat, pickup_lng: originCoords.lng, dropoff_lat: destinationCoords.lat, dropoff_lng: destinationCoords.lng, 
+                status: 'pending',
+                offered_price: currentOfferPrice 
+            }).select().single();
+            
             if (error) { alert('Error: ' + error.message); requestTripBtn.disabled = false; requestTripBtn.textContent = 'Solicitar Viaje'; return; }
-            currentTrip = data; incomingOffers = {}; startOffersListener(); updateTripUI(); drawRoute(); 
+            currentTrip = data; incomingOffers = {}; 
+            startOffersListener();
+            updateTripUI(); drawRoute(); 
         }
 
         function startOffersListener() {
             if(offersChannel) offersChannel.unsubscribe();
             offersChannel = supabaseClient.channel(`trip-offers-${currentTrip.id}`)
                 .on('broadcast', { event: 'new_offer' }, (payload) => {
-                    const offer = payload.payload; incomingOffers[offer.driver_id] = offer;
-                    soundOffer.play().catch(e => console.log('Audio bloqueado por navegador'));
+                    const offer = payload.payload;
+                    incomingOffers[offer.driver_id] = offer;
+                    
+                    // REPRODUCIR SONIDO DE NUEVA OFERTA
+                    soundOffer.currentTime = 0;
+                    soundOffer.play().catch(e => console.log('Audio bloqueado:', e));
+                    
                     renderOffersUI();
                 }).subscribe();
         }
@@ -993,31 +1242,85 @@
         function renderOffersUI() {
             if(!currentTrip || currentTrip.status !== 'pending') return;
             const offersArr = Object.values(incomingOffers).sort((a,b) => a.price - b.price);
-            if(offersArr.length === 0) { tripActions.innerHTML = `<div class="auction-container"><div class="auction-title"><i class="fas fa-radar fa-spin"></i> Enviando oferta de $${currentTrip.offered_price.toFixed(2)} a conductores...</div></div><button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>`; } 
-            else {
-                let html = `<div class="auction-container"><div class="auction-title"><i class="fas fa-bullhorn"></i> Han llegado ${offersArr.length} ofertas:</div><div class="offers-list">`;
-                offersArr.forEach(off => { const dAv = off.avatar_url ? `<img src="${off.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-tie"></i>`; html += `<div class="offer-card"><div class="offer-header"><div class="offer-driver"><div class="offer-avatar">${dAv}</div><div><div class="offer-name">${off.driver_name}</div><div class="offer-dist">A ${off.distance.toFixed(1)} km de ti</div></div></div><div class="offer-price">$${off.price.toFixed(2)}</div></div><button class="btn-accept-offer" onclick="acceptDriverOffer('${off.driver_id}', ${off.price})">Aceptar a ${off.driver_name}</button></div>`; });
-                html += `</div></div><button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>`; tripActions.innerHTML = html;
+            
+            if(offersArr.length === 0) {
+                tripActions.innerHTML = `
+                    <div class="auction-container">
+                        <div class="auction-title"><i class="fas fa-radar fa-spin"></i> Enviando oferta de $${currentTrip.offered_price.toFixed(2)} a conductores...</div>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>
+                `;
+            } else {
+                let html = `
+                    <div class="auction-container">
+                        <div class="auction-title"><i class="fas fa-bullhorn"></i> Han llegado ${offersArr.length} ofertas:</div>
+                        <div class="offers-list">
+                `;
+                offersArr.forEach(off => {
+                    const dAv = off.avatar_url ? 
+                        `<img src="${off.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<i class="fas fa-user-tie"></i>`;
+                        
+                    html += `
+                        <div class="offer-card">
+                            <div class="offer-header">
+                                <div class="offer-driver">
+                                    <div class="offer-avatar">${dAv}</div>
+                                    <div><div class="offer-name">${off.driver_name}</div><div class="offer-dist">A ${off.distance.toFixed(1)} km de ti</div></div>
+                                </div>
+                                <div class="offer-price">$${off.price.toFixed(2)}</div>
+                            </div>
+                            <button class="btn-accept-offer" onclick="acceptDriverOffer('${off.driver_id}', ${off.price})">Aceptar a ${off.driver_name}</button>
+                        </div>
+                    `;
+                });
+                html += `</div></div><button class="btn-cancel" onclick="cancelTrip()">Cancelar Búsqueda</button>`;
+                tripActions.innerHTML = html;
             }
         }
 
         window.acceptDriverOffer = async function(driverId, agreedPrice) {
             const btn = event.target; btn.disabled = true; btn.textContent = 'Cerrando trato...';
-            const { error } = await supabaseClient.from('trips').update({ driver_id: driverId, status: 'accepted', final_price: agreedPrice }).eq('id', currentTrip.id);
-            if(error) { alert('Hubo un error al confirmar.'); btn.disabled=false; return; } if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
+            const { error } = await supabaseClient.from('trips').update({ 
+                driver_id: driverId, status: 'accepted', final_price: agreedPrice
+            }).eq('id', currentTrip.id);
+            if(error) { alert('Hubo un error al confirmar.'); btn.disabled=false; return; }
+            if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
         }
 
         function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
-                setupSection.style.display = 'block'; priceNegotiator.style.display = (originCoords && destinationCoords) ? 'flex' : 'none'; startNearbyDriversTracking(); 
-                tripActions.innerHTML = `<button class="btn-request" id="request-trip-btn" ${!(originCoords && destinationCoords) ? 'disabled' : ''}>Solicitar Viaje</button>`; if (originCoords && destinationCoords) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
-                mapInstructions.style.display = 'flex'; if (!originCoords) mapInstructions.innerHTML = '<i class="fas fa-location-arrow"></i> Buscando tu ubicación...'; else if (!destinationCoords) mapInstructions.innerHTML = '<i class="fas fa-hand-pointer"></i> Toca el mapa o busca tu destino'; else mapInstructions.style.display = 'none'; 
-                closeChat(); if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+                setupSection.style.display = 'block'; 
+                priceNegotiator.style.display = (originCoords && destinationCoords) ? 'flex' : 'none';
+                startNearbyDriversTracking(); 
+                
+                tripActions.innerHTML = `<button class="btn-request" id="request-trip-btn" ${!(originCoords && destinationCoords) ? 'disabled' : ''}>Solicitar Viaje</button>`;
+                if (originCoords && destinationCoords) document.getElementById('request-trip-btn').addEventListener('click', requestTrip);
+
+                mapInstructions.style.display = 'flex';
+                if (!originCoords) mapInstructions.innerHTML = '<i class="fas fa-location-arrow"></i> Buscando tu ubicación...';
+                else if (!destinationCoords) mapInstructions.innerHTML = '<i class="fas fa-hand-pointer"></i> Toca el mapa o busca tu destino';
+                else mapInstructions.style.display = 'none'; 
+                
+                closeChat();
+                if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+
             } else {
                 setupSection.style.display = 'none'; 
-                if (currentTrip.status === 'pending') { startNearbyDriversTracking(); renderOffersUI(); mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-comment-dollar"></i> Negociando tarifa...'; } 
+                
+                if (currentTrip.status === 'pending') {
+                    startNearbyDriversTracking();
+                    renderOffersUI(); 
+                    mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = '<i class="fas fa-comment-dollar"></i> Negociando tarifa...';
+                } 
                 else if (currentTrip.status === 'accepted' || currentTrip.status === 'started') {
-                    stopNearbyDriversTracking(); const dAv = currentTrip.driver?.avatar_url ? `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-motorcycle"></i>`; let titleText = currentTrip.status === 'accepted' ? 'Conductor en camino' : 'En viaje hacia tu destino';
+                    stopNearbyDriversTracking();
+                    const dAv = currentTrip.driver?.avatar_url ? 
+                        `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                        `<i class="fas fa-motorcycle"></i>`;
+                    
+                    let titleText = currentTrip.status === 'accepted' ? 'Conductor en camino' : 'En viaje hacia tu destino';
+                    
                     tripActions.innerHTML = `
                         <div class="driver-card">
                             <div class="driver-avatar" style="${currentTrip.status === 'started' ? 'border-color:var(--brand-yellow);' : ''}">${dAv}</div>
@@ -1034,46 +1337,167 @@
                         ${currentTrip.status === 'accepted' ? `<button class="btn-cancel" onclick="cancelTrip()">Cancelar Viaje</button>` : `<button class="btn-share" onclick="shareRoute()"><i class="fas fa-shield-alt"></i> Compartir mi viaje</button>`}
                     `;
                     mapInstructions.style.display = 'flex'; mapInstructions.innerHTML = `<i class="fas fa-check-circle" style="color:var(--brand-yellow);"></i> ${titleText}`;
-                    document.getElementById('chat-title').innerHTML = currentTrip.driver?.avatar_url ? `<img src="${currentTrip.driver.avatar_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"> ${currentTrip.driver.full_name.split(' ')[0]}` : `<i class="fas fa-user-tie"></i> ${currentTrip.driver?.full_name.split(' ')[0] || 'Conductor'}`;
+                    
+                    document.getElementById('chat-title').innerHTML = currentTrip.driver?.avatar_url ? 
+                        `<img src="${currentTrip.driver.avatar_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"> ${currentTrip.driver.full_name.split(' ')[0]}` : 
+                        `<i class="fas fa-user-tie"></i> ${currentTrip.driver?.full_name.split(' ')[0] || 'Conductor'}`;
+                    
                     if(!chatChannel) initChat();
                 }
             }
         }
 
-        window.shareRoute = async function() { const dest = dropoffInput.value || 'mi destino'; const driverName = currentTrip.driver?.full_name || 'un conductor'; const driverCode = currentTrip.driver?.numeric_code || 'desconocido'; const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')); const trackingUrl = `${baseUrl}/invitado.html?viaje=${currentTrip.id}`; const textToShare = `📍 Sigue mi viaje en Mi Uber en tiempo real.\nVoy hacia: ${dest}\nConductor: ${driverName} (Cód: ${driverCode}).\n\nSigue mi ruta aquí: ${trackingUrl}`; if (navigator.share) { try { await navigator.share({ title: 'Mi viaje seguro', text: textToShare }); } catch (err) {} } else { navigator.clipboard.writeText(textToShare); alert("Link de rastreo copiado al portapapeles. Pégalo en WhatsApp."); } }
-        async function cancelTrip() { if (!confirm('¿Cancelar viaje?')) return; await supabaseClient.from('trips').update({ status: 'cancelled' }).eq('id', currentTrip.id); if(offersChannel) offersChannel.unsubscribe(); stopDriverLocationTracking(); currentTrip = null; if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = ''; priceNegotiator.style.display = 'none'; updateTripUI(); if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16); }
+        window.shareRoute = async function() {
+            const dest = dropoffInput.value || 'mi destino';
+            const driverName = currentTrip.driver?.full_name || 'un conductor';
+            const driverCode = currentTrip.driver?.numeric_code || 'desconocido';
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const trackingUrl = `${baseUrl}/invitado.html?viaje=${currentTrip.id}`;
+            const textToShare = `📍 Sigue mi viaje en Mi Uber en tiempo real.\nVoy hacia: ${dest}\nConductor: ${driverName} (Cód: ${driverCode}).\n\nSigue mi ruta aquí: ${trackingUrl}`;
+
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Mi viaje seguro', text: textToShare }); } catch (err) {}
+            } else {
+                navigator.clipboard.writeText(textToShare);
+                alert("Link de rastreo copiado al portapapeles. Pégalo en WhatsApp.");
+            }
+        }
+
+        async function cancelTrip() {
+            if (!confirm('¿Cancelar viaje?')) return;
+            await supabaseClient.from('trips').update({ status: 'cancelled' }).eq('id', currentTrip.id);
+            if(offersChannel) offersChannel.unsubscribe();
+            stopDriverLocationTracking(); currentTrip = null; 
+            if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = ''; priceNegotiator.style.display = 'none';
+            updateTripUI(); if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16);
+        }
 
         function subscribeToTripUpdates() {
             if (!currentUser) return;
             subscriptions.push(supabaseClient.channel('trip-passenger').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips', filter: `passenger_id=eq.${currentUser.id}` }, async (payload) => {
                 if (currentTrip && payload.new.id === currentTrip.id) {
                     const oldStatus = currentTrip.status; currentTrip = { ...currentTrip, ...payload.new };
-                    if (payload.new.status === 'accepted' && payload.new.driver_id) { if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; } const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single(); if (data) { currentTrip.driver = data; updateTripUI(); startDriverLocationTracking(); } }
+                    
+                    if (payload.new.status === 'accepted' && payload.new.driver_id) {
+                        if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
+                        const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single();
+                        if (data) { currentTrip.driver = data; updateTripUI(); startDriverLocationTracking(); }
+                    }
                     else if (payload.new.status === 'started' && oldStatus !== 'started') { updateTripUI(); drawRoute(); }
-                    // LA MAGIA: El conductor completó el viaje, pedimos estrellas
+                    
+                    // MAGIA: Mostrar calificación cuando el viaje se complete
                     else if (payload.new.status === 'completed' && oldStatus !== 'completed') {
-                        closeChat(); if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+                        closeChat();
+                        if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
                         openRatingModal(currentTrip.driver);
                     }
-                    else if (payload.new.status === 'cancelled') { stopDriverLocationTracking(); setTimeout(() => { currentTrip = null; if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = ''; updateTripUI(); if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16); }, 2000); } else updateTripUI(); 
+                    
+                    else if (payload.new.status === 'cancelled') {
+                        stopDriverLocationTracking(); 
+                        setTimeout(() => { currentTrip = null; if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = ''; updateTripUI(); if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16); }, 2000);
+                    } else updateTripUI(); 
                 }
             }).subscribe());
         }
 
-        function updateDriverVisuals(lat, lng, bearing) { if(!lat || !lng) return; const drvAv = currentTrip?.driver?.avatar_url ? `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:14px;"></i>`; const iconHtml = `<div style="width:40px;height:40px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);position:relative;">${drvAv}<div id="motorcycle-inner-icon-passenger" style="position:absolute; bottom:-4px; right:-4px; background:var(--brand-dark); width:18px; height:18px; border-radius:50%; border:1px solid var(--brand-yellow); display:flex; align-items:center; justify-content:center; transform:rotate(${bearing}deg); transition: transform 0.5s ease-out;"><i class="fas fa-location-arrow" style="color:var(--brand-yellow); font-size:8px; transform:rotate(-45deg);"></i></div></div>`; if (driverMarker) { driverMarker.setLatLng([lat, lng]); driverMarker.setIcon(L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] })); } else { driverMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] }) }).addTo(map); drawRoute(); } }
+        function updateDriverVisuals(lat, lng, bearing) {
+            if(!lat || !lng) return;
+            
+            const drvAv = currentTrip?.driver?.avatar_url ? 
+                `<img src="${currentTrip.driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:14px;"></i>`;
+                
+            const iconHtml = `
+                <div style="width:40px;height:40px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 4px 10px rgba(0,0,0,0.5);position:relative;">
+                    ${drvAv}
+                    <div id="motorcycle-inner-icon-passenger" style="position:absolute; bottom:-4px; right:-4px; background:var(--brand-dark); width:18px; height:18px; border-radius:50%; border:1px solid var(--brand-yellow); display:flex; align-items:center; justify-content:center; transform:rotate(${bearing}deg); transition: transform 0.5s ease-out;">
+                        <i class="fas fa-location-arrow" style="color:var(--brand-yellow); font-size:8px; transform:rotate(-45deg);"></i>
+                    </div>
+                </div>`;
+            
+            if (driverMarker) { 
+                driverMarker.setLatLng([lat, lng]); 
+                driverMarker.setIcon(L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] })); 
+            } 
+            else { 
+                driverMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'driver-marker-animated', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 20] }) }).addTo(map); 
+                drawRoute(); 
+            }
+        }
+        
         function startDriverLocationTracking() { if (!currentTrip) return; if (driverLocationChannel) driverLocationChannel.unsubscribe(); driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`).on('broadcast', { event: 'location' }, (payload) => { updateDriverVisuals(payload.payload.lat, payload.payload.lng, payload.payload.bearing || 0); }).subscribe(); if(driverMarker) drawRoute(); }
         function stopDriverLocationTracking() { if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; } if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } if (routeLine) { map.removeLayer(routeLine); routeLine = null; } if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } }
 
         function startNearbyDriversTracking() { if (nearbyDriversInterval) return; fetchNearbyDrivers(); nearbyDriversInterval = setInterval(fetchNearbyDrivers, 10000); }
         function stopNearbyDriversTracking() { if (nearbyDriversInterval) { clearInterval(nearbyDriversInterval); nearbyDriversInterval = null; } Object.values(nearbyDriverMarkers).forEach(marker => map.removeLayer(marker)); nearbyDriverMarkers = {}; }
 
-        async function fetchNearbyDrivers() { if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) return; const { data, error } = await supabaseClient.from('user_profiles').select('id, full_name, driver_lat, driver_lng, avatar_url').eq('role', 'conductor').eq('available', true).not('driver_lat', 'is', null); if (error || !data) return; const activeIds = data.map(d => d.id); for (const id in nearbyDriverMarkers) { if (!activeIds.includes(id)) { map.removeLayer(nearbyDriverMarkers[id]); delete nearbyDriverMarkers[id]; } } data.forEach(driver => { if (originCoords && calculateDistance(originCoords.lat, originCoords.lng, driver.driver_lat, driver.driver_lng) > 50) return; const dAv = driver.avatar_url ? `<img src="${driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:12px;"></i>`; const iconHtml = `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-15px);"><div style="background:var(--brand-dark-light); color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; margin-bottom:4px; white-space:nowrap; border: 1px solid rgba(255,255,255,0.1);">${driver.full_name.split(' ')[0]}</div><div style="width:30px;height:30px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 3px 8px rgba(0,0,0,0.5);">${dAv}</div></div>`; if (nearbyDriverMarkers[driver.id]) { nearbyDriverMarkers[driver.id].setLatLng([driver.driver_lat, driver.driver_lng]); nearbyDriverMarkers[driver.id].setIcon(L.divIcon({ className: 'nearby-driver-marker', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 50] })); } else { nearbyDriverMarkers[driver.id] = L.marker([driver.driver_lat, driver.driver_lng], { icon: L.divIcon({ className: 'nearby-driver-marker', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 50] }) }).addTo(map); } }); }
+        async function fetchNearbyDrivers() {
+            if (currentTrip && ['accepted', 'started'].includes(currentTrip.status)) return;
+            const { data, error } = await supabaseClient.from('user_profiles').select('id, full_name, driver_lat, driver_lng, avatar_url').eq('role', 'conductor').eq('available', true).not('driver_lat', 'is', null);
+            if (error || !data) return;
+            const activeIds = data.map(d => d.id);
+            for (const id in nearbyDriverMarkers) { if (!activeIds.includes(id)) { map.removeLayer(nearbyDriverMarkers[id]); delete nearbyDriverMarkers[id]; } }
+            
+            data.forEach(driver => {
+                if (originCoords && calculateDistance(originCoords.lat, originCoords.lng, driver.driver_lat, driver.driver_lng) > 50) return; 
+                
+                const dAv = driver.avatar_url ? 
+                    `<img src="${driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                    `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);font-size:12px;"></i>`;
+                    
+                const iconHtml = `
+                    <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-15px);">
+                        <div style="background:var(--brand-dark-light); color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; margin-bottom:4px; white-space:nowrap; border: 1px solid rgba(255,255,255,0.1);">${driver.full_name.split(' ')[0]}</div>
+                        <div style="width:30px;height:30px;background:var(--brand-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand-yellow);box-shadow:0 3px 8px rgba(0,0,0,0.5);">${dAv}</div>
+                    </div>`;
+                    
+                if (nearbyDriverMarkers[driver.id]) { 
+                    nearbyDriverMarkers[driver.id].setLatLng([driver.driver_lat, driver.driver_lng]); 
+                    nearbyDriverMarkers[driver.id].setIcon(L.divIcon({ className: 'nearby-driver-marker', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 50] }));
+                } else { 
+                    nearbyDriverMarkers[driver.id] = L.marker([driver.driver_lat, driver.driver_lng], { icon: L.divIcon({ className: 'nearby-driver-marker', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 50] }) }).addTo(map); 
+                }
+            });
+        }
 
         // ==========================================
         // INIT Y AUTENTICACIÓN
         // ==========================================
-        async function checkSession() { try { const { data: { session } } = await supabaseClient.auth.getSession(); if (session) await loadUserProfile(session.user.id); else showAuthScreen(); } catch(e) { showAuthScreen(); } finally { loadingScreen.style.display = 'none'; } }
-        async function loadUserProfile(userId) { const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single(); if (error || !data || data.role !== 'pasajero') { alert('Esta cuenta no es de pasajero.'); await supabaseClient.auth.signOut(); showAuthScreen(); return; } userProfile = data; currentUser = (await supabaseClient.auth.getUser()).data.user; document.getElementById('auth-screen').classList.remove('active'); updateHeaderUI(); mainPanel.style.display = 'flex'; initMap(); await checkCurrentTrip(); subscribeToTripUpdates(); if (!currentTrip) locateBtn.click(); }
+        function showModal(modal) { modal.classList.add('active'); }
+        function hideModals() { loginModal.classList.remove('active'); registerModal.classList.remove('active'); }
+        function unsubscribeAll() { subscriptions.forEach(sub => sub.unsubscribe()); subscriptions = []; }
+        
+        async function checkSession() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) await loadUserProfile(session.user.id);
+                else showAuthScreen();
+            } catch(e) {
+                showAuthScreen();
+            } finally {
+                loadingScreen.style.display = 'none';
+            }
+        }
+
+        async function loadUserProfile(userId) {
+            const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
+            if (error || !data || data.role !== 'pasajero') {
+                alert('Esta cuenta no es de pasajero.');
+                await supabaseClient.auth.signOut();
+                showAuthScreen();
+                return;
+            }
+            userProfile = data;
+            currentUser = (await supabaseClient.auth.getUser()).data.user;
+
+            document.getElementById('auth-screen').classList.remove('active');
+            updateHeaderUI();
+            mainPanel.style.display = 'flex';
+            initMap();
+            await checkCurrentTrip();
+            subscribeToTripUpdates();
+            if (!currentTrip) locateBtn.click();
+        }
 
         let panelCollapsed = false; document.getElementById('panel-handle').addEventListener('click', () => { panelCollapsed = !panelCollapsed; tripPanel.style.transform = panelCollapsed ? 'translateY(calc(100% - 70px))' : 'translateY(0)'; });
 
