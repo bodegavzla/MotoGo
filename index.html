@@ -28,13 +28,12 @@
             -webkit-font-smoothing: antialiased; 
         }
 
-        /* Utilidades Generales */
+        /* --- ESTILOS GENERALES Y MODALES --- */
         #network-status { display: none; position: fixed; top: 0; width: 100%; text-align: center; padding: 12px; background: var(--ios-red); color: white; z-index: 5000; font-weight: 600; font-size: 14px; backdrop-filter: blur(10px); }
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-dark); display: flex; justify-content: center; align-items: center; z-index: 4000; }
         .spinner-large { border: 4px solid rgba(255, 195, 0, 0.2); border-left-color: var(--brand-yellow); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Modales */
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
         .modal.active { display: flex; opacity: 1; }
         .modal-content { background-color: var(--brand-dark-light); border-radius: 24px; width: 90%; max-width: 400px; padding: 30px 25px; position: relative; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-height: 90vh; overflow-y: auto; }
@@ -47,24 +46,23 @@
         input { width: 100%; padding: 14px 16px; background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 16px; color: white; font-family: inherit; transition: border 0.2s; }
         input:focus { border: 1px solid var(--brand-yellow); outline: none; background-color: rgba(255,255,255,0.1); }
         input:disabled { background-color: rgba(0,0,0,0.2); color: var(--ios-gray); cursor: not-allowed; }
+        
         button { width: 100%; padding: 16px; background-color: var(--brand-yellow); color: var(--brand-dark); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
         button:active { transform: scale(0.98); opacity: 0.9; }
+        
         .switch-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--ios-gray); }
         .switch-link a { color: var(--brand-yellow); text-decoration: none; font-weight: 500; cursor: pointer; }
         .message { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 14px; display: none; font-weight: 500; }
         .error-message { background-color: rgba(255, 59, 48, 0.1); color: var(--ios-red); border: 1px solid rgba(255, 59, 48, 0.2); }
         .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); }
-        .spinner { border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--brand-yellow); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; margin: 10px auto 0; display: none; }
 
-        /* Estructura Principal */
+        /* --- HEADER Y PERFIL --- */
         #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
-        
         header { display: flex; justify-content: space-between; align-items: center; background: rgba(46, 39, 37, 0.85); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; width: 100%; z-index: 2000; }
         header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
         
-        /* Botón de Perfil en Header */
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .user-info-btn { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; color: white; }
         .user-info-btn:active { transform: scale(0.95); background: rgba(255,195,0,0.1); border-color: var(--brand-yellow); color: var(--brand-yellow); }
         .user-info-avatar { width: 24px; height: 24px; border-radius: 12px; background: var(--brand-yellow); color: var(--brand-dark); display: flex; justify-content: center; align-items: center; font-size: 12px; overflow: hidden; }
         .user-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -75,6 +73,7 @@
         .notification-dropdown { position: absolute; top: 60px; right: 10px; width: 350px; max-width: 90vw; background: var(--brand-dark-light); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 2001; display: none; max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
         .notification-dropdown.show { display: block; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
         .notification-header { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(61, 53, 50, 0.95); backdrop-filter: blur(10px); font-size: 15px; z-index: 10;}
         .notification-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
         .notification-item.unread { background: rgba(255, 195, 0, 0.05); }
@@ -82,7 +81,6 @@
         .notification-item .trip-details { font-size: 13px; color: var(--ios-gray); line-height: 1.4; }
         .no-notifications { padding: 30px 20px; text-align: center; color: var(--ios-gray); font-size: 14px; }
 
-        /* Negociación Rápida */
         .profit-badge { padding: 4px 8px; border-radius: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .profit-high { background: rgba(52, 199, 89, 0.15); color: var(--ios-green); }
         .profit-mid { background: rgba(255, 195, 0, 0.15); color: var(--brand-yellow); }
@@ -93,24 +91,23 @@
         .btn-offer-counter { background: rgba(255, 195, 0, 0.1); border: 1px solid var(--brand-yellow); color: var(--brand-yellow); flex: 1; padding: 10px 5px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.1s;}
         .btn-offer-counter:active { background: var(--brand-yellow); color: var(--brand-dark); transform: scale(0.95); }
 
-        /* Mapa y Navegación */
+        /* --- MAPA Y MARCADORES --- */
         #map-container { flex: 1; position: relative; height: 100%; width: 100%; }
         #map { width: 100%; height: 100%; }
+        
         .navigate-btn { position: absolute; bottom: 200px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--brand-dark); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 1000; display: none; align-items: center; justify-content: center; font-size: 20px; color: var(--brand-yellow); transition: transform 0.2s; border:none; }
         .navigate-btn:active { transform: scale(0.9); }
-
-        /* Marcadores del Mapa Animados */
         .driver-marker-animated { transition: margin 0.5s ease-out; }
 
-        /* Panel del Conductor */
+        /* --- PANEL INTELIGENTE CONDUCTOR --- */
         .driver-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--brand-dark); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.6); padding: 20px 24px calc(30px + env(safe-area-inset-bottom)) 24px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); border-top: 1px solid rgba(255,255,255,0.1); }
         .panel-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: pointer; }
 
-        /* Toggle Disponibilidad */
         .availability-toggle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 16px; background: var(--brand-dark-light); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
         .availability-info { display: flex; flex-direction: column; gap: 4px; }
         .availability-info .main-text { font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; font-size: 16px; }
         .availability-info .sub-text { font-size: 13px; color: var(--ios-gray); }
+        
         .toggle-switch { position: relative; display: inline-block; width: 56px; height: 32px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .3s; border-radius: 34px; border: 1px solid rgba(255,255,255,0.05); }
@@ -121,13 +118,15 @@
         .gps-indicator { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(52, 199, 89, 0.15); border-radius: 12px; font-size: 11px; color: var(--ios-green); margin-top: 6px; font-weight: 600; width: fit-content; border: 1px solid rgba(52, 199, 89, 0.2); }
         .gps-indicator.inactive { background: rgba(255, 59, 48, 0.15); color: var(--ios-red); border-color: rgba(255, 59, 48, 0.2); }
 
-        /* Viaje Actual y Acciones */
+        /* Información de Viaje */
         .current-trip { background: var(--brand-dark-light); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,195,0,0.2); }
         .current-trip h4 { color: var(--brand-yellow); margin-bottom: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .route-info-box { font-size: 14px; margin-bottom: 15px; line-height: 1.5; color: white; }
+        
         .trip-price-badge { display: inline-flex; flex-direction: column; align-items: flex-end; }
         .trip-price-badge .usd { color: var(--brand-yellow); font-size: 20px; font-weight: 800; }
         .trip-price-badge .bs { color: var(--ios-gray); font-size: 11px; font-weight: 600; }
+        
         .passenger-info { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
         
         .action-buttons { display: flex; gap: 12px; margin-top: 15px; }
@@ -135,7 +134,7 @@
         .btn-complete { background: var(--ios-green); color: white; }
         .btn-cancel-trip { background: transparent; border: 1px solid rgba(255, 59, 48, 0.5); color: var(--ios-red); }
 
-        /* Historial en Carrusel */
+        /* Historial y Vistas (Carrusel) */
         .history-section { margin-top: 10px; }
         .history-section h4 { color: white; font-size: 15px; margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .history-filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 5px; scrollbar-width: none; }
@@ -165,56 +164,34 @@
         
         .leaflet-control-zoom { display: none; }
 
-        /* ========================================= */
-        /* VISTA DE PERFIL COMPLETA                  */
-        /* ========================================= */
-        .profile-view { 
-            position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; 
-            background: rgba(46, 39, 37, 0.98); backdrop-filter: blur(20px); 
-            z-index: 3500; transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            display: flex; flex-direction: column; overflow-y: auto; 
-        }
+        /* --- VISTA DE PERFIL COMPLETA --- */
+        .profile-view { position: fixed; top: 0; left: 100%; width: 100%; height: 100%; height: 100dvh; background: rgba(46, 39, 37, 0.98); backdrop-filter: blur(20px); z-index: 3500; transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; overflow-y: auto; }
         .profile-view.active { left: 0; }
         
-        .profile-header { 
-            padding: 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); 
-            position: sticky; top: 0; background: var(--brand-dark); z-index: 10;
-        }
+        .profile-header { padding: 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; background: var(--brand-dark); z-index: 10;}
         .profile-header h2 { margin: 0; flex: 1; text-align: left; font-size: 18px; margin-left: 15px; }
-        .btn-logout-profile { 
-            background: rgba(255, 59, 48, 0.1); color: var(--ios-red); padding: 8px 15px; 
-            border-radius: 12px; font-size: 13px; font-weight: 600; width: auto; border: 1px solid rgba(255, 59, 48, 0.2); 
-        }
+        .btn-logout-profile { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); padding: 8px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; width: auto; border: 1px solid rgba(255, 59, 48, 0.2); cursor: pointer;}
         
         .profile-content { padding: 30px 20px; flex: 1; }
         
         .avatar-upload-container { display: flex; justify-content: center; margin-bottom: 30px; }
-        .avatar-upload { 
-            width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); 
-            position: relative; border: 3px solid var(--brand-yellow); display: flex; align-items: center; 
-            justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5); 
-        }
+        .avatar-upload { width: 120px; height: 120px; border-radius: 60px; background: var(--brand-dark-light); position: relative; border: 3px solid var(--brand-yellow); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .avatar-upload img { width: 100%; height: 100%; object-fit: cover; display: none; }
         .avatar-upload .placeholder-icon { font-size: 40px; color: var(--brand-yellow); }
-        .avatar-upload .overlay { 
-            position: absolute; bottom: 0; background: rgba(0,0,0,0.7); width: 100%; 
-            text-align: center; padding: 8px 0; color: white; font-size: 12px; font-weight: 600; 
-        }
+        .avatar-upload .overlay { position: absolute; bottom: 0; background: rgba(0,0,0,0.7); width: 100%; text-align: center; padding: 8px 0; color: white; font-size: 12px; font-weight: 600; }
         input[type="file"] { display: none; }
 
         .btn-save-profile { margin-top: 20px; }
         .profile-spinner { font-size: 20px; animation: spin 1s linear infinite; display: none; }
 
-        /* ========================================= */
-        /* CHAT UI                                   */
-        /* ========================================= */
-        .chat-fab { position: fixed; bottom: 200px; right: 20px; width: 56px; height: 56px; border-radius: 28px; background: var(--brand-yellow); color: var(--brand-dark); display: none; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 1500; cursor: pointer; transition: transform 0.2s; }
-        .chat-fab:active { transform: scale(0.9); }
-        .chat-fab .badge { position: absolute; top: -2px; right: -2px; background: var(--ios-red); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: bold; display: none; align-items: center; justify-content: center; border: 2px solid var(--brand-dark); }
+        /* --- NUEVO BOTÓN CHAT EN TARJETA --- */
+        .card-chat-btn { background: var(--brand-yellow); color: var(--brand-dark); border: none; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; transition: transform 0.1s; padding: 0; flex-shrink: 0;}
+        .card-chat-btn:active { transform: scale(0.9); }
+        .card-chat-btn .badge { position: absolute; top: -2px; right: -2px; background: var(--ios-red); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: none; align-items: center; justify-content: center; border: 2px solid var(--brand-dark); }
         
+        /* --- PANEL DEL CHAT --- */
         .chat-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 75vh; height: 75dvh; background: var(--brand-dark); border-radius: 24px 24px 0 0; z-index: 4000; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0,0,0,0.6); border-top: 1px solid rgba(255,255,255,0.1); }
         .chat-panel.active { transform: translateY(0); }
-        
         .chat-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(46, 39, 37, 0.95); backdrop-filter: blur(10px); border-radius: 24px 24px 0 0;}
         .chat-header h3 { font-size: 16px; margin: 0; display: flex; align-items: center; gap: 10px; color: white; font-weight: 600;}
         .chat-close { background: transparent; border: none; color: var(--ios-gray); font-size: 28px; cursor: pointer; padding: 0; width: auto; display: flex; align-items: center; justify-content: center;}
@@ -230,8 +207,6 @@
         .chat-input:focus { border-color: var(--brand-yellow); background: rgba(255,255,255,0.1);}
         .chat-send-btn { width: 48px; height: 48px; border-radius: 24px; background: var(--brand-yellow); color: var(--brand-dark); border: none; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; padding:0; flex-shrink: 0; transition: transform 0.1s;}
         .chat-send-btn:active { transform: scale(0.9); }
-        .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
     </style>
 </head>
 <body>
@@ -309,15 +284,10 @@
         </div>
     </div>
 
-    <div id="chat-fab" class="chat-fab" onclick="openChat()">
-        <i class="fas fa-comment-dots"></i>
-        <span class="badge" id="chat-badge">0</span>
-    </div>
-
     <div id="chat-panel" class="chat-panel">
         <div class="chat-header">
             <h3 id="chat-title"><i class="fas fa-user"></i> Pasajero</h3>
-            <button class="chat-close" onclick="closeChat()">&times;</button>
+            <button class="chat-close" onclick="closeChat()">×</button>
         </div>
         <div class="chat-messages" id="chat-messages">
             </div>
@@ -475,7 +445,9 @@
         const avatarPlaceholder = document.getElementById('avatar-placeholder');
         let selectedAvatarFile = null;
 
-        // Listeners de Red
+        // ==========================================
+        // LISTENERS DE RED
+        // ==========================================
         window.addEventListener('offline', () => document.getElementById('network-status').style.display = 'block');
         window.addEventListener('online', async () => { 
             document.getElementById('network-status').style.display = 'none'; 
@@ -483,13 +455,15 @@
         });
 
         // ==========================================
-        // CHAT EN TIEMPO REAL (Conductor)
+        // CHAT EN TIEMPO REAL
         // ==========================================
         async function initChat() {
             document.getElementById('chat-messages').innerHTML = '';
-            unreadMessages = 0; document.getElementById('chat-badge').style.display = 'none';
+            unreadMessages = 0; 
+            const badge = document.getElementById('chat-badge');
+            if(badge) badge.style.display = 'none';
 
-            // Descargar historial de mensajes
+            // Descargar historial de mensajes de este viaje
             const { data } = await supabaseClient.from('messages').select('*').eq('trip_id', currentTrip.id).order('created_at', { ascending: true });
             if (data) data.forEach(msg => renderMessage(msg));
 
@@ -497,11 +471,14 @@
             chatChannel = supabaseClient.channel(`chat-${currentTrip.id}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `trip_id=eq.${currentTrip.id}` }, (payload) => {
                     renderMessage(payload.new);
-                    // Notificación roja si el chat está cerrado y no es un mensaje mío
+                    // Notificación roja en el botón dentro de la tarjeta
                     if (!isChatOpen && payload.new.sender_id !== currentUser.id) {
                         unreadMessages++;
-                        document.getElementById('chat-badge').style.display = 'flex';
-                        document.getElementById('chat-badge').textContent = unreadMessages;
+                        const badgeEl = document.getElementById('chat-badge');
+                        if (badgeEl) {
+                            badgeEl.style.display = 'flex';
+                            badgeEl.textContent = unreadMessages;
+                        }
                     }
                 }).subscribe();
         }
@@ -522,7 +499,8 @@
             isChatOpen = true;
             document.getElementById('chat-panel').classList.add('active');
             unreadMessages = 0;
-            document.getElementById('chat-badge').style.display = 'none';
+            const badge = document.getElementById('chat-badge');
+            if(badge) badge.style.display = 'none';
         }
 
         window.closeChat = function() {
@@ -1035,7 +1013,6 @@
                 currentTripContainer.style.display = 'none'; mainStateView.style.display = 'block'; tripDetailsView.style.display = 'none'; navigateBtn.style.display = 'none'; driverPanel.style.transform = 'translateY(0)'; 
                 
                 // Ocultar Chat
-                document.getElementById('chat-fab').style.display = 'none';
                 closeChat();
                 if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
                 return; 
@@ -1054,6 +1031,7 @@
                 `<img src="${currentTrip.passenger.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--brand-yellow);">` : 
                 `<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,195,0,0.1);display:flex;align-items:center;justify-content:center;color:var(--brand-yellow);border:1px solid var(--brand-yellow);"><i class="fas fa-user"></i></div>`;
 
+            // MAGIA: El botón de chat inyectado dentro de la tarjeta
             document.getElementById('current-trip-info').innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                     <h4>${iconTop}</h4>
@@ -1071,11 +1049,13 @@
                             <span style="font-size:12px;">PIN: ${currentTrip.passenger?.numeric_code}</span>
                         </div>
                     </div>
+                    <button onclick="openChat()" class="card-chat-btn">
+                        <i class="fas fa-comment-dots"></i>
+                        <span class="badge" id="chat-badge" style="display: ${unreadMessages > 0 ? 'flex' : 'none'}">${unreadMessages}</span>
+                    </button>
                 </div>
                 <div class="action-buttons">${b}</div>`;
 
-            // CHAT UI VISIBLE PARA CONDUCTOR
-            document.getElementById('chat-fab').style.display = 'flex';
             const miniAv = currentTrip.passenger?.avatar_url ? 
                 `<img src="${currentTrip.passenger.avatar_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : 
                 `<i class="fas fa-user"></i>`;
