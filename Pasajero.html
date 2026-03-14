@@ -69,8 +69,15 @@
         .success-message { background-color: rgba(52, 199, 89, 0.1); color: var(--ios-green); border: 1px solid rgba(52, 199, 89, 0.2); }
         .profile-spinner { font-size: 20px; animation: spin 1s linear infinite; display: none; }
 
+        /* Estrellas Calificación */
+        .stars { display: flex; justify-content: center; gap: 15px; font-size: 35px; color: rgba(255,255,255,0.2); margin-bottom: 25px; cursor: pointer; }
+        .stars i { transition: color 0.2s, transform 0.1s; }
+        .stars i:active { transform: scale(0.8); }
+        .stars i.active { color: var(--brand-yellow); }
+
         /* --- HEADER Y PERFIL --- */
         #main-panel { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
+        
         header { display: flex; justify-content: space-between; align-items: center; background: rgba(46, 39, 37, 0.85); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 2000; position: absolute; top: 0; width: 100%; }
         header h1 { font-size: 18px; font-weight: 700; color: var(--brand-yellow); }
         
@@ -179,7 +186,7 @@
 
         .leaflet-control-zoom { display: none; }
 
-        /* --- NUEVO BOTÓN CHAT EN TARJETA --- */
+        /* --- BOTÓN CHAT EN TARJETA --- */
         .card-chat-btn { background: var(--brand-yellow); color: var(--brand-dark); border: none; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; transition: transform 0.1s; padding: 0; flex-shrink: 0; margin-left: auto;}
         .card-chat-btn:active { transform: scale(0.9); }
         .card-chat-btn .badge { position: absolute; top: -2px; right: -2px; background: var(--ios-red); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: none; align-items: center; justify-content: center; border: 2px solid var(--brand-dark); }
@@ -211,6 +218,42 @@
     <div id="network-status"><i class="fas fa-wifi-slash"></i> Sin conexión a Internet</div>
     <div id="loading-screen"><div class="spinner-large"></div></div>
 
+    <audio id="sound-msg" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+    <audio id="sound-offer" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-login">×</span>
+            <h2>Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="form-group"><label>Correo</label><input type="email" id="login-email" required></div>
+                <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div>
+                <button type="submit" id="login-btn">Entrar</button>
+                <div class="spinner" id="login-spinner"></div>
+                <div class="message error-message" id="login-error"></div>
+            </form>
+            <div class="switch-link">¿No tienes cuenta? <a id="show-register">Regístrate</a></div>
+        </div>
+    </div>
+    
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-register">×</span>
+            <h2>Crear Cuenta (Pasajero)</h2>
+            <form id="register-form">
+                <div class="form-group"><label>Nombre</label><input type="text" id="register-fullname" required></div>
+                <div class="form-group"><label>PIN de Seguridad (4 a 8 dígitos)</label><input type="text" id="register-code" maxlength="8" pattern="\d{4,8}" required></div>
+                <div class="form-group"><label>Correo</label><input type="email" id="register-email" required></div>
+                <div class="form-group"><label>Contraseña</label><input type="password" id="register-password" required></div>
+                <button type="submit" id="register-btn">Registrarse</button>
+                <div class="spinner" id="register-spinner"></div>
+                <div class="message error-message" id="register-error"></div>
+                <div class="message success-message" id="register-success"></div>
+            </form>
+            <div class="switch-link">¿Ya tienes cuenta? <a id="show-login">Inicia sesión</a></div>
+        </div>
+    </div>
+
     <div id="permission-modal" class="modal">
         <div class="modal-content">
             <div class="permission-icon"><i class="fas fa-location-arrow"></i></div>
@@ -230,34 +273,23 @@
         </div>
     </div>
 
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="close-login">&times;</span>
-            <h2>Iniciar Sesión</h2>
-            <form id="login-form">
-                <div class="form-group"><label>Correo</label><input type="email" id="login-email" required></div>
-                <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div>
-                <button type="submit" id="login-btn">Entrar</button>
-                <div class="message error-message" id="login-error"></div>
-            </form>
-            <div class="switch-link">¿No tienes cuenta? <a id="show-register">Regístrate</a></div>
-        </div>
-    </div>
-
-    <div id="register-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="close-register">&times;</span>
-            <h2>Crear Cuenta</h2>
-            <form id="register-form">
-                <div class="form-group"><label>Nombre</label><input type="text" id="register-fullname" required></div>
-                <div class="form-group"><label>PIN de Seguridad (4 a 8 dígitos)</label><input type="text" id="register-code" maxlength="8" pattern="\d{4,8}" required></div>
-                <div class="form-group"><label>Correo</label><input type="email" id="register-email" required></div>
-                <div class="form-group"><label>Contraseña</label><input type="password" id="register-password" required></div>
-                <button type="submit" id="register-btn">Registrarse</button>
-                <div class="message error-message" id="register-error"></div>
-                <div class="message success-message" id="register-success"></div>
-            </form>
-            <div class="switch-link">¿Ya tienes cuenta? <a id="show-login">Inicia sesión</a></div>
+    <div id="rating-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h2>Califica tu Viaje</h2>
+            <div class="driver-avatar" id="rating-avatar" style="margin: 0 auto 15px; width: 80px; height: 80px; border-radius: 40px; background:var(--brand-dark-light); display:flex; align-items:center; justify-content:center; overflow:hidden; border: 3px solid var(--brand-yellow); font-size: 30px;">
+                <i class="fas fa-motorcycle" style="color:var(--brand-yellow);"></i>
+            </div>
+            <p id="rating-name" style="margin-bottom: 20px; font-weight: 600; font-size: 18px;">Conductor</p>
+            
+            <div class="stars" id="star-rating">
+                <i class="fas fa-star active" data-val="1"></i>
+                <i class="fas fa-star active" data-val="2"></i>
+                <i class="fas fa-star active" data-val="3"></i>
+                <i class="fas fa-star active" data-val="4"></i>
+                <i class="fas fa-star active" data-val="5"></i>
+            </div>
+            
+            <button id="btn-submit-rating" style="margin-top: 10px;">Enviar y Finalizar</button>
         </div>
     </div>
 
@@ -416,17 +448,16 @@
         let offersChannel = null; 
         let tasaBCV = null;
 
-        // Variables del Chat
+        // Variables del Chat y Estrellas
         let chatChannel = null;
         let unreadMessages = 0;
         let isChatOpen = false;
+        let currentRating = 5;
 
         // Elementos DOM
         const loadingScreen = document.getElementById('loading-screen');
         const loginModal = document.getElementById('login-modal'); 
         const registerModal = document.getElementById('register-modal');
-        const permissionModal = document.getElementById('permission-modal'); 
-        const permissionDeniedModal = document.getElementById('permission-denied-modal');
         const mainPanel = document.getElementById('main-panel'); 
         const userNameSpan = document.getElementById('user-name');
         const locateBtn = document.getElementById('locate-btn');
@@ -451,6 +482,66 @@
         const avatarImage = document.getElementById('avatar-image');
         const avatarPlaceholder = document.getElementById('avatar-placeholder');
         let selectedAvatarFile = null;
+
+        // Objetos de Audio
+        const soundOffer = document.getElementById('sound-offer');
+        const soundMsg = document.getElementById('sound-msg');
+
+        // Listeners de Red
+        window.addEventListener('offline', () => document.getElementById('network-status').style.display = 'block');
+        window.addEventListener('online', async () => { 
+            document.getElementById('network-status').style.display = 'none'; 
+            if(currentUser) { await checkSession(); await loadPendingTrips(); } 
+        });
+
+        // ==========================================
+        // SISTEMA DE CALIFICACIÓN (5 ESTRELLAS)
+        // ==========================================
+        document.querySelectorAll('#star-rating i').forEach(star => {
+            star.addEventListener('click', (e) => {
+                currentRating = parseInt(e.target.getAttribute('data-val'));
+                document.querySelectorAll('#star-rating i').forEach(s => {
+                    if(parseInt(s.getAttribute('data-val')) <= currentRating) s.classList.add('active');
+                    else s.classList.remove('active');
+                });
+            });
+        });
+
+        window.openRatingModal = function(driver) {
+            document.getElementById('rating-name').textContent = driver?.full_name || 'Conductor';
+            
+            const avHtml = driver?.avatar_url ? 
+                `<img src="${driver.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
+                `<i class="fas fa-motorcycle" style="color:var(--brand-yellow);"></i>`;
+            document.getElementById('rating-avatar').innerHTML = avHtml;
+            
+            currentRating = 5;
+            document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('active'));
+            showModal(document.getElementById('rating-modal'));
+        }
+
+        document.getElementById('btn-submit-rating').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-submit-rating');
+            btn.disabled = true; btn.textContent = 'Enviando...';
+            
+            // Ojo: El pasajero solo actualiza `driver_rating`, el estatus de completado lo cambia el conductor.
+            await supabaseClient.from('trips').update({ 
+                driver_rating: currentRating 
+            }).eq('id', currentTrip.id);
+            
+            document.getElementById('rating-modal').classList.remove('active');
+            btn.disabled = false; btn.textContent = 'Enviar y Finalizar';
+            
+            // Limpiamos la pantalla y volvemos a la vista de buscar viaje
+            stopDriverLocationTracking(); 
+            currentTrip = null; 
+            if (destinationMarker) map.removeLayer(destinationMarker); 
+            destinationCoords = null; 
+            dropoffInput.value = ''; 
+            priceNegotiator.style.display = 'none';
+            updateTripUI(); 
+            if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16);
+        });
 
         // ==========================================
         // MATEMÁTICAS (Distancia)
@@ -477,8 +568,11 @@
             chatChannel = supabaseClient.channel(`chat-${currentTrip.id}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `trip_id=eq.${currentTrip.id}` }, (payload) => {
                     renderMessage(payload.new);
-                    // Si el chat está cerrado y el mensaje es del conductor, sumamos la bolita roja
+                    // Si el mensaje es del conductor y el panel está cerrado
                     if (!isChatOpen && payload.new.sender_id !== currentUser.id) {
+                        // SONIDO DE NUEVO MENSAJE
+                        soundMsg.play().catch(e => console.log('Audio no interactuado aún'));
+
                         unreadMessages++;
                         const badgeEl = document.getElementById('chat-badge');
                         if (badgeEl) {
@@ -639,7 +733,6 @@
             let newAvatarUrl = userProfile.avatar_url;
 
             try {
-                // Subir foto empaquetada
                 if (selectedAvatarFile) {
                     const compressedBlob = await compressImage(selectedAvatarFile, 800, 800, 0.7); 
                     const fileName = `passenger_${currentUser.id}_${Date.now()}.jpg`; 
@@ -656,7 +749,6 @@
                     newAvatarUrl = publicUrlData.publicUrl;
                 }
                 
-                // Guardar info
                 const newName = document.getElementById('profile-fullname').value; 
                 const newPhone = document.getElementById('profile-phone').value;
                 
@@ -671,7 +763,6 @@
                 
                 updateHeaderUI(); 
                 
-                // Actualizar mi propia foto en el mapa (El Marcador de Origen)
                 if(originCoords && originMarker) { 
                     const avHtml = userProfile.avatar_url ? 
                         `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
@@ -719,7 +810,7 @@
                 if (data.code === 'Ok' && data.routes.length > 0) {
                     return {
                         coordinates: data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]),
-                        distance: data.routes[0].distance / 1000 // KM
+                        distance: data.routes[0].distance / 1000
                     };
                 }
             } catch (error) { } return null;
@@ -847,7 +938,6 @@
                     } else {
                         map.setView([latitude, longitude], 16);
                         
-                        // MAGIA: El marcador del pasajero al iniciar
                         const avHtml = userProfile.avatar_url ? 
                             `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
                             `<div style="width:18px;height:18px;background:var(--brand-yellow);border:3px solid var(--brand-dark);border-radius:50%;"></div>`;
@@ -910,6 +1000,10 @@
                 .on('broadcast', { event: 'new_offer' }, (payload) => {
                     const offer = payload.payload;
                     incomingOffers[offer.driver_id] = offer;
+                    
+                    // SONIDO DE NUEVA OFERTA
+                    soundOffer.play().catch(e => console.log('Audio bloqueado por navegador'));
+                    
                     renderOffersUI();
                 }).subscribe();
         }
@@ -963,7 +1057,6 @@
             if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
         }
 
-        // Se encarga de mostrar u ocultar la UI dependiendo del estado del viaje
         function updateTripUI() {
             if (!currentTrip || ['completed', 'cancelled'].includes(currentTrip.status)) {
                 setupSection.style.display = 'block'; 
@@ -1054,13 +1147,23 @@
             subscriptions.push(supabaseClient.channel('trip-passenger').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips', filter: `passenger_id=eq.${currentUser.id}` }, async (payload) => {
                 if (currentTrip && payload.new.id === currentTrip.id) {
                     const oldStatus = currentTrip.status; currentTrip = { ...currentTrip, ...payload.new };
+                    
                     if (payload.new.status === 'accepted' && payload.new.driver_id) {
                         if(offersChannel) { offersChannel.unsubscribe(); offersChannel = null; }
                         const { data } = await supabaseClient.from('user_profiles').select('*').eq('id', payload.new.driver_id).single();
                         if (data) { currentTrip.driver = data; updateTripUI(); startDriverLocationTracking(); }
                     }
                     else if (payload.new.status === 'started' && oldStatus !== 'started') { updateTripUI(); drawRoute(); }
-                    else if (['completed', 'cancelled'].includes(payload.new.status)) {
+                    
+                    // MAGIA: Mostrar calificación cuando el viaje se complete
+                    else if (payload.new.status === 'completed' && oldStatus !== 'completed') {
+                        // El conductor terminó el viaje, activamos las estrellas
+                        closeChat();
+                        if(chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+                        openRatingModal(currentTrip.driver);
+                    }
+                    
+                    else if (payload.new.status === 'cancelled') {
                         stopDriverLocationTracking(); 
                         setTimeout(() => { currentTrip = null; if (destinationMarker) map.removeLayer(destinationMarker); destinationCoords = null; dropoffInput.value = ''; updateTripUI(); if (originCoords) map.setView([originCoords.lat, originCoords.lng], 16); }, 2000);
                     } else updateTripUI(); 
@@ -1096,6 +1199,9 @@
         function startDriverLocationTracking() { if (!currentTrip) return; if (driverLocationChannel) driverLocationChannel.unsubscribe(); driverLocationChannel = supabaseClient.channel(`trip-${currentTrip.id}`).on('broadcast', { event: 'location' }, (payload) => { updateDriverVisuals(payload.payload.lat, payload.payload.lng, payload.payload.bearing || 0); }).subscribe(); if(driverMarker) drawRoute(); }
         function stopDriverLocationTracking() { if (driverLocationChannel) { driverLocationChannel.unsubscribe(); driverLocationChannel = null; } if (driverMarker) { map.removeLayer(driverMarker); driverMarker = null; } if (routeLine) { map.removeLayer(routeLine); routeLine = null; } if (searchRadiusCircle) { map.removeLayer(searchRadiusCircle); searchRadiusCircle = null; } }
 
+        // ==========================================
+        // RADAR GHOST CARS (Conductores cercanos)
+        // ==========================================
         function startNearbyDriversTracking() { if (nearbyDriversInterval) return; fetchNearbyDrivers(); nearbyDriversInterval = setInterval(fetchNearbyDrivers, 10000); }
         function stopNearbyDriversTracking() { if (nearbyDriversInterval) { clearInterval(nearbyDriversInterval); nearbyDriversInterval = null; } Object.values(nearbyDriverMarkers).forEach(marker => map.removeLayer(marker)); nearbyDriverMarkers = {}; }
 
